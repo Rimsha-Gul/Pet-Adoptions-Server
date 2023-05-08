@@ -32,9 +32,5 @@ authRouter.delete("/logout", authenticateAccessToken, async (req, res) => {
   }
   res.sendStatus(204);
 });
-// export default (router: express.Router) => {
-//   router.post("/auth/signup", signup);
-//   router.post("/auth/login", login);
-// };
 
 export default authRouter;
