@@ -1,10 +1,16 @@
 import mongoose from "mongoose";
+//import mongooseSequence from "mongoose-sequence";
+
+//const AutoIncrement = mongooseSequence(mongoose);
+
+//const AutoIncrement = AutoIncrementFactory(mongoose);
 
 interface User {
   name: string;
   email: string;
   address: string;
   password: string;
+  tokens: [{ accessToken: string }, { refreshToken: string }];
 }
 
 const UserSchema = new mongoose.Schema<User>(
@@ -13,20 +19,24 @@ const UserSchema = new mongoose.Schema<User>(
     email: { type: String, required: true },
     address: { type: String, required: true },
     password: { type: String, required: true },
+    tokens: [
+      {
+        accessToken: {
+          type: String,
+          required: true,
+        },
+        refreshToken: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );
 
-const UserModel = mongoose.model<User>("User", UserSchema);
+//UserSchema.plugin(AutoIncrement, { inc_field: "id" });
 
-export const getUsers = () => UserModel.find();
-export const getUserByEmail = (email: string) => UserModel.findOne({ email });
-export const getUserBySessionToken = (sessionToken: string) =>
-  UserModel.findOne({
-    "authentication.sessionToken": sessionToken,
-  });
-export const getUserById = (id: string) => UserModel.findById(id);
-export const createUser = (values: Record<string, any>) =>
-  new UserModel(values).save().then((user) => user.toObject());
+const UserModel = mongoose.model<User>("User", UserSchema);
 
 export default UserModel;
