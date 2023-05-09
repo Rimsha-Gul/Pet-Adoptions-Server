@@ -1,10 +1,11 @@
-import UserModel from "../models/User";
+import User from "../models/User";
 
 export const removeTokensInDB = async (email: string) => {
-  const user = await UserModel.findOne({ email });
+  const user = await User.findOne({ email });
   if (!user) return;
 
-  user.tokens.splice(0);
+  user.tokens.accessToken = "";
+  user.tokens.refreshToken = "";
   await user.save();
   return;
 };

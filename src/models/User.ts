@@ -1,42 +1,52 @@
-import mongoose from "mongoose";
+import mongoose, { Model } from "mongoose";
+
 //import mongooseSequence from "mongoose-sequence";
 
 //const AutoIncrement = mongooseSequence(mongoose);
 
 //const AutoIncrement = AutoIncrementFactory(mongoose);
 
-interface User {
+export interface UserPayload {
   name: string;
   email: string;
   address: string;
   password: string;
-  tokens: [{ accessToken: string }, { refreshToken: string }];
 }
 
-const UserSchema = new mongoose.Schema<User>(
+export interface UserResponse extends UserPayload {
+  tokens: { accessToken: string; refreshToken: string };
+}
+
+export interface UserDocument extends UserResponse, Document {}
+
+export interface UpdatedUser {
+  email: string;
+  address?: String;
+}
+
+export interface UpdatedUserResponse {
+  success: boolean;
+  user?: UpdatedUser;
+}
+
+const UserSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true },
     address: { type: String, required: true },
     password: { type: String, required: true },
-    tokens: [
-      {
-        accessToken: {
-          type: String,
-          required: true,
-        },
-        refreshToken: {
-          type: String,
-          required: true,
-        },
-      },
-    ],
+    tokens: {
+      accessToken: { type: String },
+      refreshToken: { type: String },
+    },
   },
   { timestamps: true }
 );
 
 //UserSchema.plugin(AutoIncrement, { inc_field: "id" });
 
-const UserModel = mongoose.model<User>("User", UserSchema);
-
-export default UserModel;
+const User: Model<UserDocument> = mongoose.model<UserDocument>(
+  "user",
+  UserSchema
+);
+export default User;

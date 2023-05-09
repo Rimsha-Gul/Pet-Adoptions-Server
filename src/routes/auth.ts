@@ -25,7 +25,6 @@ authRouter.post("/login", async (req, res) => {
 
 authRouter.delete("/logout", authenticateAccessToken, async (req, res) => {
   try {
-    console.log("here");
     await controller.logout(req, res);
   } catch (err: any) {
     res.status(err.code).send(err.message);
