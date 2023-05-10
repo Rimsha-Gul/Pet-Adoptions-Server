@@ -17,7 +17,7 @@ export interface UserResponse extends UserPayload {
   tokens: { accessToken: string; refreshToken: string };
 }
 
-export interface LoginResponse {
+export interface TokenResponse {
   tokens: { accessToken: string; refreshToken: string };
 }
 

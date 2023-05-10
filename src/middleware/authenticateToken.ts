@@ -1,7 +1,7 @@
 import { RequestHandler, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { verifyTokenInDB } from "../utils/verifyTokenInDB";
-import { Request } from "../types/Request";
+import { UserRequest } from "../types/Request";
 //import { fetchLatestAutoExec } from "../utils/verifyTokenInDB";
 
 export const authenticateAccessToken: RequestHandler = async (
@@ -35,7 +35,7 @@ export const authenticateRefreshToken: RequestHandler = async (
 };
 
 const authenticateToken = async (
-  req: Request,
+  req: UserRequest,
   res: Response,
   next: NextFunction,
   key: string,
