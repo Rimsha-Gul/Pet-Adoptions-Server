@@ -45,20 +45,14 @@ const authenticateToken = async (
   const token = authHeader?.split(" ")[1];
 
   try {
-    req.user = {
-      email: "example@email.com",
-    };
     if (!token) throw "Unauthorized";
     const data: any = jwt.verify(token, key);
 
     const user = await verifyTokenInDB(data?.email, token, tokenType);
     if (!user) {
-      console.log(user);
       throw "Unauthorized";
     }
-    if (req.user) {
-      req.user.email = user.email;
-    }
+    req.user = user;
     return next();
   } catch (error) {
     res.sendStatus(401);

@@ -30,7 +30,6 @@ export const verifyTokenInDB = async (
 
   if (!currentTokenObj) return undefined;
   else {
-    await removeTokensInDB(user.email);
     return {
       email: user.email,
     };

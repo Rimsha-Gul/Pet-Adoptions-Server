@@ -1,11 +1,13 @@
-import { Request, Response } from "express";
+import { Request } from "express";
 import bcrypt from "bcrypt";
 import User from "../models/User";
 import { generateAccessToken } from "../utils/generateAccessToken";
 import { generateRefreshToken } from "../utils/generateRefreshToken";
+import { UserResponse, LoginResponse } from "../models/User";
+import { removeTokensInDB } from "../utils/removeTokensInDB";
 
 export class AuthController {
-  public async signup(req: Request, res: Response) {
+  public async signup(req: Request): Promise<UserResponse> {
     // existing user check
     // hashed password
     // user creation
@@ -30,25 +32,38 @@ export class AuthController {
       address,
       password: hashedPassword,
     });
-    user.save().then((user) => user.toObject());
-    const token = generateAccessToken(user.email);
-    return { user, token };
+    await user.save();
+    const accessToken = generateAccessToken(user.email);
+    const refreshToken = generateRefreshToken(user.email);
+
+    user.tokens = {
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    };
+    await user.save();
+    return {
+      name: user.name,
+      email: user.email,
+      address: user.address,
+      password: user.password,
+      tokens: user.tokens,
+    };
   }
 
-  public async login(req: Request, res: Response) {
+  public async login(req: Request): Promise<LoginResponse> {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400);
+      throw "A credential is missing.";
     }
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: "User not found" });
+      throw "User not found";
     }
 
     const expectedPassword = await bcrypt.compare(password, user.password);
     if (!expectedPassword) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      throw "Invalid credentials";
     }
 
     const accessToken = generateAccessToken(user.email);
@@ -58,21 +73,11 @@ export class AuthController {
       accessToken: accessToken,
       refreshToken: refreshToken,
     };
-    res.cookie("user_id", user._id);
     await user.save();
-    return { accessToken, refreshToken };
+    return { tokens: user.tokens };
   }
 
-  public async logout(req: Request, res: Response) {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400);
-    }
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "User not found" });
-    }
-    //user.tokens.splice(0);
-    await user.save();
+  public async logout(req: any) {
+    await removeTokensInDB(req.user.email);
   }
 }

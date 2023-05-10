@@ -4,8 +4,7 @@ export const removeTokensInDB = async (email: string) => {
   const user = await User.findOne({ email });
   if (!user) return;
 
-  user.tokens.accessToken = "";
-  user.tokens.refreshToken = "";
+  user.set("tokens", undefined);
   await user.save();
   return;
 };

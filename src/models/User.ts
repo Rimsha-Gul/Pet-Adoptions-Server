@@ -17,6 +17,16 @@ export interface UserResponse extends UserPayload {
   tokens: { accessToken: string; refreshToken: string };
 }
 
+export interface LoginResponse {
+  tokens: { accessToken: string; refreshToken: string };
+}
+
+export interface SessionResponse {
+  name: string;
+  email: string;
+  address: string;
+}
+
 export interface UserDocument extends UserResponse, Document {}
 
 export interface UpdatedUser {
