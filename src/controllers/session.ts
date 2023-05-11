@@ -24,7 +24,7 @@ export class SessionController {
 }
 
 const session = async (req: UserRequest) => {
-  const email = req.user?.email;
+  const email = req.user!.email;
   const user = await User.findOne({ email });
   return {
     name: user!.name,

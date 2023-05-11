@@ -11,10 +11,10 @@ const authRouter = express.Router();
 const controller = new AuthController();
 
 authRouter.post("/signup", async (req, res) => {
-  const { error, value: body } = signUpValidation(req.body);
+  const { error } = signUpValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
   try {
-    const response = await controller.signup(body);
+    const response = await controller.signup(req.body);
     res.send(response);
   } catch (err: any) {
     res.status(err.code).send(err.message);
@@ -22,10 +22,10 @@ authRouter.post("/signup", async (req, res) => {
 });
 
 authRouter.post("/login", async (req, res) => {
-  const { error, value: body } = loginValidation(req.body);
+  const { error } = loginValidation(req.body);
   if (error) return res.status(400).send(error.details[0].message);
   try {
-    const response = await controller.login(body);
+    const response = await controller.login(req.body);
     res.send(response);
   } catch (err: any) {
     res.status(err.code).send(err.message);

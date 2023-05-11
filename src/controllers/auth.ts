@@ -5,6 +5,7 @@ import { generateAccessToken } from "../utils/generateAccessToken";
 import { generateRefreshToken } from "../utils/generateRefreshToken";
 import { UserResponse, TokenResponse } from "../models/User";
 import { removeTokensInDB } from "../utils/removeTokensInDB";
+import { UserRequest } from "../types/Request";
 import {
   Example,
   Hidden,
@@ -124,6 +125,6 @@ const login = async (req: any): Promise<TokenResponse> => {
   return { tokens: user.tokens };
 };
 
-const logout = async (req: any) => {
-  await removeTokensInDB(req.user.email);
+const logout = async (req: UserRequest) => {
+  await removeTokensInDB(req.user!.email);
 };
