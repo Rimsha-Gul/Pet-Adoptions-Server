@@ -20,7 +20,6 @@ export const verifyTokenInDB = async (
   tokenType: "accessToken" | "refreshToken"
 ) => {
   const user = await User.findOne({ email });
-
   if (!user) return undefined;
 
   let currentTokenObj;

@@ -5,7 +5,16 @@ import { generateAccessToken } from "../utils/generateAccessToken";
 import { generateRefreshToken } from "../utils/generateRefreshToken";
 import { UserResponse, TokenResponse } from "../models/User";
 import { removeTokensInDB } from "../utils/removeTokensInDB";
-import { Example, Hidden, Post, Request, Route, Security, Tags } from "tsoa";
+import {
+  Example,
+  Hidden,
+  Post,
+  Query,
+  Request,
+  Route,
+  Security,
+  Tags,
+} from "tsoa";
 
 @Route("auth")
 @Tags("Auth")
@@ -48,18 +57,17 @@ export class AuthController {
    */
   @Security("bearerAuth")
   @Post("/logout")
-  public async logout(@Request() @Hidden() req: express.Request) {
+  public async logout(@Query("req") @Hidden() req?: any) {
     return logout(req);
   }
 }
 
-const signup = async (req: express.Request): Promise<UserResponse> => {
+const signup = async (req: any): Promise<UserResponse> => {
   // existing user check
   // hashed password
   // user creation
   // token generation
-
-  const { name, email, password, address } = req.body;
+  const { name, email, address, password } = req;
 
   const existingUser = await User.findOne({ email });
 
@@ -70,15 +78,14 @@ const signup = async (req: express.Request): Promise<UserResponse> => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const user = new User({
-    name,
-    email,
-    address,
+    name: name,
+    email: email,
+    address: address,
     password: hashedPassword,
   });
   await user.save();
   const accessToken = generateAccessToken(user.email);
   const refreshToken = generateRefreshToken(user.email);
-
   user.tokens = {
     accessToken: accessToken,
     refreshToken: refreshToken,
@@ -93,8 +100,8 @@ const signup = async (req: express.Request): Promise<UserResponse> => {
   };
 };
 
-const login = async (req: express.Request): Promise<TokenResponse> => {
-  const { email, password } = req.body;
+const login = async (req: any): Promise<TokenResponse> => {
+  const { email, password } = req;
 
   const user = await User.findOne({ email });
   if (!user) {

@@ -1,7 +1,7 @@
 import { UserRequest } from "../types/Request";
 import User from "../models/User";
 import { SessionResponse } from "../models/User";
-import { Example, Get, Hidden, Request, Route, Security, Tags } from "tsoa";
+import { Example, Get, Hidden, Query, Route, Security, Tags } from "tsoa";
 
 Security("bearerAuth");
 @Route("session")
@@ -17,7 +17,7 @@ export class SessionController {
   })
   @Get("/")
   public async session(
-    @Request() @Hidden() request: UserRequest
+    @Query() @Hidden() request: UserRequest
   ): Promise<SessionResponse> {
     return session(request);
   }
