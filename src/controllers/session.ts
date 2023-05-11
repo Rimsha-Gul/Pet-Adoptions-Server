@@ -1,4 +1,4 @@
-import { UserRequest } from "../types/Request";
+//import { UserRequest } from "../types/Request";
 import User from "../models/User";
 import { SessionResponse } from "../models/User";
 import { Example, Get, Hidden, Query, Route, Security, Tags } from "tsoa";
@@ -17,13 +17,13 @@ export class SessionController {
   })
   @Get("/")
   public async session(
-    @Query() @Hidden() request: UserRequest
+    @Query("req") @Hidden() req?: any
   ): Promise<SessionResponse> {
-    return session(request);
+    return session(req);
   }
 }
 
-const session = async (req: UserRequest) => {
+const session = async (req: any) => {
   const email = req.user!.email;
   const user = await User.findOne({ email });
   return {

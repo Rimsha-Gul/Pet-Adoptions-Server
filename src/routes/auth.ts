@@ -1,11 +1,7 @@
 import express from "express";
 import { AuthController } from "../controllers/auth";
 import { authenticateAccessToken } from "../middleware/authenticateToken";
-import {
-  signUpValidation,
-  loginValidation,
-  logoutValidation,
-} from "../utils/validation";
+import { signUpValidation, loginValidation } from "../utils/validation";
 
 const authRouter = express.Router();
 const controller = new AuthController();

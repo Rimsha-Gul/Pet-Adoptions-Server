@@ -21,15 +21,15 @@ export const loginValidation = (data: any): Joi.ValidationResult =>
     password: passwordSchema.required(),
   }).validate(data);
 
-export const logoutValidation = (data: any): Joi.ValidationResult =>
-  Joi.object({
-    refreshToken: refreshTokenSchema.required(),
-  }).validate(data);
+// export const logoutValidation = (data: any): Joi.ValidationResult =>
+//   Joi.object({
+//     refreshToken: refreshTokenSchema.required(),
+//   }).validate(data);
 
-export const sessionValidation = (data: any): Joi.ValidationResult =>
-  Joi.object({
-    authorization: Joi.string()
-      .required()
-      .pattern(/^Bearer [a-zA-Z0-9\-._~+/]+=*$/),
-    accessToken: accessTokenSchema.required(),
-  }).validate(data);
+// export const sessionValidation = (data: any): Joi.ValidationResult =>
+//   Joi.object({
+//     authorization: Joi.string()
+//       .required()
+//       .pattern(/^Bearer [a-zA-Z0-9\-._~+/]+=*$/),
+//     accessToken: accessTokenSchema.required(),
+//   }).validate(data);

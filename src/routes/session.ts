@@ -1,7 +1,7 @@
 import express from "express";
 import { SessionController } from "../controllers/session";
 import { authenticateAccessToken } from "../middleware/authenticateToken";
-import { sessionValidation } from "../utils/validation";
+//import { sessionValidation } from "../utils/validation";
 
 const sessionRouter = express.Router();
 
