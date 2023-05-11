@@ -2,8 +2,6 @@ import express, { Express } from 'express'
 import dotenv from 'dotenv'
 import mongoose, { ConnectOptions } from 'mongoose'
 import router from './routes'
-import session from 'express-session'
-import cookieParser from 'cookie-parser'
 
 dotenv.config()
 
