@@ -1,6 +1,6 @@
-import User from '../models/User'
-import { SessionResponse } from '../models/User'
-import { Example, Get, Hidden, Query, Route, Security, Tags } from 'tsoa'
+import User, { SessionResponse } from '../models/User'
+import { UserRequest } from 'src/types/Request'
+import { Example, Get, Request, Route, Security, Tags } from 'tsoa'
 
 @Security('bearerAuth')
 @Route('session')
@@ -15,14 +15,12 @@ export class SessionController {
     address: '123 Main St'
   })
   @Get('/')
-  public async session(
-    @Query('req') @Hidden() req?: any
-  ): Promise<SessionResponse> {
+  public async session(@Request() req: UserRequest): Promise<SessionResponse> {
     return session(req)
   }
 }
 
-const session = async (req: any) => {
+const session = async (req: UserRequest) => {
   const email = req.user!.email
   const user = await User.findOne({ email })
   return {

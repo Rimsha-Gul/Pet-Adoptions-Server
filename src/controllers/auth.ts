@@ -13,9 +13,8 @@ import {
   Body,
   Delete,
   Example,
-  Hidden,
   Post,
-  Query,
+  Request,
   Route,
   Security,
   Tags
@@ -61,7 +60,7 @@ export class AuthController {
    */
   @Security('bearerAuth')
   @Delete('/logout')
-  public async logout(@Query('req') @Hidden() req?: any) {
+  public async logout(@Request() req: UserRequest) {
     return logout(req)
   }
 }

@@ -23,7 +23,7 @@ mongoose
   })
 
 /***********************************
- *        Listing for requests     *
+ *      Listening for requests     *
  ***********************************/
 const app: Express = express()
 
