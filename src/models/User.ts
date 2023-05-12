@@ -13,14 +13,6 @@ export interface UserPayload {
   password: string
 }
 
-export interface UserResponse extends TokenResponse, UserPayload {}
-
-export interface SignupResponse extends TokenResponse {
-  name: string
-  email: string
-  address: string
-}
-
 export interface LoginPayload {
   email: string
   password: string
@@ -29,6 +21,10 @@ export interface LoginPayload {
 export interface TokenResponse {
   tokens: { accessToken: string; refreshToken: string }
 }
+
+export interface UserResponse extends TokenResponse, UserPayload {}
+
+export interface SignupResponse extends SessionResponse, TokenResponse {}
 
 export interface SessionResponse {
   name: string

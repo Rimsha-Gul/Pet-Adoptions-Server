@@ -1,36 +1,31 @@
-import User from "../models/User";
-import { removeTokensInDB } from "./removeTokensInDB";
-import { RequestUser } from "../types/RequestUser";
+import User from '../models/User'
+import { RequestUser } from '../types/RequestUser'
 
 export const fetchLatestAutoExec = async (
   reqUser: RequestUser
 ): Promise<RequestUser | undefined> => {
-  const dbUser = await User.findOne({ email: reqUser.email });
+  const dbUser = await User.findOne({ email: reqUser.email })
 
-  if (!dbUser) return undefined;
+  if (!dbUser) return undefined
 
   return {
-    email: dbUser.email,
-  };
-};
+    email: dbUser.email
+  }
+}
 
-export const verifyTokenInDB = async (
-  email: string,
-  token: string,
-  tokenType: "accessToken" | "refreshToken"
-) => {
-  const user = await User.findOne({ email });
-  if (!user) return undefined;
+export const verifyTokenInDB = async (email: string, token: string) => {
+  const user = await User.findOne({ email })
+  if (!user) return undefined
 
-  let currentTokenObj;
+  let currentTokenObj
   if (user.tokens.accessToken === token || user.tokens.refreshToken === token) {
-    currentTokenObj = token;
+    currentTokenObj = token
   }
 
-  if (!currentTokenObj) return undefined;
+  if (!currentTokenObj) return undefined
   else {
     return {
-      email: user.email,
-    };
+      email: user.email
+    }
   }
-};
+}

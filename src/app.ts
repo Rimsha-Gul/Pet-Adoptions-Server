@@ -2,20 +2,13 @@ import express, { Express } from 'express'
 import dotenv from 'dotenv'
 import mongoose, { ConnectOptions } from 'mongoose'
 import router from './routes'
+import path from 'path'
 
 dotenv.config()
 
-const app: Express = express()
-
-app.use(express.json())
-app.use('/', router)
-
-const port = process.env.PORT
-
-app.listen(`${port}`, () => {
-  console.log(`⚡️[server]: Server is running at http://localhost:${port}`)
-})
-
+/***********************************
+ *         Mongo DB Connection      *
+ ***********************************/
 mongoose.Promise = Promise
 mongoose
   .connect(`${process.env.MONGO_URI}`, {
@@ -28,3 +21,19 @@ mongoose
   .catch((err) => {
     console.error('MongoDB Connection Error: ', err)
   })
+
+/***********************************
+ *        Listing for requests     *
+ ***********************************/
+const app: Express = express()
+
+app.use(express.json())
+
+app.use(express.static(path.join(__dirname, '../public')))
+app.use('/', router)
+
+const port = process.env.PORT
+
+app.listen(`${port}`, () => {
+  console.log(`⚡️[server]: Server is running at http://localhost:${port}`)
+})

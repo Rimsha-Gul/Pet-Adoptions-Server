@@ -43,7 +43,7 @@ export class AuthController {
   }
 
   /**
-   * @summary Verifies the user's email and password and returns JWT eokens
+   * @summary Verifies the user's email and password and returns JWT tokens
    */
   @Example<TokenResponse>({
     tokens: {
@@ -57,7 +57,7 @@ export class AuthController {
   }
 
   /**
-   * @summary Removes JWT tokens and returns nothing
+   * @summary Removes JWT tokens and returns success message
    */
   @Security('bearerAuth')
   @Delete('/logout')
@@ -129,4 +129,5 @@ const login = async (body: LoginPayload): Promise<TokenResponse> => {
 
 const logout = async (req: UserRequest) => {
   await removeTokensInDB(req.user!.email)
+  return 'Logout successful'
 }

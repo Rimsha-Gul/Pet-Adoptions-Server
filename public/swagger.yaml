@@ -138,7 +138,7 @@ paths:
                             examples:
                                 'Example 1':
                                     value: {tokens: {accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..., refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...}}
-            summary: 'Verifies the user''s email and password and returns JWT eokens'
+            summary: 'Verifies the user''s email and password and returns JWT tokens'
             tags:
                 - Auth
             security: []
@@ -153,8 +153,12 @@ paths:
         delete:
             operationId: Logout
             responses:
-                '204':
-                    description: 'No content'
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                type: string
             summary: 'Removes JWT tokens and returns nothing'
             tags:
                 - Auth

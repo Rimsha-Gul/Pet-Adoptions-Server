@@ -11,9 +11,9 @@ authRouter.post('/signup', async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message)
   try {
     const response = await controller.signup(req.body)
-    res.send(response)
+    return res.send(response)
   } catch (err: any) {
-    res.status(err.code).send(err.message)
+    return res.status(err.code).send(err.message)
   }
 })
 
@@ -22,21 +22,19 @@ authRouter.post('/login', async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message)
   try {
     const response = await controller.login(req.body)
-    res.send(response)
+    return res.send(response)
   } catch (err: any) {
-    res.status(err.code).send(err.message)
+    return res.status(err.code).send(err.message)
   }
 })
 
 authRouter.delete('/logout', authenticateAccessToken, async (req, res) => {
-  // const { error, value: body } = logoutValidation(req.body);
-  // if (error) return res.status(400).send(error.details[0].message);
   try {
-    await controller.logout(req)
+    const response = await controller.logout(req)
+    return res.send(response)
   } catch (err: any) {
-    res.status(err.code).send(err.message)
+    return res.status(err.code).send(err.message)
   }
-  res.sendStatus(204)
 })
 
 export default authRouter

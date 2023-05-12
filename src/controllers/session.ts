@@ -1,4 +1,3 @@
-//import { UserRequest } from "../types/Request";
 import User from '../models/User'
 import { SessionResponse } from '../models/User'
 import { Example, Get, Hidden, Query, Route, Security, Tags } from 'tsoa'
@@ -8,7 +7,7 @@ import { Example, Get, Hidden, Query, Route, Security, Tags } from 'tsoa'
 @Tags('Session')
 export class SessionController {
   /**
-   * @summary Get session info
+   * @summary Get a user's session info
    */
   @Example<SessionResponse>({
     name: 'John Doe',
