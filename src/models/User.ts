@@ -36,7 +36,7 @@ export interface UserDocument extends UserResponse, Document {}
 
 export interface UpdatedUser {
   email: string
-  address?: String
+  address?: string
 }
 
 export interface UpdatedUserResponse {

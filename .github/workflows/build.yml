@@ -1,0 +1,53 @@
+name: Lint and build app
+
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: npm
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run linters
+      run: npm run lint
+      
+  build:
+    needs: lint
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [lts/*]
+        
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build app
+        run: npm run build
+        env:
+          PORT: ${{env.PORT}}
+          MONGO_URI: ${{env.MONGO_URI}}
+          ACCESS_TOKEN_SECRET: ${{env.ACCESS_TOKEN_SECRET}}
+          REFRESH_TOKEN_SECRET: ${{env.REFRESH_TOKEN_SECRET}}
+          SESSION_SECRET: ${{env.SESSION_SECRET}}
