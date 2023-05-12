@@ -1,5 +1,6 @@
 import User, { SessionResponse } from '../models/User'
 import { UserRequest } from 'src/types/Request'
+import { RequestUser } from 'src/types/RequestUser'
 import { Example, Get, Request, Route, Security, Tags } from 'tsoa'
 
 @Security('bearerAuth')
@@ -21,11 +22,14 @@ export class SessionController {
 }
 
 const session = async (req: UserRequest) => {
-  const email = req.user!.email
+  const email = (req.user as RequestUser).email
   const user = await User.findOne({ email })
-  return {
-    name: user!.name,
-    email: user!.email,
-    address: user!.address
+  if (user) {
+    return {
+      name: user.name,
+      email: user.email,
+      address: user.address
+    }
   }
+  throw 'User not found'
 }

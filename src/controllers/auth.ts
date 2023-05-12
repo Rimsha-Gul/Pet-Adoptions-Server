@@ -19,6 +19,7 @@ import {
   Security,
   Tags
 } from 'tsoa'
+import { RequestUser } from 'src/types/RequestUser'
 
 @Route('auth')
 @Tags('Auth')
@@ -127,6 +128,6 @@ const login = async (body: LoginPayload): Promise<TokenResponse> => {
 }
 
 const logout = async (req: UserRequest) => {
-  await removeTokensInDB(req.user!.email)
+  await removeTokensInDB((req.user as RequestUser).email)
   return 'Logout successful'
 }
