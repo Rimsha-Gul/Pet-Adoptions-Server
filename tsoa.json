@@ -1,0 +1,26 @@
+{
+  "entryFile": "src/app.ts",
+  "noImplicitAdditionalProperties": "throw-on-extras",
+  "spec": {
+    "outputDirectory": "public",
+    "securityDefinitions": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "tags": [
+      {
+        "name": "Auth",
+        "description": "Operations about auth"
+      },
+      {
+        "name": "Session",
+        "description": "Get Session information"
+      }
+    ],
+    "yaml": true,
+    "specVersion": 3
+  }
+}
