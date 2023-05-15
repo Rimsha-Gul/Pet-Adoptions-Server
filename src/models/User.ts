@@ -34,11 +34,8 @@ export interface SessionResponse {
 }
 
 export interface UserDocument extends UserResponse, Document {
-  hashPassword(password: string): Promise<string>
-  comparePassword(
-    enteredPassword: string,
-    hashedPassword: string
-  ): Promise<boolean>
+  hashPassword(): Promise<void>
+  comparePassword(enteredPassword: string): Promise<boolean>
 }
 
 export interface UpdatedUser {
@@ -65,16 +62,26 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-UserSchema.statics.hashPassword = async function (password: string) {
-  return await bcrypt.hash(password, 10)
+UserSchema.methods.hashPassword = async function (): Promise<void> {
+  this.password = await bcrypt.hash(this.password, 10)
 }
 
-UserSchema.statics.comparePassword = async function (
-  enteredPassword,
-  hashedPassword
-) {
-  return await bcrypt.compare(enteredPassword, hashedPassword)
+UserSchema.methods.comparePassword = async function (
+  enteredPassword: string
+): Promise<boolean> {
+  return await bcrypt.compare(enteredPassword, this.password)
 }
+
+// UserSchema.statics.hashPassword = async function (password: string) {
+//   return await bcrypt.hash(password, 10)
+// }
+
+// UserSchema.statics.comparePassword = async function (
+//   enteredPassword,
+//   hashedPassword
+// ) {
+//   return await bcrypt.compare(enteredPassword, hashedPassword)
+// }
 //UserSchema.plugin(AutoIncrement, { inc_field: "id" });
 
 const User: Model<UserDocument> = mongoose.model<UserDocument>(
