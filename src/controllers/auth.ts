@@ -80,10 +80,9 @@ const signup = async (body: UserPayload): Promise<SignupResponse> => {
   const user = new User({
     name: name,
     email: email,
-    address: address,
-    password: password
+    address: address
   })
-  await user.hashPassword()
+  user.password = User.hashPassword(password)
   await user.save()
   //user.password = await user.hashPassword(password)
   const accessToken = generateAccessToken(user.email)
@@ -109,9 +108,8 @@ const login = async (body: LoginPayload): Promise<TokenResponse> => {
     throw 'User not found'
   }
 
-  const isExpectedPassword = await user.comparePassword(password)
-  if (!isExpectedPassword) {
-    console.log('invalid')
+  const isCorrectPassword = user.comparePassword(password)
+  if (!isCorrectPassword) {
     throw 'Invalid credentials'
   }
 

@@ -1,4 +1,4 @@
-import mongoose, { Model } from 'mongoose'
+import { model, Model, Schema } from 'mongoose'
 import bcrypt from 'bcrypt'
 
 //import mongooseSequence from "mongoose-sequence";
@@ -33,9 +33,20 @@ export interface SessionResponse {
   address: string
 }
 
+// interface IUserModel extends Model<IUser> {
+//   hashPassword(password: string): string
+// }
+
 export interface UserDocument extends UserResponse, Document {
-  hashPassword(): Promise<void>
-  comparePassword(enteredPassword: string): Promise<boolean>
+  hashPassword(password: string): string
+  comparePassword(password: string): boolean
+}
+
+export interface IUser extends UserDocument {
+  comparePassword(password: string): boolean
+}
+interface IUserModel extends Model<IUser> {
+  hashPassword(password: string): string
 }
 
 export interface UpdatedUser {
@@ -48,7 +59,7 @@ export interface UpdatedUserResponse {
   user?: UpdatedUser
 }
 
-const UserSchema = new mongoose.Schema(
+const UserSchema = new Schema<UserDocument>(
   {
     name: { type: String, required: true },
     email: { type: String, required: true },
@@ -62,30 +73,20 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-UserSchema.methods.hashPassword = async function (): Promise<void> {
-  this.password = await bcrypt.hash(this.password, 10)
-}
+// Static Method to hash password
+UserSchema.static('hashPassword', function (password: string): string {
+  const salt = bcrypt.genSaltSync(10)
+  return bcrypt.hashSync(password, salt)
+})
 
-UserSchema.methods.comparePassword = async function (
-  enteredPassword: string
-): Promise<boolean> {
-  return await bcrypt.compare(enteredPassword, this.password)
-}
+// Instance Method to compare passwords
+UserSchema.method('comparePassword', function (password: string): boolean {
+  if (bcrypt.compareSync(password, this.password)) return true
+  return false
+})
 
-// UserSchema.statics.hashPassword = async function (password: string) {
-//   return await bcrypt.hash(password, 10)
-// }
-
-// UserSchema.statics.comparePassword = async function (
-//   enteredPassword,
-//   hashedPassword
-// ) {
-//   return await bcrypt.compare(enteredPassword, hashedPassword)
-// }
 //UserSchema.plugin(AutoIncrement, { inc_field: "id" });
 
-const User: Model<UserDocument> = mongoose.model<UserDocument>(
-  'user',
-  UserSchema
-)
+export const User: IUserModel = model<IUser, IUserModel>('User', UserSchema)
+
 export default User
