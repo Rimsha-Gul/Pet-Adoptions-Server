@@ -1,4 +1,5 @@
 import mongoose, { Model } from 'mongoose'
+import bcrypt from 'bcrypt'
 
 //import mongooseSequence from "mongoose-sequence";
 
@@ -32,7 +33,13 @@ export interface SessionResponse {
   address: string
 }
 
-export interface UserDocument extends UserResponse, Document {}
+export interface UserDocument extends UserResponse, Document {
+  hashPassword(password: string): Promise<string>
+  comparePassword(
+    enteredPassword: string,
+    hashedPassword: string
+  ): Promise<boolean>
+}
 
 export interface UpdatedUser {
   email: string
@@ -58,6 +65,16 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
+UserSchema.statics.hashPassword = async function (password: string) {
+  return await bcrypt.hash(password, 10)
+}
+
+UserSchema.statics.comparePassword = async function (
+  enteredPassword,
+  hashedPassword
+) {
+  return await bcrypt.compare(enteredPassword, hashedPassword)
+}
 //UserSchema.plugin(AutoIncrement, { inc_field: "id" });
 
 const User: Model<UserDocument> = mongoose.model<UserDocument>(
