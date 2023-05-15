@@ -1,4 +1,5 @@
-import mongoose, { Model } from 'mongoose'
+import { model, Model, Schema } from 'mongoose'
+import bcrypt from 'bcrypt'
 
 //import mongooseSequence from "mongoose-sequence";
 
@@ -32,7 +33,21 @@ export interface SessionResponse {
   address: string
 }
 
-export interface UserDocument extends UserResponse, Document {}
+// interface IUserModel extends Model<IUser> {
+//   hashPassword(password: string): string
+// }
+
+export interface UserDocument extends UserResponse, Document {
+  hashPassword(password: string): string
+  comparePassword(password: string): boolean
+}
+
+export interface IUser extends UserDocument {
+  comparePassword(password: string): boolean
+}
+interface IUserModel extends Model<IUser> {
+  hashPassword(password: string): string
+}
 
 export interface UpdatedUser {
   email: string
@@ -44,7 +59,7 @@ export interface UpdatedUserResponse {
   user?: UpdatedUser
 }
 
-const UserSchema = new mongoose.Schema(
+const UserSchema = new Schema<UserDocument>(
   {
     name: { type: String, required: true },
     email: { type: String, required: true },
@@ -58,10 +73,20 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
+// Static Method to hash password
+UserSchema.static('hashPassword', function (password: string): string {
+  const salt = bcrypt.genSaltSync(10)
+  return bcrypt.hashSync(password, salt)
+})
+
+// Instance Method to compare passwords
+UserSchema.method('comparePassword', function (password: string): boolean {
+  if (bcrypt.compareSync(password, this.password)) return true
+  return false
+})
+
 //UserSchema.plugin(AutoIncrement, { inc_field: "id" });
 
-const User: Model<UserDocument> = mongoose.model<UserDocument>(
-  'user',
-  UserSchema
-)
+export const User: IUserModel = model<IUser, IUserModel>('User', UserSchema)
+
 export default User

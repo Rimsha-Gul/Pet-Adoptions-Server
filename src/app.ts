@@ -6,34 +6,42 @@ import path from 'path'
 
 dotenv.config()
 
-/***********************************
- *         Mongo DB Connection      *
- ***********************************/
-mongoose.Promise = Promise
-mongoose
-  .connect(`${process.env.MONGO_URI}`, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  } as ConnectOptions)
-  .then(() => {
-    console.log('MongoDB Connected')
-  })
-  .catch((err) => {
-    console.error('MongoDB Connection Error: ', err)
-  })
+const startApp = async () => {
+  try {
+    /***********************************
+     *         Mongo DB Connection      *
+     ***********************************/
 
-/***********************************
- *      Listening for requests     *
- ***********************************/
-const app: Express = express()
+    await mongoose
+      .connect(`${process.env.MONGO_URI}`, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+      } as ConnectOptions)
+      .then(() => {
+        console.log('MongoDB Connected')
+      })
+      .catch((err) => {
+        console.error('MongoDB Connection Error: ', err)
+      })
 
-app.use(express.json())
+    /***********************************
+     *      Listening for requests     *
+     ***********************************/
+    const app: Express = express()
 
-app.use(express.static(path.join(__dirname, '../public')))
-app.use('/', router)
+    app.use(express.json())
 
-const port = process.env.PORT
+    app.use(express.static(path.join(__dirname, '../public')))
+    app.use('/', router)
 
-app.listen(`${port}`, () => {
-  console.log(`⚡️[server]: Server is running at http://localhost:${port}`)
-})
+    const port = process.env.PORT
+
+    app.listen(`${port}`, () => {
+      console.log(`⚡️[server]: Server is running at http://localhost:${port}`)
+    })
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+startApp()

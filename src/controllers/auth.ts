@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt'
 import User, {
   LoginPayload,
   SignupResponse,
@@ -72,22 +71,20 @@ const signup = async (body: UserPayload): Promise<SignupResponse> => {
   // user creation
   // token generation
   const { name, email, address, password } = body
-
   const existingUser = await User.findOne({ email })
 
   if (existingUser) {
     throw 'User already exists.'
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10)
-
   const user = new User({
     name: name,
     email: email,
-    address: address,
-    password: hashedPassword
+    address: address
   })
+  user.password = User.hashPassword(password)
   await user.save()
+  //user.password = await user.hashPassword(password)
   const accessToken = generateAccessToken(user.email)
   const refreshToken = generateRefreshToken(user.email)
   user.tokens = {
@@ -111,8 +108,8 @@ const login = async (body: LoginPayload): Promise<TokenResponse> => {
     throw 'User not found'
   }
 
-  const expectedPassword = await bcrypt.compare(password, user.password)
-  if (!expectedPassword) {
+  const isCorrectPassword = user.comparePassword(password)
+  if (!isCorrectPassword) {
     throw 'Invalid credentials'
   }
 
