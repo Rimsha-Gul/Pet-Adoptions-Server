@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import mongoose, { ConnectOptions } from 'mongoose'
 import router from './routes'
 import path from 'path'
+import cors from 'cors'
 
 dotenv.config()
 
@@ -30,6 +31,7 @@ const startApp = async () => {
     const app: Express = express()
 
     app.use(express.json())
+    app.use(cors())
 
     app.use(express.static(path.join(__dirname, '../public')))
     app.use('/', router)

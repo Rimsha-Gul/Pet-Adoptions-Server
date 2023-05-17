@@ -18,7 +18,8 @@ import {
   Security,
   Tags
 } from 'tsoa'
-import { RequestUser } from 'src/types/RequestUser'
+import { RequestUser } from '../types/RequestUser'
+import { sendSignupEmail } from '../middleware/sendSignUpEmail'
 
 @Route('auth')
 @Tags('Auth')
@@ -84,7 +85,14 @@ const signup = async (body: UserPayload): Promise<SignupResponse> => {
   })
   user.password = User.hashPassword(password)
   await user.save()
-  //user.password = await user.hashPassword(password)
+
+  try {
+    await sendSignupEmail()
+    console.log('Signup email sent successfully')
+  } catch (error) {
+    console.error('Error sending signup email:', error)
+  }
+
   const accessToken = generateAccessToken(user.email)
   const refreshToken = generateRefreshToken(user.email)
   user.tokens = {
