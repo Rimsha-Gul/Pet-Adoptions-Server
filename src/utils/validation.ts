@@ -7,7 +7,7 @@ const passwordSchema = Joi.string().min(6).max(1024)
 
 export const signUpValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    name: usernameSchema.required(),
+    username: usernameSchema.required(),
     email: emailSchema.required(),
     address: addressSchema.required(),
     password: passwordSchema.required()

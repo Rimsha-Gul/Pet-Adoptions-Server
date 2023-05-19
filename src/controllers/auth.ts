@@ -2,7 +2,9 @@ import User, {
   LoginPayload,
   SignupResponse,
   UserPayload,
-  TokenResponse
+  TokenResponse,
+  VerificationResponse,
+  VerificationPayload
 } from '../models/User'
 import { generateAccessToken } from '../utils/generateAccessToken'
 import { generateRefreshToken } from '../utils/generateRefreshToken'
@@ -20,6 +22,7 @@ import {
 } from 'tsoa'
 import { RequestUser } from '../types/RequestUser'
 import { sendSignupEmail } from '../middleware/sendSignUpEmail'
+import { generateVerificationCode } from '../utils/generateVerificationCode'
 
 @Route('auth')
 @Tags('Auth')
@@ -29,17 +32,31 @@ export class AuthController {
    *
    */
   @Example<SignupResponse>({
-    name: 'John Doe',
+    username: 'John Doe',
     email: 'johndoe@example.com',
-    address: '123 Main St',
+    address: '123 Main St'
+  })
+  @Post('/signup')
+  public async signup(@Body() body: UserPayload): Promise<SignupResponse> {
+    return signup(body)
+  }
+
+  /**
+   * @summary Accepts a 6-digit code from user, verifies the code in db
+   *
+   */
+  @Example<VerificationResponse>({
+    isVerified: true,
     tokens: {
       accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
       refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
     }
   })
-  @Post('/signup')
-  public async signup(@Body() body: UserPayload): Promise<SignupResponse> {
-    return signup(body)
+  @Post('/verifyEmail')
+  public async verifyEmail(
+    @Body() body: VerificationPayload
+  ): Promise<VerificationResponse> {
+    return verifyEmail(body)
   }
 
   /**
@@ -52,8 +69,8 @@ export class AuthController {
     }
   })
   @Post('/login')
-  public async login(@Body() req: LoginPayload): Promise<TokenResponse> {
-    return login(req)
+  public async login(@Body() body: LoginPayload): Promise<TokenResponse> {
+    return login(body)
   }
 
   /**
@@ -71,7 +88,7 @@ const signup = async (body: UserPayload): Promise<SignupResponse> => {
   // hashed password
   // user creation
   // token generation
-  const { name, email, address, password } = body
+  const { username, email, address, password } = body
   const existingUser = await User.findOne({ email })
 
   if (existingUser) {
@@ -79,31 +96,51 @@ const signup = async (body: UserPayload): Promise<SignupResponse> => {
   }
 
   const user = new User({
-    name: name,
+    username: username,
     email: email,
     address: address
   })
   user.password = User.hashPassword(password)
   await user.save()
 
+  const verificationCode: string = generateVerificationCode()
   try {
-    await sendSignupEmail()
+    await sendSignupEmail(verificationCode, user.email)
     console.log('Signup email sent successfully')
   } catch (error) {
     console.error('Error sending signup email:', error)
   }
+  user.verificationCode = verificationCode
 
-  const accessToken = generateAccessToken(user.email)
-  const refreshToken = generateRefreshToken(user.email)
-  user.tokens = {
-    accessToken: accessToken,
-    refreshToken: refreshToken
+  await user.save()
+  return {
+    username: user.username,
+    email: user.email,
+    address: user.address
+  }
+}
+
+const verifyEmail = async (
+  body: VerificationPayload
+): Promise<VerificationResponse> => {
+  const { email, verificationCode } = body
+  const user = await User.findOne({ email })
+  if (!user) {
+    throw 'User not found'
+  }
+
+  if (verificationCode == user.verificationCode) {
+    user.isVerified = true
+    const accessToken = generateAccessToken(user.email)
+    const refreshToken = generateRefreshToken(user.email)
+    user.tokens = {
+      accessToken: accessToken,
+      refreshToken: refreshToken
+    }
   }
   await user.save()
   return {
-    name: user.name,
-    email: user.email,
-    address: user.address,
+    isVerified: user.isVerified,
     tokens: user.tokens
   }
 }

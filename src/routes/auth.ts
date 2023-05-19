@@ -17,6 +17,15 @@ authRouter.post('/signup', async (req, res) => {
   }
 })
 
+authRouter.post('/verifyEmail', async (req, res) => {
+  try {
+    const response = await controller.verifyEmail(req.body)
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(401).send(err.message)
+  }
+})
+
 authRouter.post('/login', async (req, res) => {
   const { error } = loginValidation(req.body)
   if (error) return res.status(400).send(error.details[0].message)

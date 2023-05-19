@@ -7,7 +7,7 @@ components:
     schemas:
         SignupResponse:
             properties:
-                name:
+                username:
                     type: string
                 email:
                     type: string
@@ -24,7 +24,7 @@ components:
                         - accessToken
                     type: object
             required:
-                - name
+                - username
                 - email
                 - address
                 - tokens
@@ -32,7 +32,7 @@ components:
             additionalProperties: false
         UserPayload:
             properties:
-                name:
+                username:
                     type: string
                 email:
                     type: string
@@ -41,10 +41,29 @@ components:
                 password:
                     type: string
             required:
-                - name
+                - username
                 - email
                 - address
                 - password
+            type: object
+            additionalProperties: false
+        VerificationResponse:
+            properties:
+                isVerified:
+                    type: boolean
+            required:
+                - isVerified
+            type: object
+            additionalProperties: false
+        VerificationPayload:
+            properties:
+                email:
+                    type: string
+                verificationCode:
+                    type: string
+            required:
+                - email
+                - verificationCode
             type: object
             additionalProperties: false
         TokenResponse:
@@ -76,14 +95,14 @@ components:
             additionalProperties: false
         SessionResponse:
             properties:
-                name:
+                username:
                     type: string
                 email:
                     type: string
                 address:
                     type: string
             required:
-                - name
+                - username
                 - email
                 - address
             type: object
@@ -113,7 +132,7 @@ paths:
                                 $ref: '#/components/schemas/SignupResponse'
                             examples:
                                 'Example 1':
-                                    value: {name: 'John Doe', email: johndoe@example.com, address: '123 Main St', tokens: {accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..., refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...}}
+                                    value: {username: 'John Doe', email: johndoe@example.com, address: '123 Main St', tokens: {accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..., refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...}}
             summary: 'Accepts user info, creates user and returns user info along JWT tokens'
             tags:
                 - Auth
@@ -125,6 +144,30 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/UserPayload'
+    /auth/verifyEmail:
+        post:
+            operationId: VerifyEmail
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/VerificationResponse'
+                            examples:
+                                'Example 1':
+                                    value: {isVerified: true}
+            summary: 'Accepts a 6-digit code from user, verifies the code in db'
+            tags:
+                - Auth
+            security: []
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/VerificationPayload'
     /auth/login:
         post:
             operationId: Login
@@ -178,7 +221,7 @@ paths:
                                 $ref: '#/components/schemas/SessionResponse'
                             examples:
                                 'Example 1':
-                                    value: {name: 'John Doe', email: johndoe@example.com, address: '123 Main St'}
+                                    value: {username: 'John Doe', email: johndoe@example.com, address: '123 Main St'}
             summary: 'Get a user''s session info'
             tags:
                 - Session
