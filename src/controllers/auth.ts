@@ -4,7 +4,8 @@ import User, {
   UserPayload,
   TokenResponse,
   VerificationResponse,
-  VerificationPayload
+  VerificationPayload,
+  ResendCodePayload
 } from '../models/User'
 import { generateAccessToken } from '../utils/generateAccessToken'
 import { generateRefreshToken } from '../utils/generateRefreshToken'
@@ -57,6 +58,15 @@ export class AuthController {
     @Body() body: VerificationPayload
   ): Promise<VerificationResponse> {
     return verifyEmail(body)
+  }
+
+  /**
+   * @summary Generates a 6-digit code and sends it
+   *
+   */
+  @Post('/resendCode')
+  public async resendCode(@Body() body: ResendCodePayload) {
+    return resendCode(body)
   }
 
   /**
@@ -129,7 +139,15 @@ const verifyEmail = async (
     throw 'User not found'
   }
 
-  if (verificationCode == user.verificationCode) {
+  const currentTimestamp = Date.now()
+  const userUpdationTimestamp = user.get('updatedAt').getTime()
+  const timeDifference = currentTimestamp - userUpdationTimestamp
+  console.log(timeDifference)
+  if (timeDifference > 60000) {
+    throw 'Verification code expired'
+  }
+
+  if (verificationCode === user.verificationCode) {
     user.isVerified = true
     const accessToken = generateAccessToken(user.email)
     const refreshToken = generateRefreshToken(user.email)
@@ -142,6 +160,23 @@ const verifyEmail = async (
   return {
     isVerified: user.isVerified,
     tokens: user.tokens
+  }
+}
+
+const resendCode = async (body: ResendCodePayload) => {
+  console.log(body)
+  const { email } = body
+  const user = await User.findOne({ email })
+  if (!user) throw 'User not found'
+  const verificationCode: string = generateVerificationCode()
+  try {
+    console.log(email)
+    await sendSignupEmail(verificationCode, user.email)
+    user.verificationCode = verificationCode
+    await user.save()
+    return 'Signup email sent successfully'
+  } catch (error) {
+    throw 'Error sending signup email'
   }
 }
 
@@ -158,15 +193,29 @@ const login = async (body: LoginPayload): Promise<TokenResponse> => {
     throw 'Invalid credentials'
   }
 
-  const accessToken = generateAccessToken(user.email)
-  const refreshToken = generateRefreshToken(user.email)
+  if (!user.isVerified) {
+    const verificationCode: string = generateVerificationCode()
+    try {
+      await sendSignupEmail(verificationCode, user.email)
+      console.log('Signup email sent successfully')
+      user.verificationCode = verificationCode
+      await user.save()
+    } catch (error) {
+      throw 'Error sending signup email'
+    }
+    throw 'User not verified'
+  } else {
+    // if user is verified, generate the tokens
+    const accessToken = generateAccessToken(user.email)
+    const refreshToken = generateRefreshToken(user.email)
 
-  user.tokens = {
-    accessToken: accessToken,
-    refreshToken: refreshToken
+    user.tokens = {
+      accessToken: accessToken,
+      refreshToken: refreshToken
+    }
+    await user.save()
+    return { tokens: user.tokens }
   }
-  await user.save()
-  return { tokens: user.tokens }
 }
 
 const logout = async (req: UserRequest) => {

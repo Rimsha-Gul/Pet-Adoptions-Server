@@ -1,4 +1,4 @@
-import { model, Model, Schema } from 'mongoose'
+import { model, Document, Model, Schema } from 'mongoose'
 import bcrypt from 'bcrypt'
 
 //import mongooseSequence from "mongoose-sequence";
@@ -17,6 +17,10 @@ export interface UserPayload {
 export interface LoginPayload {
   email: string
   password: string
+}
+
+export interface ResendCodePayload {
+  email: string
 }
 
 export interface VerificationPayload {

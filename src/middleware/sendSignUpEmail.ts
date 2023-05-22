@@ -5,7 +5,7 @@ export const sendSignupEmail = async (
   recipientEmail: string
 ): Promise<void> => {
   const mailOptions = {
-    from: process.env.NODEMAILER_USER,
+    from: 'purrfectadoptions161@gmail.com',
     to: `${recipientEmail}`,
     subject: 'Purrfect Adoptions - Email Verification',
     text: `Your email verification code is: ${verificationCode}. Do not share this code with anyone else.`
