@@ -26,10 +26,10 @@ authRouter.post('/verifyEmail', async (req, res) => {
   }
 })
 
-authRouter.post('/resendCode', async (req, res) => {
+authRouter.post('/sendVerificationCode', async (req, res) => {
   try {
     console.log(req.body)
-    const response = await controller.resendCode(req.body)
+    const response = await controller.sendVerificationCode(req.body)
     return res.send(response)
   } catch (err: any) {
     return res.status(403).send(err.message)

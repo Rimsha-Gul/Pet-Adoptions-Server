@@ -5,7 +5,7 @@ import User, {
   TokenResponse,
   VerificationResponse,
   VerificationPayload,
-  ResendCodePayload
+  SendCodePayload
 } from '../models/User'
 import { generateAccessToken } from '../utils/generateAccessToken'
 import { generateRefreshToken } from '../utils/generateRefreshToken'
@@ -43,6 +43,15 @@ export class AuthController {
   }
 
   /**
+   * @summary Generates a 6-digit code and sends it
+   *
+   */
+  @Post('/sendVerificationCode')
+  public async sendVerificationCode(@Body() body: SendCodePayload) {
+    return sendVerificationCode(body)
+  }
+
+  /**
    * @summary Accepts a 6-digit code from user, verifies the code in db
    *
    */
@@ -58,15 +67,6 @@ export class AuthController {
     @Body() body: VerificationPayload
   ): Promise<VerificationResponse> {
     return verifyEmail(body)
-  }
-
-  /**
-   * @summary Generates a 6-digit code and sends it
-   *
-   */
-  @Post('/resendCode')
-  public async resendCode(@Body() body: ResendCodePayload) {
-    return resendCode(body)
   }
 
   /**
@@ -113,20 +113,49 @@ const signup = async (body: UserPayload): Promise<SignupResponse> => {
   user.password = User.hashPassword(password)
   await user.save()
 
-  const verificationCode: string = generateVerificationCode()
-  try {
-    await sendSignupEmail(verificationCode, user.email)
-    console.log('Signup email sent successfully')
-  } catch (error) {
-    console.error('Error sending signup email:', error)
-  }
-  user.verificationCode = verificationCode
+  // const verificationCode: string = generateVerificationCode()
+  // try {
+  //   await sendSignupEmail(verificationCode, user.email)
+  //   console.log('Signup email sent successfully')
+  // } catch (error) {
+  //   console.error('Error sending signup email:', error)
+  // }
+  // user.verificationCode = verificationCode
 
   await user.save()
   return {
     username: user.username,
     email: user.email,
     address: user.address
+  }
+}
+
+const sendVerificationCode = async (body: SendCodePayload) => {
+  console.log(body)
+  const { email } = body
+  const user = await User.findOne({ email })
+  if (!user) throw 'User not found'
+  const verificationCode: string = generateVerificationCode()
+  try {
+    console.log(email)
+    await sendSignupEmail(verificationCode, user.email)
+    if (user.verificationCode.code) {
+      user.verificationCode = {
+        code: verificationCode,
+        createdAt: user.verificationCode.createdAt,
+        updatedAt: new Date()
+      }
+    } else {
+      user.verificationCode = {
+        code: verificationCode,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    }
+    await user.save()
+    return 'Signup email sent successfully'
+  } catch (error) {
+    throw 'Error sending signup email'
   }
 }
 
@@ -147,7 +176,7 @@ const verifyEmail = async (
     throw 'Verification code expired'
   }
 
-  if (verificationCode === user.verificationCode) {
+  if (verificationCode === user.verificationCode.code) {
     user.isVerified = true
     const accessToken = generateAccessToken(user.email)
     const refreshToken = generateRefreshToken(user.email)
@@ -163,23 +192,6 @@ const verifyEmail = async (
   }
 }
 
-const resendCode = async (body: ResendCodePayload) => {
-  console.log(body)
-  const { email } = body
-  const user = await User.findOne({ email })
-  if (!user) throw 'User not found'
-  const verificationCode: string = generateVerificationCode()
-  try {
-    console.log(email)
-    await sendSignupEmail(verificationCode, user.email)
-    user.verificationCode = verificationCode
-    await user.save()
-    return 'Signup email sent successfully'
-  } catch (error) {
-    throw 'Error sending signup email'
-  }
-}
-
 const login = async (body: LoginPayload): Promise<TokenResponse> => {
   const { email, password } = body
 
@@ -190,19 +202,19 @@ const login = async (body: LoginPayload): Promise<TokenResponse> => {
 
   const isCorrectPassword = user.comparePassword(password)
   if (!isCorrectPassword) {
-    throw 'Invalid credentials'
+    throw { code: 403, message: 'Invalid credentials' }
   }
 
   if (!user.isVerified) {
-    const verificationCode: string = generateVerificationCode()
-    try {
-      await sendSignupEmail(verificationCode, user.email)
-      console.log('Signup email sent successfully')
-      user.verificationCode = verificationCode
-      await user.save()
-    } catch (error) {
-      throw 'Error sending signup email'
-    }
+    // const verificationCode: string = generateVerificationCode()
+    // try {
+    //   await sendSignupEmail(verificationCode, user.email)
+    //   console.log('Signup email sent successfully')
+    //   user.verificationCode = verificationCode
+    //   await user.save()
+    // } catch (error) {
+    //   throw 'Error sending signup email'
+    // }
     throw 'User not verified'
   } else {
     // if user is verified, generate the tokens

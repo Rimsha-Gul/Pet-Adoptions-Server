@@ -19,7 +19,7 @@ export interface LoginPayload {
   password: string
 }
 
-export interface ResendCodePayload {
+export interface SendCodePayload {
   email: string
 }
 
@@ -56,7 +56,11 @@ export interface VerificationResponse extends TokenResponse {
 
 export interface UserDocument extends UserResponse, Document {
   isVerified: boolean
-  verificationCode: string
+  verificationCode: {
+    code: string
+    createdAt: Date
+    updatedAt: Date
+  }
   hashPassword(password: string): string
   comparePassword(password: string): boolean
 }
@@ -85,7 +89,11 @@ const UserSchema = new Schema<UserDocument>(
     address: { type: String, required: true },
     password: { type: String, required: true },
     isVerified: { type: Boolean, required: true, default: false },
-    verificationCode: { type: String },
+    verificationCode: {
+      code: { type: String },
+      createdAt: { type: Date },
+      updatedAt: { type: Date }
+    },
     tokens: {
       accessToken: { type: String },
       refreshToken: { type: String }
