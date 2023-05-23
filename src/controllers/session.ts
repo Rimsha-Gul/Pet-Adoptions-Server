@@ -11,7 +11,7 @@ export class SessionController {
    * @summary Get a user's session info
    */
   @Example<SessionResponse>({
-    username: 'John Doe',
+    name: 'John Doe',
     email: 'johndoe@example.com',
     address: '123 Main St'
   })
@@ -26,10 +26,10 @@ const session = async (req: UserRequest) => {
   const user = await User.findOne({ email })
   if (user) {
     return {
-      username: user.username,
+      name: user.name,
       email: user.email,
       address: user.address
     }
   }
-  throw 'User not found'
+  throw { code: 404, message: 'User not found' }
 }

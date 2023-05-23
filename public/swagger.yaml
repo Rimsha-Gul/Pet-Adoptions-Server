@@ -7,21 +7,21 @@ components:
     schemas:
         SignupResponse:
             properties:
-                username:
+                name:
                     type: string
                 email:
                     type: string
                 address:
                     type: string
             required:
-                - username
+                - name
                 - email
                 - address
             type: object
             additionalProperties: false
         UserPayload:
             properties:
-                username:
+                name:
                     type: string
                 email:
                     type: string
@@ -30,7 +30,7 @@ components:
                 password:
                     type: string
             required:
-                - username
+                - name
                 - email
                 - address
                 - password
@@ -103,14 +103,14 @@ components:
             additionalProperties: false
         SessionResponse:
             properties:
-                username:
+                name:
                     type: string
                 email:
                     type: string
                 address:
                     type: string
             required:
-                - username
+                - name
                 - email
                 - address
             type: object
@@ -140,7 +140,7 @@ paths:
                                 $ref: '#/components/schemas/SignupResponse'
                             examples:
                                 'Example 1':
-                                    value: {username: 'John Doe', email: johndoe@example.com, address: '123 Main St'}
+                                    value: {name: 'John Doe', email: johndoe@example.com, address: '123 Main St'}
             summary: 'Accepts user info, creates user and returns user info along JWT tokens'
             tags:
                 - Auth
@@ -250,7 +250,7 @@ paths:
                                 $ref: '#/components/schemas/SessionResponse'
                             examples:
                                 'Example 1':
-                                    value: {username: 'John Doe', email: johndoe@example.com, address: '123 Main St'}
+                                    value: {name: 'John Doe', email: johndoe@example.com, address: '123 Main St'}
             summary: 'Get a user''s session info'
             tags:
                 - Session

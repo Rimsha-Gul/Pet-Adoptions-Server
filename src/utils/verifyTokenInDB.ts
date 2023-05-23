@@ -1,23 +1,10 @@
 import User from '../models/User'
-import { RequestUser } from '../types/RequestUser'
-
-export const fetchLatestAutoExec = async (
-  reqUser: RequestUser
-): Promise<RequestUser | undefined> => {
-  const dbUser = await User.findOne({ email: reqUser.email })
-
-  if (!dbUser) return undefined
-
-  return {
-    email: dbUser.email
-  }
-}
 
 export const verifyTokenInDB = async (email: string, token: string) => {
   const user = await User.findOne({ email })
   if (!user) return undefined
 
-  let currentTokenObj
+  let currentTokenObj: any
   if (user.tokens.accessToken === token || user.tokens.refreshToken === token) {
     currentTokenObj = token
   }

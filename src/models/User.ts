@@ -8,7 +8,7 @@ import bcrypt from 'bcrypt'
 //const AutoIncrement = AutoIncrementFactory(mongoose);
 
 export interface UserPayload {
-  username: string
+  name: string
   email: string
   address: string
   password: string
@@ -35,13 +35,13 @@ export interface TokenResponse {
 export interface UserResponse extends TokenResponse, UserPayload {}
 
 export interface SignupResponse {
-  username: string
+  name: string
   email: string
   address: string
 }
 
 export interface SessionResponse extends SignupResponse {
-  username: string
+  name: string
   email: string
   address: string
 }
@@ -84,7 +84,7 @@ export interface UpdatedUserResponse {
 
 const UserSchema = new Schema<UserDocument>(
   {
-    username: { type: String, required: true },
+    name: { type: String, required: true },
     email: { type: String, required: true },
     address: { type: String, required: true },
     password: { type: String, required: true },

@@ -22,8 +22,9 @@ import {
   Tags
 } from 'tsoa'
 import { RequestUser } from '../types/RequestUser'
-import { sendSignupEmail } from '../middleware/sendSignUpEmail'
+import { sendEmail } from '../middleware/sendEmail'
 import { generateVerificationCode } from '../utils/generateVerificationCode'
+import { getVerificationCodeEmail } from '../data/emailMessages'
 
 @Route('auth')
 @Tags('Auth')
@@ -33,7 +34,7 @@ export class AuthController {
    *
    */
   @Example<SignupResponse>({
-    username: 'John Doe',
+    name: 'John Doe',
     email: 'johndoe@example.com',
     address: '123 Main St'
   })
@@ -98,33 +99,24 @@ const signup = async (body: UserPayload): Promise<SignupResponse> => {
   // hashed password
   // user creation
   // token generation
-  const { username, email, address, password } = body
+  const { name, email, address, password } = body
   const existingUser = await User.findOne({ email })
 
   if (existingUser) {
-    throw 'User already exists.'
+    throw { code: 409, message: 'User already exists.' }
   }
 
   const user = new User({
-    username: username,
+    name: name,
     email: email,
     address: address
   })
   user.password = User.hashPassword(password)
   await user.save()
 
-  // const verificationCode: string = generateVerificationCode()
-  // try {
-  //   await sendSignupEmail(verificationCode, user.email)
-  //   console.log('Signup email sent successfully')
-  // } catch (error) {
-  //   console.error('Error sending signup email:', error)
-  // }
-  // user.verificationCode = verificationCode
-
   await user.save()
   return {
-    username: user.username,
+    name: user.name,
     email: user.email,
     address: user.address
   }
@@ -134,11 +126,11 @@ const sendVerificationCode = async (body: SendCodePayload) => {
   console.log(body)
   const { email } = body
   const user = await User.findOne({ email })
-  if (!user) throw 'User not found'
+  if (!user) throw { code: 404, message: 'User not found' }
   const verificationCode: string = generateVerificationCode()
   try {
-    console.log(email)
-    await sendSignupEmail(verificationCode, user.email)
+    const email = getVerificationCodeEmail(verificationCode)
+    await sendEmail(user.email, email.subject, email.message)
     if (user.verificationCode.code) {
       user.verificationCode = {
         code: verificationCode,
@@ -153,9 +145,9 @@ const sendVerificationCode = async (body: SendCodePayload) => {
       }
     }
     await user.save()
-    return 'Signup email sent successfully'
+    return { code: 200, message: 'Signup email sent successfully' }
   } catch (error) {
-    throw 'Error sending signup email'
+    throw { code: 500, message: 'Error sending signup email' }
   }
 }
 
@@ -164,16 +156,14 @@ const verifyEmail = async (
 ): Promise<VerificationResponse> => {
   const { email, verificationCode } = body
   const user = await User.findOne({ email })
-  if (!user) {
-    throw 'User not found'
-  }
+  if (!user) throw { code: 404, message: 'User not found' }
 
   const currentTimestamp = Date.now()
   const userUpdationTimestamp = user.get('updatedAt').getTime()
   const timeDifference = currentTimestamp - userUpdationTimestamp
   console.log(timeDifference)
   if (timeDifference > 60000) {
-    throw 'Verification code expired'
+    throw { code: 401, message: 'Verification code expired' }
   }
 
   if (verificationCode === user.verificationCode.code) {
@@ -196,26 +186,15 @@ const login = async (body: LoginPayload): Promise<TokenResponse> => {
   const { email, password } = body
 
   const user = await User.findOne({ email })
-  if (!user) {
-    throw 'User not found'
-  }
+  if (!user) throw { code: 404, message: 'User not found' }
 
   const isCorrectPassword = user.comparePassword(password)
   if (!isCorrectPassword) {
-    throw { code: 403, message: 'Invalid credentials' }
+    throw { code: 401, message: 'Invalid credentials' }
   }
 
   if (!user.isVerified) {
-    // const verificationCode: string = generateVerificationCode()
-    // try {
-    //   await sendSignupEmail(verificationCode, user.email)
-    //   console.log('Signup email sent successfully')
-    //   user.verificationCode = verificationCode
-    //   await user.save()
-    // } catch (error) {
-    //   throw 'Error sending signup email'
-    // }
-    throw 'User not verified'
+    throw { code: 403, message: 'User not verified' }
   } else {
     // if user is verified, generate the tokens
     const accessToken = generateAccessToken(user.email)
@@ -232,5 +211,5 @@ const login = async (body: LoginPayload): Promise<TokenResponse> => {
 
 const logout = async (req: UserRequest) => {
   await removeTokensInDB((req.user as RequestUser).email)
-  return 'Logout successful'
+  return { code: 200, message: 'Logout successful' }
 }

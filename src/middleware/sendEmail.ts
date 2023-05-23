@@ -1,14 +1,15 @@
 import transporter from '../plugins/nodemailer.plugin'
 
-export const sendSignupEmail = async (
-  verificationCode: string,
-  recipientEmail: string
+export const sendEmail = async (
+  recipientEmail: string,
+  subject: string,
+  message: string
 ): Promise<void> => {
   const mailOptions = {
     from: process.env.NODEMAILER_USER,
     to: `${recipientEmail}`,
-    subject: 'Purrfect Adoptions - Email Verification',
-    text: `Your email verification code is: ${verificationCode}. Do not share this code with anyone else.`
+    subject: `${subject}`,
+    html: `${message}`
   }
 
   try {

@@ -13,7 +13,7 @@ authRouter.post('/signup', async (req, res) => {
     const response = await controller.signup(req.body)
     return res.send(response)
   } catch (err: any) {
-    return res.status(409).send(err.message)
+    return res.status(err.code).send(err.message)
   }
 })
 
@@ -22,7 +22,7 @@ authRouter.post('/verifyEmail', async (req, res) => {
     const response = await controller.verifyEmail(req.body)
     return res.send(response)
   } catch (err: any) {
-    return res.status(403).send(err.message)
+    return res.status(err.code).send(err.message)
   }
 })
 
@@ -32,7 +32,7 @@ authRouter.post('/sendVerificationCode', async (req, res) => {
     const response = await controller.sendVerificationCode(req.body)
     return res.send(response)
   } catch (err: any) {
-    return res.status(403).send(err.message)
+    return res.status(err.code).send(err.message)
   }
 })
 
@@ -43,16 +43,7 @@ authRouter.post('/login', async (req, res) => {
     const response = await controller.login(req.body)
     return res.send(response)
   } catch (err: any) {
-    console.log(err)
-    if (err === 'User not found') {
-      return res.status(404).send('User not found')
-    } else if (err === 'Invalid credentials') {
-      return res.status(401).send('Invalid credentials')
-    } else if (err === 'User not verified') {
-      return res.status(401).send('User not verified')
-    } else {
-      return res.status(500).send('Internal server error')
-    }
+    return res.status(err.code).send(err.message)
   }
 })
 

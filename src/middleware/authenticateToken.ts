@@ -36,13 +36,11 @@ const authenticateToken = async (
     req.user = {
       email: 'example@mail.com'
     }
-    if (!token) throw 'Unauthorized'
+    if (!token) throw { code: 401, message: 'Unauthorized' }
     const data: any = jwt.verify(token, key)
 
     const user = await verifyTokenInDB(data?.email, token)
-    if (!user) {
-      throw 'Unauthorized'
-    }
+    if (!user) throw { code: 404, message: 'User not found' }
     req.user = user
     return next()
   } catch (error) {
