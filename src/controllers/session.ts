@@ -31,5 +31,5 @@ const session = async (req: UserRequest) => {
       address: user.address
     }
   }
-  throw 'User not found'
+  throw { code: 404, message: 'User not found' }
 }

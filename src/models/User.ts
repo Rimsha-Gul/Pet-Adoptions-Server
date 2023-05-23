@@ -1,4 +1,4 @@
-import { model, Model, Schema } from 'mongoose'
+import { model, Document, Model, Schema } from 'mongoose'
 import bcrypt from 'bcrypt'
 
 //import mongooseSequence from "mongoose-sequence";
@@ -19,18 +19,35 @@ export interface LoginPayload {
   password: string
 }
 
+export interface SendCodePayload {
+  email: string
+}
+
+export interface VerificationPayload {
+  email: string
+  verificationCode: string
+}
+
 export interface TokenResponse {
   tokens: { accessToken: string; refreshToken: string }
 }
 
 export interface UserResponse extends TokenResponse, UserPayload {}
 
-export interface SignupResponse extends SessionResponse, TokenResponse {}
-
-export interface SessionResponse {
+export interface SignupResponse {
   name: string
   email: string
   address: string
+}
+
+export interface SessionResponse extends SignupResponse {
+  name: string
+  email: string
+  address: string
+}
+
+export interface VerificationResponse extends TokenResponse {
+  isVerified: boolean
 }
 
 // interface IUserModel extends Model<IUser> {
@@ -38,6 +55,12 @@ export interface SessionResponse {
 // }
 
 export interface UserDocument extends UserResponse, Document {
+  isVerified: boolean
+  verificationCode: {
+    code: string
+    createdAt: Date
+    updatedAt: Date
+  }
   hashPassword(password: string): string
   comparePassword(password: string): boolean
 }
@@ -65,6 +88,12 @@ const UserSchema = new Schema<UserDocument>(
     email: { type: String, required: true },
     address: { type: String, required: true },
     password: { type: String, required: true },
+    isVerified: { type: Boolean, required: true, default: false },
+    verificationCode: {
+      code: { type: String },
+      createdAt: { type: Date },
+      updatedAt: { type: Date }
+    },
     tokens: {
       accessToken: { type: String },
       refreshToken: { type: String }

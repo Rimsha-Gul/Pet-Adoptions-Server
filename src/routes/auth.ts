@@ -13,7 +13,26 @@ authRouter.post('/signup', async (req, res) => {
     const response = await controller.signup(req.body)
     return res.send(response)
   } catch (err: any) {
-    return res.status(409).send(err.message)
+    return res.status(err.code).send(err.message)
+  }
+})
+
+authRouter.post('/verifyEmail', async (req, res) => {
+  try {
+    const response = await controller.verifyEmail(req.body)
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
+  }
+})
+
+authRouter.post('/sendVerificationCode', async (req, res) => {
+  try {
+    console.log(req.body)
+    const response = await controller.sendVerificationCode(req.body)
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
   }
 })
 
@@ -24,7 +43,7 @@ authRouter.post('/login', async (req, res) => {
     const response = await controller.login(req.body)
     return res.send(response)
   } catch (err: any) {
-    return res.status(401).send(err.message)
+    return res.status(err.code).send(err.message)
   }
 })
 

@@ -10,7 +10,7 @@ sessionRouter.get('/', authenticateAccessToken, async (req, res) => {
     const response = await controller.session(req)
     res.send(response)
   } catch (err: any) {
-    res.status(403).send(err.message)
+    res.status(err.code).send(err.message)
   }
 })
 

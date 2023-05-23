@@ -13,21 +13,10 @@ components:
                     type: string
                 address:
                     type: string
-                tokens:
-                    properties:
-                        refreshToken:
-                            type: string
-                        accessToken:
-                            type: string
-                    required:
-                        - refreshToken
-                        - accessToken
-                    type: object
             required:
                 - name
                 - email
                 - address
-                - tokens
             type: object
             additionalProperties: false
         UserPayload:
@@ -45,6 +34,44 @@ components:
                 - email
                 - address
                 - password
+            type: object
+            additionalProperties: false
+        SendCodePayload:
+            properties:
+                email:
+                    type: string
+            required:
+                - email
+            type: object
+            additionalProperties: false
+        VerificationResponse:
+            properties:
+                tokens:
+                    properties:
+                        refreshToken:
+                            type: string
+                        accessToken:
+                            type: string
+                    required:
+                        - refreshToken
+                        - accessToken
+                    type: object
+                isVerified:
+                    type: boolean
+            required:
+                - tokens
+                - isVerified
+            type: object
+            additionalProperties: false
+        VerificationPayload:
+            properties:
+                email:
+                    type: string
+                verificationCode:
+                    type: string
+            required:
+                - email
+                - verificationCode
             type: object
             additionalProperties: false
         TokenResponse:
@@ -113,7 +140,7 @@ paths:
                                 $ref: '#/components/schemas/SignupResponse'
                             examples:
                                 'Example 1':
-                                    value: {name: 'John Doe', email: johndoe@example.com, address: '123 Main St', tokens: {accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..., refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...}}
+                                    value: {name: 'John Doe', email: johndoe@example.com, address: '123 Main St'}
             summary: 'Accepts user info, creates user and returns user info along JWT tokens'
             tags:
                 - Auth
@@ -125,6 +152,51 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/UserPayload'
+    /auth/sendVerificationCode:
+        post:
+            operationId: SendVerificationCode
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                type: string
+            summary: 'Generates a 6-digit code and sends it'
+            tags:
+                - Auth
+            security: []
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/SendCodePayload'
+    /auth/verifyEmail:
+        post:
+            operationId: VerifyEmail
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/VerificationResponse'
+                            examples:
+                                'Example 1':
+                                    value: {isVerified: true, tokens: {accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..., refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...}}
+            summary: 'Accepts a 6-digit code from user, verifies the code in db'
+            tags:
+                - Auth
+            security: []
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/VerificationPayload'
     /auth/login:
         post:
             operationId: Login
