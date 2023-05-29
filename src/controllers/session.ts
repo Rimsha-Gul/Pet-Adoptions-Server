@@ -12,8 +12,7 @@ export class SessionController {
    */
   @Example<SessionResponse>({
     name: 'John Doe',
-    email: 'johndoe@example.com',
-    address: '123 Main St'
+    email: 'johndoe@example.com'
   })
   @Get('/')
   public async session(@Request() req: UserRequest): Promise<SessionResponse> {
@@ -27,8 +26,7 @@ const session = async (req: UserRequest) => {
   if (user) {
     return {
       name: user.name,
-      email: user.email,
-      address: user.address
+      email: user.email
     }
   }
   throw { code: 404, message: 'User not found' }

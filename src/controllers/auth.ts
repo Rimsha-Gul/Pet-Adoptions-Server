@@ -30,13 +30,12 @@ import { getVerificationCodeEmail } from '../data/emailMessages'
 @Tags('Auth')
 export class AuthController {
   /**
-   * @summary Accepts user info, creates user and returns user info along JWT tokens
+   * @summary Accepts user info, creates user and returns user info except password
    *
    */
   @Example<SignupResponse>({
     name: 'John Doe',
-    email: 'johndoe@example.com',
-    address: '123 Main St'
+    email: 'johndoe@example.com'
   })
   @Post('/signup')
   public async signup(@Body() body: UserPayload): Promise<SignupResponse> {
@@ -99,7 +98,7 @@ const signup = async (body: UserPayload): Promise<SignupResponse> => {
   // hashed password
   // user creation
   // token generation
-  const { name, email, address, password } = body
+  const { name, email, password } = body
   const existingUser = await User.findOne({ email })
 
   if (existingUser) {
@@ -108,17 +107,14 @@ const signup = async (body: UserPayload): Promise<SignupResponse> => {
 
   const user = new User({
     name: name,
-    email: email,
-    address: address
+    email: email
   })
   user.password = User.hashPassword(password)
   await user.save()
 
-  await user.save()
   return {
     name: user.name,
-    email: user.email,
-    address: user.address
+    email: user.email
   }
 }
 
@@ -158,15 +154,14 @@ const verifyEmail = async (
   const user = await User.findOne({ email })
   if (!user) throw { code: 404, message: 'User not found' }
 
-  const currentTimestamp = Date.now()
-  const userUpdationTimestamp = user.get('updatedAt').getTime()
-  const timeDifference = currentTimestamp - userUpdationTimestamp
-  console.log(timeDifference)
-  if (timeDifference > 60000) {
-    throw { code: 401, message: 'Verification code expired' }
-  }
-
   if (verificationCode === user.verificationCode.code) {
+    const currentTimestamp = Date.now()
+    const userUpdationTimestamp = user.verificationCode.updatedAt.getTime()
+    const timeDifference = currentTimestamp - userUpdationTimestamp
+    console.log(timeDifference)
+    if (timeDifference > 60000) {
+      throw { code: 401, message: 'Verification code expired' }
+    }
     user.isVerified = true
     const accessToken = generateAccessToken(user.email)
     const refreshToken = generateRefreshToken(user.email)
@@ -174,6 +169,8 @@ const verifyEmail = async (
       accessToken: accessToken,
       refreshToken: refreshToken
     }
+  } else {
+    throw { code: 400, message: 'Incorrect verification code' }
   }
   await user.save()
   return {
