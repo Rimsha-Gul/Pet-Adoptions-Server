@@ -1,7 +1,6 @@
 import { Document, Model, Schema, model } from 'mongoose'
 
 export interface PetResponse {
-  shelterId: Schema.Types.ObjectId
   name: string
   age: number
   color: string
@@ -9,11 +8,13 @@ export interface PetResponse {
   image: string
 }
 
-export interface PetDocument extends PetResponse, Document {}
+export interface PetDocument extends PetResponse, Document {
+  shelterId: Schema.Types.ObjectId
+}
 
 const PetSchema = new Schema<PetDocument>(
   {
-    shelterId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    shelterId: { type: Schema.Types.ObjectId },
     name: { type: String, required: true },
     age: { type: Number, required: true },
     color: { type: String, required: true },

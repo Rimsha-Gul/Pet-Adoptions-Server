@@ -1,6 +1,7 @@
 import User from '../models/User'
 
 export const verifyTokenInDB = async (email: string, token: string) => {
+  console.log('verify', email)
   const user = await User.findOne({ email })
   if (!user) return undefined
 
@@ -12,7 +13,9 @@ export const verifyTokenInDB = async (email: string, token: string) => {
   if (!currentTokenObj) return undefined
   else {
     return {
-      email: user.email
+      _id: user._id,
+      email: user.email,
+      role: user.role
     }
   }
 }

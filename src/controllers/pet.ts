@@ -14,7 +14,6 @@ import Pet from '../models/Pet'
 import { Request as ExpressRequest } from 'express'
 import { UserRequest } from '../types/Request'
 import { RequestUser } from '../types/RequestUser'
-import User from '../models/User'
 
 @Route('pet')
 @Tags('Pet')
@@ -31,6 +30,7 @@ export class PetController {
   //   bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.',
   //   image: 'meredith.jpg'
   // })
+  @Security('bearerAuth')
   @Post('/')
   public async addPet(
     @FormField() name: string,
@@ -88,11 +88,9 @@ const addPet = async (
     throw { code: 400, message: 'No image file provided.' }
   }
   const petimage = image.filename
-  const userEmail = (req.user as RequestUser).email
-  const shelter = await User.findOne({ userEmail })
 
   const pet = new Pet({
-    shelterId: shelter?._id,
+    shelterId: (req.user as RequestUser)._id,
     name: name,
     age: age,
     color: color,
@@ -103,7 +101,6 @@ const addPet = async (
   await pet.save()
 
   return {
-    shelterId: pet.shelterId,
     name: pet.name,
     age: pet.age,
     color: pet.color,

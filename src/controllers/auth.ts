@@ -163,8 +163,8 @@ const verifyEmail = async (
       throw { code: 401, message: 'Verification code expired' }
     }
     user.isVerified = true
-    const accessToken = generateAccessToken(user.email)
-    const refreshToken = generateRefreshToken(user.email)
+    const accessToken = generateAccessToken(user.email, user.role)
+    const refreshToken = generateRefreshToken(user.email, user.role)
     user.tokens = {
       accessToken: accessToken,
       refreshToken: refreshToken
@@ -194,8 +194,8 @@ const login = async (body: LoginPayload): Promise<TokenResponse> => {
     throw { code: 403, message: 'User not verified' }
   } else {
     // if user is verified, generate the tokens
-    const accessToken = generateAccessToken(user.email)
-    const refreshToken = generateRefreshToken(user.email)
+    const accessToken = generateAccessToken(user.email, user.role)
+    const refreshToken = generateRefreshToken(user.email, user.role)
 
     user.tokens = {
       accessToken: accessToken,

@@ -2,6 +2,7 @@ import { RequestHandler, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import { verifyTokenInDB } from '../utils/verifyTokenInDB'
 import { UserRequest } from '../types/Request'
+import { Role } from '../models/User'
 
 export const authenticateAccessToken: RequestHandler = async (
   req,
@@ -34,7 +35,8 @@ const authenticateToken = async (
   const token = authHeader?.split(' ')[1]
   try {
     req.user = {
-      email: 'example@mail.com'
+      email: 'example@mail.com',
+      role: Role.User
     }
     if (!token) throw { code: 401, message: 'Unauthorized' }
     const data: any = jwt.verify(token, key)
@@ -43,7 +45,7 @@ const authenticateToken = async (
     if (!user) throw { code: 404, message: 'User not found' }
     req.user = user
     return next()
-  } catch (error) {
-    res.sendStatus(401)
+  } catch (error: any) {
+    res.status(error.code).send(error.message)
   }
 }

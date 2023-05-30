@@ -9,7 +9,8 @@ import { isShelter } from '../middleware/isShelter'
 const petRouter = express.Router()
 const petController = new PetController()
 
-petRouter.post('/', isShelter, async (req, res) => {
+petRouter.post('/', authenticateAccessToken, isShelter, async (req, res) => {
+  console.log('Inside router')
   upload.single('image')(req, res, async (err: any) => {
     if (err) {
       // Handle Multer error

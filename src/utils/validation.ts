@@ -21,7 +21,6 @@ export const loginValidation = (data: any): Joi.ValidationResult =>
 
 export const addPetValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    shelterId: Joi.number().required(),
     name: petNameSchema.required(),
     age: Joi.number().required(),
     color: Joi.string().required(),

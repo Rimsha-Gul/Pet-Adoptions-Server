@@ -22,8 +22,6 @@ components:
                     type: string
                 email:
                     type: string
-                address:
-                    type: string
                 password:
                     type: string
             required:
@@ -110,9 +108,6 @@ components:
             additionalProperties: false
         PetResponse:
             properties:
-                shelterId:
-                    type: number
-                    format: double
                 name:
                     type: string
                 age:
@@ -125,7 +120,6 @@ components:
                 image:
                     type: string
             required:
-                - shelterId
                 - name
                 - age
                 - color
@@ -298,13 +292,12 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/PetResponse'
-                            examples:
-                                'Example 1':
-                                    value: {shelterId: 1, name: Meredith, age: 1, color: Gray, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', image: meredith.jpg}
             summary: 'Accepts pet info, adds pet to db and returns pet info'
             tags:
                 - Pet
-            security: []
+            security:
+                -
+                    bearerAuth: []
             parameters: []
             requestBody:
                 required: true
@@ -313,8 +306,6 @@ paths:
                         schema:
                             type: object
                             properties:
-                                shelterId:
-                                    type: string
                                 name:
                                     type: string
                                 age:
@@ -327,7 +318,6 @@ paths:
                                     type: string
                                     format: binary
                             required:
-                                - shelterId
                                 - name
                                 - age
                                 - color
@@ -344,9 +334,6 @@ paths:
                                 items:
                                     $ref: '#/components/schemas/PetResponse'
                                 type: array
-                            examples:
-                                'Example 1':
-                                    value: [{shelterId: 1, name: Meredith, age: 1, color: Gray, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', image: meredith.jpg}, {shelterId: 1, name: Olivia, age: 1, color: White, bio: 'Olivia is a sweet and gentle cat. She enjoys sunbathing by the window and loves being brushed.', image: olivia.jpg}]
             summary: 'Returns all pets'
             tags:
                 - Pet
