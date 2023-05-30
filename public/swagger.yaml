@@ -298,6 +298,9 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/PetResponse'
+                            examples:
+                                'Example 1':
+                                    value: {shelterId: 1, name: Meredith, age: 1, color: Gray, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', image: meredith.jpg}
             summary: 'Accepts pet info, adds pet to db and returns pet info'
             tags:
                 - Pet
@@ -341,6 +344,9 @@ paths:
                                 items:
                                     $ref: '#/components/schemas/PetResponse'
                                 type: array
+                            examples:
+                                'Example 1':
+                                    value: [{shelterId: 1, name: Meredith, age: 1, color: Gray, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', image: meredith.jpg}, {shelterId: 1, name: Olivia, age: 1, color: White, bio: 'Olivia is a sweet and gentle cat. She enjoys sunbathing by the window and loves being brushed.', image: olivia.jpg}]
             summary: 'Returns all pets'
             tags:
                 - Pet

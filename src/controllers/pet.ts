@@ -1,6 +1,5 @@
 import { PetResponse } from '../models/Pet'
 import {
-  Example,
   FormField,
   Get,
   Post,
@@ -13,6 +12,9 @@ import {
 } from 'tsoa'
 import Pet from '../models/Pet'
 import { Request as ExpressRequest } from 'express'
+import { UserRequest } from '../types/Request'
+import { RequestUser } from '../types/RequestUser'
+import User from '../models/User'
 
 @Route('pet')
 @Tags('Pet')
@@ -21,48 +23,48 @@ export class PetController {
    * @summary Accepts pet info, adds pet to db and returns pet info
    *
    */
-  @Example<PetResponse>({
-    shelterId: 1,
-    name: 'Meredith',
-    age: 1,
-    color: 'Gray',
-    bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.',
-    image: 'meredith.jpg'
-  })
+  // @Example<PetResponse>({
+  //   shelterId: ObjectId('611e0c0b1234567890123456'),
+  //   name: 'Meredith',
+  //   age: 1,
+  //   color: 'Gray',
+  //   bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.',
+  //   image: 'meredith.jpg'
+  // })
   @Post('/')
   public async addPet(
-    @FormField() shelterId: number,
     @FormField() name: string,
     @FormField() age: number,
     @FormField() color: string,
     @FormField() bio: string,
-    @UploadedFile() image: any
+    @UploadedFile() image: any,
+    @Request() req: UserRequest
   ): Promise<PetResponse> {
-    return addPet(shelterId, name, age, color, bio, image)
+    return addPet(name, age, color, bio, image, req)
   }
 
   /**
    * @summary Returns all pets
    *
    */
-  @Example<PetResponse[]>([
-    {
-      shelterId: 1,
-      name: 'Meredith',
-      age: 1,
-      color: 'Gray',
-      bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.',
-      image: 'meredith.jpg'
-    },
-    {
-      shelterId: 1,
-      name: 'Olivia',
-      age: 1,
-      color: 'White',
-      bio: 'Olivia is a sweet and gentle cat. She enjoys sunbathing by the window and loves being brushed.',
-      image: 'olivia.jpg'
-    }
-  ])
+  // @Example<PetResponse[]>([
+  //   {
+  //     shelterId: 1,
+  //     name: 'Meredith',
+  //     age: 1,
+  //     color: 'Gray',
+  //     bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.',
+  //     image: 'meredith.jpg'
+  //   },
+  //   {
+  //     shelterId: 1,
+  //     name: 'Olivia',
+  //     age: 1,
+  //     color: 'White',
+  //     bio: 'Olivia is a sweet and gentle cat. She enjoys sunbathing by the window and loves being brushed.',
+  //     image: 'olivia.jpg'
+  //   }
+  // ])
   @Security('bearerAuth')
   @Get('/')
   public async getAllPets(
@@ -75,37 +77,22 @@ export class PetController {
 }
 
 const addPet = async (
-  shelterId: number,
   name: string,
   age: number,
   color: string,
   bio: string,
-  image: any
+  image: any,
+  req: UserRequest
 ): Promise<PetResponse> => {
-  console.log('entered controller')
-  // const { shelterId, name, age, color, bio } = body
   if (!image) {
     throw { code: 400, message: 'No image file provided.' }
   }
-  console.log('inside controller')
   const petimage = image.filename
-  console.log(petimage)
-
-  const existingPet = await Pet.findOne({
-    shelterId: shelterId,
-    name: name,
-    age: age,
-    color: color,
-    bio: bio,
-    image: petimage
-  })
-
-  if (existingPet) {
-    throw { code: 409, message: 'Pet already exists.' }
-  }
+  const userEmail = (req.user as RequestUser).email
+  const shelter = await User.findOne({ userEmail })
 
   const pet = new Pet({
-    shelterId: shelterId,
+    shelterId: shelter?._id,
     name: name,
     age: age,
     color: color,
@@ -127,7 +114,7 @@ const addPet = async (
 
 const getAllPets = async (
   page = 1,
-  limit = 2,
+  limit = 3,
   req: ExpressRequest
 ): Promise<PetResponse[]> => {
   try {
