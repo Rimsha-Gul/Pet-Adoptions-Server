@@ -1,4 +1,4 @@
-import { PetResponse } from '../models/Pet'
+import { Category, PetResponse } from '../models/Pet'
 import {
   FormField,
   Get,
@@ -36,11 +36,12 @@ export class PetController {
     @FormField() name: string,
     @FormField() age: number,
     @FormField() color: string,
+    @FormField() category: Category,
     @FormField() bio: string,
     @UploadedFile() image: any,
     @Request() req: UserRequest
   ): Promise<PetResponse> {
-    return addPet(name, age, color, bio, image, req)
+    return addPet(name, age, color, category, bio, image, req)
   }
 
   /**
@@ -70,9 +71,11 @@ export class PetController {
   public async getAllPets(
     @Query('page') page: number,
     @Query('limit') limit: number,
-    @Request() req: ExpressRequest
-  ): Promise<PetResponse[]> {
-    return getAllPets(page, limit, req)
+    @Request() req: ExpressRequest,
+    @Query('searchQuery') searchQuery?: string,
+    @Query('filterOption') filterOption?: string
+  ): Promise<{ pets: PetResponse[]; totalPages: number }> {
+    return getAllPets(page, limit, req, searchQuery, filterOption)
   }
 }
 
@@ -80,6 +83,7 @@ const addPet = async (
   name: string,
   age: number,
   color: string,
+  category: Category,
   bio: string,
   image: any,
   req: UserRequest
@@ -94,6 +98,7 @@ const addPet = async (
     name: name,
     age: age,
     color: color,
+    category: category,
     bio: bio,
     image: petimage
   })
@@ -112,11 +117,41 @@ const addPet = async (
 const getAllPets = async (
   page = 1,
   limit = 3,
-  req: ExpressRequest
-): Promise<PetResponse[]> => {
+  req: ExpressRequest,
+  searchQuery?: string,
+  filterOption?: string
+): Promise<{ pets: PetResponse[]; totalPages: number }> => {
   try {
     const skip = (page - 1) * limit
-    const petsList = await Pet.find().skip(skip).limit(limit)
+    let query = Pet.find()
+
+    // Apply search filter if a search query is provided
+    if (searchQuery) {
+      query = query.find({
+        $or: [
+          { name: { $regex: searchQuery, $options: 'i' } },
+          { color: { $regex: searchQuery, $options: 'i' } },
+          { bio: { $regex: searchQuery, $options: 'i' } }
+        ]
+      })
+    }
+
+    // Apply category filter if a filter option is provided
+    if (filterOption) {
+      console.log('Filtering')
+      query = query.find({ category: filterOption })
+    }
+
+    // Count total number of pets without applying pagination
+    const totalPetsPromise = Pet.countDocuments(query)
+
+    // Apply pagination to the query
+    query = query.skip(skip).limit(limit)
+
+    const [petsList, totalPets] = await Promise.all([query, totalPetsPromise])
+
+    console.log('Total pets:', totalPets)
+
     // Map the petsList to include the image URL
     const petsWithImageUrl = petsList.map((pet) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -126,7 +161,11 @@ const getAllPets = async (
         image: `${req.protocol}://${req.get('host')}/uploads/${pet.image}`
       }
     })
-    return petsWithImageUrl
+
+    const totalPages = Math.ceil(totalPets / limit)
+    console.log(petsWithImageUrl)
+    console.log(totalPages)
+    return { pets: petsWithImageUrl, totalPages }
   } catch (error: any) {
     throw { code: 500, message: 'Failed to fetch pets' }
   }

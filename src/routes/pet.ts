@@ -27,6 +27,7 @@ petRouter.post('/', authenticateAccessToken, isShelter, async (req, res) => {
         req.body.name,
         req.body.age,
         req.body.color,
+        req.body.category,
         req.body.bio,
         (req as PetRequest).file,
         req
@@ -41,9 +42,18 @@ petRouter.post('/', authenticateAccessToken, isShelter, async (req, res) => {
 petRouter.get('/', authenticateAccessToken, async (req, res) => {
   const page = parseInt(req.query.page as string)
   const limit = parseInt(req.query.limit as string)
-
+  const searchQuery = req.query.searchQuery as string
+  const filterOption = req.query.filterOption as string
+  console.log('page: ', page)
+  console.log('limit:', limit)
   try {
-    const response = await petController.getAllPets(page, limit, req)
+    const response = await petController.getAllPets(
+      page,
+      limit,
+      req,
+      searchQuery,
+      filterOption
+    )
     res.send(response)
   } catch (err: any) {
     res.status(err.code).send(err.message)

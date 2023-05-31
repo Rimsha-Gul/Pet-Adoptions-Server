@@ -1,5 +1,16 @@
 import { Document, Model, Schema, model } from 'mongoose'
 
+export enum Category {
+  Cat = 'CAT',
+  Dog = 'DOG',
+  Horse = 'HORSE',
+  Rabbit = 'RABBIT',
+  Bird = 'BIRD',
+  SmallAndFurry = 'SMALL_AND_FURRY',
+  ScalesFinsAndOthers = 'SCALES_FINS_AND_OTHERS',
+  Barnyard = 'BARNYARD'
+}
+
 export interface PetResponse {
   name: string
   age: number
@@ -10,6 +21,7 @@ export interface PetResponse {
 
 export interface PetDocument extends PetResponse, Document {
   shelterId: Schema.Types.ObjectId
+  category: Category
 }
 
 const PetSchema = new Schema<PetDocument>(
@@ -18,6 +30,7 @@ const PetSchema = new Schema<PetDocument>(
     name: { type: String, required: true },
     age: { type: Number, required: true },
     color: { type: String, required: true },
+    category: { type: String, enum: Category, required: true },
     bio: { type: String, required: true },
     image: { type: String, required: true }
   },

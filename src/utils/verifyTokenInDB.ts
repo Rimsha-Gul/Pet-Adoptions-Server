@@ -1,7 +1,6 @@
 import User from '../models/User'
 
 export const verifyTokenInDB = async (email: string, token: string) => {
-  console.log('verify', email)
   const user = await User.findOne({ email })
   if (!user) return undefined
 

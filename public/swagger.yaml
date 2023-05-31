@@ -312,6 +312,8 @@ paths:
                                     type: string
                                 color:
                                     type: string
+                                category:
+                                    type: string
                                 bio:
                                     type: string
                                 image:
@@ -321,6 +323,7 @@ paths:
                                 - name
                                 - age
                                 - color
+                                - category
                                 - bio
                                 - image
         get:
@@ -331,9 +334,13 @@ paths:
                     content:
                         application/json:
                             schema:
-                                items:
-                                    $ref: '#/components/schemas/PetResponse'
-                                type: array
+                                properties:
+                                    totalPages: {type: number, format: double}
+                                    pets: {items: {$ref: '#/components/schemas/PetResponse'}, type: array}
+                                required:
+                                    - totalPages
+                                    - pets
+                                type: object
             summary: 'Returns all pets'
             tags:
                 - Pet
@@ -355,6 +362,18 @@ paths:
                     schema:
                         format: double
                         type: number
+                -
+                    in: query
+                    name: searchQuery
+                    required: false
+                    schema:
+                        type: string
+                -
+                    in: query
+                    name: filterOption
+                    required: false
+                    schema:
+                        type: string
 servers:
     -
         url: /
