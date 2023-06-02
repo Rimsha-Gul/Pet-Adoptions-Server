@@ -11,7 +11,7 @@ const petController = new PetController()
 
 petRouter.post('/', authenticateAccessToken, isShelter, async (req, res) => {
   console.log('Inside router')
-  upload.single('image')(req, res, async (err: any) => {
+  upload.array('images', 10)(req, res, async (err: any) => {
     if (err) {
       // Handle Multer error
       return res.status(400).send('Only image files are allowed.')
@@ -20,16 +20,29 @@ petRouter.post('/', authenticateAccessToken, isShelter, async (req, res) => {
     console.log(req.body)
     if (error) {
       console.log('Validation error')
-      return res.status(400).send(error.details[0].message)
+      return res.status(400).send(error.details)
     }
     try {
       const response = await petController.addPet(
         req.body.name,
+        req.body.gender,
         req.body.age,
         req.body.color,
+        req.body.breed,
         req.body.category,
+        req.body.activityNeeds,
+        req.body.levelOfGrooming,
+        req.body.isHouseTrained,
+        req.body.healthCheck,
+        req.body.microchip,
+        req.body.wormed,
+        req.body.heartwormTreated,
+        req.body.vaccinated,
+        req.body.deSexed,
         req.body.bio,
-        (req as PetRequest).file,
+        req.body.traits,
+        req.body.adoptionFee,
+        (req as PetRequest).files,
         req
       )
       return res.send(response)

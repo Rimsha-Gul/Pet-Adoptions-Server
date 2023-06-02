@@ -11,28 +11,76 @@ export enum Category {
   Barnyard = 'BARNYARD'
 }
 
+export enum Gender {
+  Male = 'MALE',
+  Female = 'FEMALE'
+}
+
+export enum ActivityNeeds {
+  Low = 'LOW',
+  MidRange = 'MIDRANGE',
+  High = 'HIGH',
+  VeryHigh = 'VERYHIGH'
+}
+
+export enum LevelOfGrooming {
+  Low = 'LOW',
+  Medium = 'MEDIUM',
+  High = 'HIGH'
+}
+
 export interface PetResponse {
   name: string
-  age: number
+  gender: Gender
+  age: string
   color: string
+  breed: string
   bio: string
-  image: string
+  images: string[]
 }
 
 export interface PetDocument extends PetResponse, Document {
   shelterId: Schema.Types.ObjectId
   category: Category
+  activityNeeds: ActivityNeeds
+  levelOfGrooming: LevelOfGrooming
+  isHouseTrained: boolean
+  healthInfo: {
+    healthCheck: boolean
+    microchip: boolean
+    wormed: boolean
+    heartwormTreated: boolean
+    vaccinated: boolean
+    deSexed: boolean
+  }
+  traits: string[]
+  adoptionFee: string
 }
 
 const PetSchema = new Schema<PetDocument>(
   {
     shelterId: { type: Schema.Types.ObjectId },
     name: { type: String, required: true },
-    age: { type: Number, required: true },
+    gender: { type: String, enum: Gender, required: true },
+    age: { type: String, required: true },
     color: { type: String, required: true },
+    breed: { type: String, required: true },
     category: { type: String, enum: Category, required: true },
     bio: { type: String, required: true },
-    image: { type: String, required: true }
+    activityNeeds: { type: String, enum: ActivityNeeds, required: true },
+    levelOfGrooming: { type: String, enum: LevelOfGrooming, required: true },
+    isHouseTrained: { type: Boolean, required: true },
+    healthInfo: {
+      healthCheck: { type: Boolean, required: true },
+      microchip: { type: Boolean, required: true },
+      wormed: { type: Boolean, required: true },
+      heartwormTreated: { type: Boolean, required: true },
+      vaccinated: { type: Boolean, required: true },
+      deSexed: { type: Boolean, required: true }
+    },
+    images: { type: [String], required: true },
+    traits: { type: [String], required: true },
+    adoptionFee: { type: String, required: true }
   },
   { timestamps: true }
 )

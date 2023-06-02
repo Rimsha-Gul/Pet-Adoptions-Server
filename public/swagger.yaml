@@ -106,25 +106,37 @@ components:
                 - email
             type: object
             additionalProperties: false
+        Gender:
+            enum:
+                - MALE
+                - FEMALE
+            type: string
         PetResponse:
             properties:
                 name:
                     type: string
+                gender:
+                    $ref: '#/components/schemas/Gender'
                 age:
-                    type: number
-                    format: double
+                    type: string
                 color:
+                    type: string
+                breed:
                     type: string
                 bio:
                     type: string
-                image:
-                    type: string
+                images:
+                    items:
+                        type: string
+                    type: array
             required:
                 - name
+                - gender
                 - age
                 - color
+                - breed
                 - bio
-                - image
+                - images
             type: object
             additionalProperties: false
     securitySchemes:
@@ -308,24 +320,63 @@ paths:
                             properties:
                                 name:
                                     type: string
+                                gender:
+                                    type: string
                                 age:
                                     type: string
                                 color:
                                     type: string
+                                breed:
+                                    type: string
                                 category:
+                                    type: string
+                                activityNeeds:
+                                    type: string
+                                levelOfGrooming:
+                                    type: string
+                                isHouseTrained:
+                                    type: string
+                                healthCheck:
+                                    type: string
+                                microchip:
+                                    type: string
+                                wormed:
+                                    type: string
+                                heartwormTreated:
+                                    type: string
+                                vaccinated:
+                                    type: string
+                                deSexed:
                                     type: string
                                 bio:
                                     type: string
-                                image:
+                                traits:
                                     type: string
-                                    format: binary
+                                adoptionFee:
+                                    type: string
+                                images:
+                                    items: {type: string, format: binary}
+                                    type: array
                             required:
                                 - name
+                                - gender
                                 - age
                                 - color
+                                - breed
                                 - category
+                                - activityNeeds
+                                - levelOfGrooming
+                                - isHouseTrained
+                                - healthCheck
+                                - microchip
+                                - wormed
+                                - heartwormTreated
+                                - vaccinated
+                                - deSexed
                                 - bio
-                                - image
+                                - traits
+                                - adoptionFee
+                                - images
         get:
             operationId: GetAllPets
             responses:

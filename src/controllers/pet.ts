@@ -1,4 +1,10 @@
-import { Category, PetResponse } from '../models/Pet'
+import {
+  ActivityNeeds,
+  Category,
+  Gender,
+  LevelOfGrooming,
+  PetResponse
+} from '../models/Pet'
 import {
   FormField,
   Get,
@@ -8,7 +14,7 @@ import {
   Route,
   Security,
   Tags,
-  UploadedFile
+  UploadedFiles
 } from 'tsoa'
 import Pet from '../models/Pet'
 import { Request as ExpressRequest } from 'express'
@@ -34,14 +40,48 @@ export class PetController {
   @Post('/')
   public async addPet(
     @FormField() name: string,
-    @FormField() age: number,
+    @FormField() gender: Gender,
+    @FormField() age: string,
     @FormField() color: string,
+    @FormField() breed: string,
     @FormField() category: Category,
+    @FormField() activityNeeds: ActivityNeeds,
+    @FormField() levelOfGrooming: LevelOfGrooming,
+    @FormField() isHouseTrained: boolean,
+    @FormField() healthCheck: boolean,
+    @FormField() microchip: boolean,
+    @FormField() wormed: boolean,
+    @FormField() heartwormTreated: boolean,
+    @FormField() vaccinated: boolean,
+    @FormField() deSexed: boolean,
     @FormField() bio: string,
-    @UploadedFile() image: any,
+    @FormField() traits: string,
+    @FormField() adoptionFee: string,
+    @UploadedFiles() images: Express.Multer.File[],
     @Request() req: UserRequest
   ): Promise<PetResponse> {
-    return addPet(name, age, color, category, bio, image, req)
+    return addPet(
+      name,
+      gender,
+      age,
+      color,
+      breed,
+      category,
+      activityNeeds,
+      levelOfGrooming,
+      isHouseTrained,
+      healthCheck,
+      microchip,
+      wormed,
+      heartwormTreated,
+      vaccinated,
+      deSexed,
+      bio,
+      traits,
+      adoptionFee,
+      images,
+      req
+    )
   }
 
   /**
@@ -81,36 +121,66 @@ export class PetController {
 
 const addPet = async (
   name: string,
-  age: number,
+  gender: string,
+  age: string,
   color: string,
+  breed: string,
   category: Category,
+  activityNeeds: ActivityNeeds,
+  levelOfGrooming: LevelOfGrooming,
+  isHouseTrained: boolean,
+  healthCheck: boolean,
+  microchip: boolean,
+  wormed: boolean,
+  heartwormTreated: boolean,
+  vaccinated: boolean,
+  deSexed: boolean,
   bio: string,
-  image: any,
+  traits: string,
+  adoptionFee: string,
+  images: Express.Multer.File[],
   req: UserRequest
 ): Promise<PetResponse> => {
-  if (!image) {
+  if (!images) {
     throw { code: 400, message: 'No image file provided.' }
   }
-  const petimage = image.filename
+  const petImages: string[] = images.map((image) => image.filename)
 
   const pet = new Pet({
     shelterId: (req.user as RequestUser)._id,
     name: name,
+    gender: gender,
     age: age,
     color: color,
+    breed: breed,
     category: category,
+    activityNeeds: activityNeeds,
+    levelOfGrooming: levelOfGrooming,
+    isHouseTrained: isHouseTrained,
+    healthInfo: {
+      healthCheck: healthCheck,
+      microchip: microchip,
+      wormed: wormed,
+      heartwormTreated: heartwormTreated,
+      vaccinated: vaccinated,
+      deSexed: deSexed
+    },
     bio: bio,
-    image: petimage
+    traits: traits.split(','),
+    adoptionFee: adoptionFee,
+    images: petImages
   })
 
   await pet.save()
 
   return {
     name: pet.name,
+    gender: pet.gender,
     age: pet.age,
     color: pet.color,
+    breed: pet.breed,
     bio: pet.bio,
-    image: pet.image
+    images: pet.images
   }
 }
 
@@ -153,19 +223,23 @@ const getAllPets = async (
     console.log('Total pets:', totalPets)
 
     // Map the petsList to include the image URL
-    const petsWithImageUrl = petsList.map((pet) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { image, ...petWithoutImage } = pet.toObject()
-      return {
-        ...petWithoutImage,
-        image: `${req.protocol}://${req.get('host')}/uploads/${pet.image}`
-      }
-    })
+    const petsWithImageUrls = await Promise.all(
+      petsList.map(async (pet) => {
+        const { images, ...petWithoutImages } = pet.toObject()
+        const imageUrls = await Promise.all(
+          images.map(
+            (image) => `${req.protocol}://${req.get('host')}/uploads/${image}`
+          )
+        )
+        return {
+          ...petWithoutImages,
+          images: imageUrls
+        }
+      })
+    )
 
     const totalPages = Math.ceil(totalPets / limit)
-    console.log(petsWithImageUrl)
-    console.log(totalPages)
-    return { pets: petsWithImageUrl, totalPages }
+    return { pets: petsWithImageUrls, totalPages }
   } catch (error: any) {
     throw { code: 500, message: 'Failed to fetch pets' }
   }
