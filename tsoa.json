@@ -18,6 +18,10 @@
       {
         "name": "Session",
         "description": "Get Session information"
+      },
+      {
+        "name": "Pet",
+        "description": "Operations about pet"
       }
     ],
     "yaml": true,

@@ -3,9 +3,9 @@ import { SessionController } from '../controllers/session'
 import { authenticateAccessToken } from '../middleware/authenticateToken'
 
 const sessionRouter = express.Router()
+const controller = new SessionController()
 
 sessionRouter.get('/', authenticateAccessToken, async (req, res) => {
-  const controller = new SessionController()
   try {
     const response = await controller.session(req)
     res.send(response)

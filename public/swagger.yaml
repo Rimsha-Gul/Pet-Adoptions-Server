@@ -11,12 +11,9 @@ components:
                     type: string
                 email:
                     type: string
-                address:
-                    type: string
             required:
                 - name
                 - email
-                - address
             type: object
             additionalProperties: false
         UserPayload:
@@ -25,14 +22,11 @@ components:
                     type: string
                 email:
                     type: string
-                address:
-                    type: string
                 password:
                     type: string
             required:
                 - name
                 - email
-                - address
                 - password
             type: object
             additionalProperties: false
@@ -107,12 +101,30 @@ components:
                     type: string
                 email:
                     type: string
-                address:
-                    type: string
             required:
                 - name
                 - email
-                - address
+            type: object
+            additionalProperties: false
+        PetResponse:
+            properties:
+                name:
+                    type: string
+                age:
+                    type: number
+                    format: double
+                color:
+                    type: string
+                bio:
+                    type: string
+                image:
+                    type: string
+            required:
+                - name
+                - age
+                - color
+                - bio
+                - image
             type: object
             additionalProperties: false
     securitySchemes:
@@ -140,8 +152,8 @@ paths:
                                 $ref: '#/components/schemas/SignupResponse'
                             examples:
                                 'Example 1':
-                                    value: {name: 'John Doe', email: johndoe@example.com, address: '123 Main St'}
-            summary: 'Accepts user info, creates user and returns user info along JWT tokens'
+                                    value: {name: 'John Doe', email: johndoe@example.com}
+            summary: 'Accepts user info, creates user and returns user info except password'
             tags:
                 - Auth
             security: []
@@ -161,7 +173,13 @@ paths:
                     content:
                         application/json:
                             schema:
-                                type: string
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
             summary: 'Generates a 6-digit code and sends it'
             tags:
                 - Auth
@@ -230,7 +248,13 @@ paths:
                     content:
                         application/json:
                             schema:
-                                type: string
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
             summary: 'Removes JWT tokens and returns success message'
             tags:
                 - Auth
@@ -250,7 +274,7 @@ paths:
                                 $ref: '#/components/schemas/SessionResponse'
                             examples:
                                 'Example 1':
-                                    value: {name: 'John Doe', email: johndoe@example.com, address: '123 Main St'}
+                                    value: {name: 'John Doe', email: johndoe@example.com}
             summary: 'Get a user''s session info'
             tags:
                 - Session
@@ -258,6 +282,98 @@ paths:
                 -
                     bearerAuth: []
             parameters: []
+    /pet:
+        post:
+            operationId: AddPet
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/PetResponse'
+            summary: 'Accepts pet info, adds pet to db and returns pet info'
+            tags:
+                - Pet
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    multipart/form-data:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                age:
+                                    type: string
+                                color:
+                                    type: string
+                                category:
+                                    type: string
+                                bio:
+                                    type: string
+                                image:
+                                    type: string
+                                    format: binary
+                            required:
+                                - name
+                                - age
+                                - color
+                                - category
+                                - bio
+                                - image
+        get:
+            operationId: GetAllPets
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    totalPages: {type: number, format: double}
+                                    pets: {items: {$ref: '#/components/schemas/PetResponse'}, type: array}
+                                required:
+                                    - totalPages
+                                    - pets
+                                type: object
+            summary: 'Returns all pets'
+            tags:
+                - Pet
+            security:
+                -
+                    bearerAuth: []
+            parameters:
+                -
+                    in: query
+                    name: page
+                    required: true
+                    schema:
+                        format: double
+                        type: number
+                -
+                    in: query
+                    name: limit
+                    required: true
+                    schema:
+                        format: double
+                        type: number
+                -
+                    in: query
+                    name: searchQuery
+                    required: false
+                    schema:
+                        type: string
+                -
+                    in: query
+                    name: filterOption
+                    required: false
+                    schema:
+                        type: string
 servers:
     -
         url: /
@@ -268,3 +384,6 @@ tags:
     -
         name: Session
         description: 'Get Session information'
+    -
+        name: Pet
+        description: 'Operations about pet'

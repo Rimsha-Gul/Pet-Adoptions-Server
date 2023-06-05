@@ -7,10 +7,16 @@ import bcrypt from 'bcrypt'
 
 //const AutoIncrement = AutoIncrementFactory(mongoose);
 
+export enum Role {
+  Admin = 'ADMIN',
+  Shelter = 'SHELTER',
+  User = 'USER'
+}
+
 export interface UserPayload {
   name: string
   email: string
-  address: string
+
   password: string
 }
 
@@ -37,13 +43,11 @@ export interface UserResponse extends TokenResponse, UserPayload {}
 export interface SignupResponse {
   name: string
   email: string
-  address: string
 }
 
 export interface SessionResponse extends SignupResponse {
   name: string
   email: string
-  address: string
 }
 
 export interface VerificationResponse extends TokenResponse {
@@ -55,6 +59,7 @@ export interface VerificationResponse extends TokenResponse {
 // }
 
 export interface UserDocument extends UserResponse, Document {
+  role: Role
   isVerified: boolean
   verificationCode: {
     code: string
@@ -84,9 +89,10 @@ export interface UpdatedUserResponse {
 
 const UserSchema = new Schema<UserDocument>(
   {
+    role: { type: String, enum: Role },
     name: { type: String, required: true },
     email: { type: String, required: true },
-    address: { type: String, required: true },
+
     password: { type: String, required: true },
     isVerified: { type: Boolean, required: true, default: false },
     verificationCode: {

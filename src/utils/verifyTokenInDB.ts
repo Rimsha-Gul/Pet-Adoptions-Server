@@ -12,7 +12,9 @@ export const verifyTokenInDB = async (email: string, token: string) => {
   if (!currentTokenObj) return undefined
   else {
     return {
-      email: user.email
+      _id: user._id,
+      email: user.email,
+      role: user.role
     }
   }
 }
