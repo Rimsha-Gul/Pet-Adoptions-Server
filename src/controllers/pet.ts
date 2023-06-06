@@ -113,9 +113,23 @@ export class PetController {
     @Query('limit') limit: number,
     @Request() req: ExpressRequest,
     @Query('searchQuery') searchQuery?: string,
-    @Query('filterOption') filterOption?: string
+    @Query('filterOption') filterOption?: string,
+    @Query('colorFilter') colorFilter?: string,
+    @Query('breedFilter') breedFilter?: string,
+    @Query('genderFilter') genderFilter?: string,
+    @Query('ageFilter') ageFilter?: string
   ): Promise<{ pets: PetResponse[]; totalPages: number }> {
-    return getAllPets(page, limit, req, searchQuery, filterOption)
+    return getAllPets(
+      page,
+      limit,
+      req,
+      searchQuery,
+      filterOption,
+      colorFilter,
+      breedFilter,
+      genderFilter,
+      ageFilter
+    )
   }
 }
 
@@ -189,27 +203,119 @@ const getAllPets = async (
   limit = 3,
   req: ExpressRequest,
   searchQuery?: string,
-  filterOption?: string
-): Promise<{ pets: PetResponse[]; totalPages: number }> => {
+  filterOption?: string,
+  colorFilter?: string,
+  breedFilter?: string,
+  genderFilter?: string,
+  ageFilter?: string
+): Promise<{
+  pets: PetResponse[]
+  totalPages: number
+  colors: string[]
+  breeds: string[]
+  genders: string[]
+  ages: string[]
+}> => {
   try {
     const skip = (page - 1) * limit
     let query = Pet.find()
 
-    // Apply search filter if a search query is provided
-    if (searchQuery) {
-      query = query.find({
-        $or: [
-          { name: { $regex: searchQuery, $options: 'i' } },
-          { color: { $regex: searchQuery, $options: 'i' } },
-          { bio: { $regex: searchQuery, $options: 'i' } }
-        ]
-      })
-    }
+    let colors: string[] = []
+    let breeds: string[] = []
+    let genders: string[] = []
+    let ages: string[] = []
 
     // Apply category filter if a filter option is provided
     if (filterOption) {
       console.log('Filtering')
       query = query.find({ category: filterOption })
+
+      // Fetch all pets of this category to get unique colors, breeds, genders, and ages
+      const allPetsOfCategory = await Pet.find({
+        category: filterOption
+      }).exec()
+      colors = Array.from(new Set(allPetsOfCategory.map((pet) => pet.color)))
+      breeds = Array.from(new Set(allPetsOfCategory.map((pet) => pet.breed)))
+      genders = Array.from(new Set(allPetsOfCategory.map((pet) => pet.gender)))
+      ages = Array.from(new Set(allPetsOfCategory.map((pet) => pet.age)))
+    }
+
+    // Apply color filter if a colorFilter option is provided
+    if (colorFilter) {
+      console.log('Filtering by color')
+      query = query.find({ color: colorFilter })
+    }
+
+    // Apply breed filter if a breedFilter option is provided
+    if (breedFilter) {
+      console.log('Filtering by breed')
+      query = query.find({ breed: breedFilter })
+    }
+
+    // Apply gender filter if a genderFilter option is provided
+    if (genderFilter) {
+      console.log('Filtering by gender')
+      query = query.find({ gender: genderFilter })
+    }
+
+    // Apply age filter if an ageFilter option is provided
+    if (ageFilter) {
+      console.log('Filtering by age range')
+      console.log(ageFilter)
+
+      const [minAge, maxAge] = ageFilter.split('-').map((age) => parseInt(age))
+      console.log(minAge)
+      console.log(maxAge)
+
+      if (!isNaN(minAge) && !isNaN(maxAge)) {
+        // Both minAge and maxAge are provided
+        query = query.find({
+          $or: [
+            {
+              $and: [
+                { age: { $gte: `${minAge}yr` } },
+                { age: { $lte: `${maxAge}yr` } }
+              ]
+            },
+            {
+              $and: [
+                { age: { $eq: `${minAge}yr` } },
+                { age: { $gte: `${minAge}m` } }
+              ]
+            },
+            {
+              $and: [
+                { age: { $eq: `${maxAge}yr` } },
+                { age: { $lte: `${maxAge}m` } }
+              ]
+            }
+          ]
+        })
+      } else if (!isNaN(minAge)) {
+        // Only minAge is provided
+        query = query.find({ age: { $gte: minAge } })
+      } else if (!isNaN(maxAge)) {
+        // Only maxAge is provided
+        query = query.find({ age: { $lte: maxAge } })
+      }
+    }
+
+    // Apply search filter if a search query is provided
+    if (searchQuery) {
+      query = query.find({
+        $and: [
+          { color: colorFilter },
+          { breed: breedFilter },
+          { gender: genderFilter },
+          { age: ageFilter },
+          {
+            $or: [
+              { name: { $regex: searchQuery, $options: 'i' } },
+              { bio: { $regex: searchQuery, $options: 'i' } }
+            ]
+          }
+        ]
+      })
     }
 
     // Count total number of pets without applying pagination
@@ -239,7 +345,14 @@ const getAllPets = async (
     )
 
     const totalPages = Math.ceil(totalPets / limit)
-    return { pets: petsWithImageUrls, totalPages }
+    return {
+      pets: petsWithImageUrls,
+      totalPages,
+      colors,
+      breeds,
+      genders,
+      ages
+    }
   } catch (error: any) {
     throw { code: 500, message: 'Failed to fetch pets' }
   }
