@@ -25,6 +25,11 @@ import { RequestUser } from '../types/RequestUser'
 import { sendEmail } from '../middleware/sendEmail'
 import { generateVerificationCode } from '../utils/generateVerificationCode'
 import { getVerificationCodeEmail } from '../data/emailMessages'
+import {
+  signupResponseExample,
+  tokenResponseExample,
+  verificationResponseExample
+} from '../examples/auth'
 
 @Route('auth')
 @Tags('Auth')
@@ -33,10 +38,7 @@ export class AuthController {
    * @summary Accepts user info, creates user and returns user info except password
    *
    */
-  @Example<SignupResponse>({
-    name: 'John Doe',
-    email: 'johndoe@example.com'
-  })
+  @Example<SignupResponse>(signupResponseExample)
   @Post('/signup')
   public async signup(@Body() body: UserPayload): Promise<SignupResponse> {
     return signup(body)
@@ -55,13 +57,7 @@ export class AuthController {
    * @summary Accepts a 6-digit code from user, verifies the code in db
    *
    */
-  @Example<VerificationResponse>({
-    isVerified: true,
-    tokens: {
-      accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-      refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-    }
-  })
+  @Example<VerificationResponse>(verificationResponseExample)
   @Post('/verifyEmail')
   public async verifyEmail(
     @Body() body: VerificationPayload
@@ -72,12 +68,7 @@ export class AuthController {
   /**
    * @summary Verifies the user's email and password and returns JWT tokens
    */
-  @Example<TokenResponse>({
-    tokens: {
-      accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-      refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-    }
-  })
+  @Example<TokenResponse>(tokenResponseExample)
   @Post('/login')
   public async login(@Body() body: LoginPayload): Promise<TokenResponse> {
     return login(body)

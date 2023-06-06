@@ -49,3 +49,15 @@ export const addPetValidation = (data: any): Joi.ValidationResult =>
     traits: Joi.string().required(),
     adoptionFee: Joi.string().required()
   }).validate(data)
+
+export const getAllPetsValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).default(3),
+    searchQuery: Joi.string().allow('').optional(),
+    filterOption: petCategorySchema.allow('').optional(),
+    colorFilter: Joi.string().allow('').optional(),
+    breedFilter: Joi.string().allow('').optional(),
+    genderFilter: petGenderSchema.allow('').optional(),
+    ageFilter: Joi.string().allow('').optional()
+  }).validate(data)

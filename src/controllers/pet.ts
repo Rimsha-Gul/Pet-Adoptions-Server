@@ -3,9 +3,12 @@ import {
   Category,
   Gender,
   LevelOfGrooming,
-  PetResponse
+  PetPayload,
+  PetResponse,
+  PetsResponse
 } from '../models/Pet'
 import {
+  Example,
   FormField,
   Get,
   Post,
@@ -20,6 +23,7 @@ import Pet from '../models/Pet'
 import { Request as ExpressRequest } from 'express'
 import { UserRequest } from '../types/Request'
 import { RequestUser } from '../types/RequestUser'
+import { petResponseExample, petsResponseExample } from '../examples/pet'
 
 @Route('pet')
 @Tags('Pet')
@@ -28,14 +32,7 @@ export class PetController {
    * @summary Accepts pet info, adds pet to db and returns pet info
    *
    */
-  // @Example<PetResponse>({
-  //   shelterId: ObjectId('611e0c0b1234567890123456'),
-  //   name: 'Meredith',
-  //   age: 1,
-  //   color: 'Gray',
-  //   bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.',
-  //   image: 'meredith.jpg'
-  // })
+  @Example<PetPayload>(petResponseExample)
   @Security('bearerAuth')
   @Post('/')
   public async addPet(
@@ -88,24 +85,7 @@ export class PetController {
    * @summary Returns all pets
    *
    */
-  // @Example<PetResponse[]>([
-  //   {
-  //     shelterId: 1,
-  //     name: 'Meredith',
-  //     age: 1,
-  //     color: 'Gray',
-  //     bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.',
-  //     image: 'meredith.jpg'
-  //   },
-  //   {
-  //     shelterId: 1,
-  //     name: 'Olivia',
-  //     age: 1,
-  //     color: 'White',
-  //     bio: 'Olivia is a sweet and gentle cat. She enjoys sunbathing by the window and loves being brushed.',
-  //     image: 'olivia.jpg'
-  //   }
-  // ])
+  @Example<PetsResponse>(petsResponseExample)
   @Security('bearerAuth')
   @Get('/')
   public async getAllPets(
@@ -118,7 +98,7 @@ export class PetController {
     @Query('breedFilter') breedFilter?: string,
     @Query('genderFilter') genderFilter?: string,
     @Query('ageFilter') ageFilter?: string
-  ): Promise<{ pets: PetResponse[]; totalPages: number }> {
+  ): Promise<PetsResponse> {
     return getAllPets(
       page,
       limit,
@@ -208,14 +188,7 @@ const getAllPets = async (
   breedFilter?: string,
   genderFilter?: string,
   ageFilter?: string
-): Promise<{
-  pets: PetResponse[]
-  totalPages: number
-  colors: string[]
-  breeds: string[]
-  genders: string[]
-  ages: string[]
-}> => {
+): Promise<PetsResponse> => {
   try {
     const skip = (page - 1) * limit
     let query = Pet.find()

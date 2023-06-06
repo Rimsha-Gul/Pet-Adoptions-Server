@@ -1,6 +1,7 @@
+import { sessionResponseExample } from '../examples/session'
 import User, { SessionResponse } from '../models/User'
-import { UserRequest } from 'src/types/Request'
-import { RequestUser } from 'src/types/RequestUser'
+import { UserRequest } from '../types/Request'
+import { RequestUser } from '../types/RequestUser'
 import { Example, Get, Request, Route, Security, Tags } from 'tsoa'
 
 @Security('bearerAuth')
@@ -10,10 +11,7 @@ export class SessionController {
   /**
    * @summary Get a user's session info
    */
-  @Example<SessionResponse>({
-    name: 'John Doe',
-    email: 'johndoe@example.com'
-  })
+  @Example<SessionResponse>(sessionResponseExample)
   @Get('/')
   public async session(@Request() req: UserRequest): Promise<SessionResponse> {
     return session(req)

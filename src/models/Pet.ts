@@ -29,6 +29,60 @@ export enum LevelOfGrooming {
   High = 'HIGH'
 }
 
+export interface PetPayload {
+  name: string
+  gender: string
+  age: string
+  color: string
+  breed: string
+  category: string
+  activityNeeds: string
+  levelOfGrooming: string
+  isHouseTrained: string
+  healthCheck: string
+  microchip: string
+  wormed: string
+  heartwormTreated: string
+  vaccinated: string
+  deSexed: string
+  bio: string
+  traits: string
+  adoptionFee: string
+}
+
+export interface AllPetsResponse {
+  name: string
+  gender: Gender
+  age: string
+  color: string
+  breed: string
+  category: Category
+  activityNeeds: ActivityNeeds
+  levelOfGrooming: LevelOfGrooming
+  isHouseTrained: boolean
+  healthInfo: {
+    healthCheck: boolean
+    microchip: boolean
+    wormed: boolean
+    heartwormTreated: boolean
+    vaccinated: boolean
+    deSexed: boolean
+  }
+  bio: string
+  traits: string[]
+  adoptionFee: string
+  images: string[]
+}
+
+export interface PetsResponse {
+  pets: AllPetsResponse[]
+  totalPages: number
+  colors: string[]
+  breeds: string[]
+  genders: string[]
+  ages: string[]
+}
+
 export interface PetResponse {
   name: string
   gender: Gender
