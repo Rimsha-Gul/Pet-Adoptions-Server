@@ -106,25 +106,166 @@ components:
                 - email
             type: object
             additionalProperties: false
+        Gender:
+            enum:
+                - MALE
+                - FEMALE
+            type: string
         PetResponse:
             properties:
                 name:
                     type: string
+                gender:
+                    $ref: '#/components/schemas/Gender'
                 age:
-                    type: number
-                    format: double
+                    type: string
                 color:
+                    type: string
+                breed:
                     type: string
                 bio:
                     type: string
-                image:
-                    type: string
+                images:
+                    items:
+                        type: string
+                    type: array
             required:
                 - name
+                - gender
                 - age
                 - color
+                - breed
                 - bio
-                - image
+                - images
+            type: object
+            additionalProperties: false
+        Category:
+            enum:
+                - CAT
+                - DOG
+                - HORSE
+                - RABBIT
+                - BIRD
+                - SMALL_AND_FURRY
+                - SCALES_FINS_AND_OTHERS
+                - BARNYARD
+            type: string
+        ActivityNeeds:
+            enum:
+                - LOW
+                - MIDRANGE
+                - HIGH
+                - VERYHIGH
+            type: string
+        LevelOfGrooming:
+            enum:
+                - LOW
+                - MEDIUM
+                - HIGH
+            type: string
+        AllPetsResponse:
+            properties:
+                name:
+                    type: string
+                gender:
+                    $ref: '#/components/schemas/Gender'
+                age:
+                    type: string
+                color:
+                    type: string
+                breed:
+                    type: string
+                category:
+                    $ref: '#/components/schemas/Category'
+                activityNeeds:
+                    $ref: '#/components/schemas/ActivityNeeds'
+                levelOfGrooming:
+                    $ref: '#/components/schemas/LevelOfGrooming'
+                isHouseTrained:
+                    type: boolean
+                healthInfo:
+                    properties:
+                        deSexed:
+                            type: boolean
+                        vaccinated:
+                            type: boolean
+                        heartwormTreated:
+                            type: boolean
+                        wormed:
+                            type: boolean
+                        microchip:
+                            type: boolean
+                        healthCheck:
+                            type: boolean
+                    required:
+                        - deSexed
+                        - vaccinated
+                        - heartwormTreated
+                        - wormed
+                        - microchip
+                        - healthCheck
+                    type: object
+                bio:
+                    type: string
+                traits:
+                    items:
+                        type: string
+                    type: array
+                adoptionFee:
+                    type: string
+                images:
+                    items:
+                        type: string
+                    type: array
+            required:
+                - name
+                - gender
+                - age
+                - color
+                - breed
+                - category
+                - activityNeeds
+                - levelOfGrooming
+                - isHouseTrained
+                - healthInfo
+                - bio
+                - traits
+                - adoptionFee
+                - images
+            type: object
+            additionalProperties: false
+        PetsResponse:
+            properties:
+                pets:
+                    items:
+                        $ref: '#/components/schemas/AllPetsResponse'
+                    type: array
+                totalPages:
+                    type: number
+                    format: double
+                colors:
+                    items:
+                        type: string
+                    type: array
+                breeds:
+                    items:
+                        type: string
+                    type: array
+                genders:
+                    items:
+                        type: string
+                    type: array
+                ages:
+                    items:
+                        type: string
+                    type: array
+            required:
+                - pets
+                - totalPages
+                - colors
+                - breeds
+                - genders
+                - ages
             type: object
             additionalProperties: false
     securitySchemes:
@@ -273,8 +414,7 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/SessionResponse'
                             examples:
-                                'Example 1':
-                                    value: {name: 'John Doe', email: johndoe@example.com}
+                                'Example 1': {}
             summary: 'Get a user''s session info'
             tags:
                 - Session
@@ -292,6 +432,9 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/PetResponse'
+                            examples:
+                                'Example 1':
+                                    value: {name: Meredith, gender: MALE, age: '2yr 4m', color: white, breed: 'Mini Lop', category: HORSE, activityNeeds: HIGH, levelOfGrooming: MEDIUM, isHouseTrained: 'true', healthCheck: 'true', microchip: 'true', wormed: 'true', heartwormTreated: 'true', vaccinated: 'true', deSexed: 'true', bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: 'playful,athletic,kid-friendly', adoptionFee: $300}
             summary: 'Accepts pet info, adds pet to db and returns pet info'
             tags:
                 - Pet
@@ -308,24 +451,63 @@ paths:
                             properties:
                                 name:
                                     type: string
+                                gender:
+                                    type: string
                                 age:
                                     type: string
                                 color:
                                     type: string
+                                breed:
+                                    type: string
                                 category:
+                                    type: string
+                                activityNeeds:
+                                    type: string
+                                levelOfGrooming:
+                                    type: string
+                                isHouseTrained:
+                                    type: string
+                                healthCheck:
+                                    type: string
+                                microchip:
+                                    type: string
+                                wormed:
+                                    type: string
+                                heartwormTreated:
+                                    type: string
+                                vaccinated:
+                                    type: string
+                                deSexed:
                                     type: string
                                 bio:
                                     type: string
-                                image:
+                                traits:
                                     type: string
-                                    format: binary
+                                adoptionFee:
+                                    type: string
+                                images:
+                                    items: {type: string, format: binary}
+                                    type: array
                             required:
                                 - name
+                                - gender
                                 - age
                                 - color
+                                - breed
                                 - category
+                                - activityNeeds
+                                - levelOfGrooming
+                                - isHouseTrained
+                                - healthCheck
+                                - microchip
+                                - wormed
+                                - heartwormTreated
+                                - vaccinated
+                                - deSexed
                                 - bio
-                                - image
+                                - traits
+                                - adoptionFee
+                                - images
         get:
             operationId: GetAllPets
             responses:
@@ -334,13 +516,10 @@ paths:
                     content:
                         application/json:
                             schema:
-                                properties:
-                                    totalPages: {type: number, format: double}
-                                    pets: {items: {$ref: '#/components/schemas/PetResponse'}, type: array}
-                                required:
-                                    - totalPages
-                                    - pets
-                                type: object
+                                $ref: '#/components/schemas/PetsResponse'
+                            examples:
+                                'Example 1':
+                                    value: {pets: [{name: Fluffy, gender: FEMALE, age: '2 yR', color: White, breed: Persian, category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, microchip: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Fluffy is a calm and friendly cat...', traits: [Affectionate, independent], adoptionFee: $100, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg']}, {name: Buddy, gender: MALE, age: '3 yR', color: Brown, breed: 'Labrador Retriever', category: DOG, activityNeeds: HIGH, levelOfGrooming: MEDIUM, isHouseTrained: true, healthInfo: {healthCheck: true, microchip: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Buddy is a playful and energetic dog...', traits: [Friendly, loyal], adoptionFee: $150, images: ['https://example.com/images/buddy1.jpg', 'https://example.com/images/buddy2.jpg']}], totalPages: 5, colors: [White, Black, Brown], breeds: [Persian, 'Labrador Retriever', 'Golden Retriever'], genders: [Male, Female], ages: ['1 year', '2 years', '3 years']}
             summary: 'Returns all pets'
             tags:
                 - Pet
@@ -371,6 +550,30 @@ paths:
                 -
                     in: query
                     name: filterOption
+                    required: false
+                    schema:
+                        type: string
+                -
+                    in: query
+                    name: colorFilter
+                    required: false
+                    schema:
+                        type: string
+                -
+                    in: query
+                    name: breedFilter
+                    required: false
+                    schema:
+                        type: string
+                -
+                    in: query
+                    name: genderFilter
+                    required: false
+                    schema:
+                        type: string
+                -
+                    in: query
+                    name: ageFilter
                     required: false
                     schema:
                         type: string
