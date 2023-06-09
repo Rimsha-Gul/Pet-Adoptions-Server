@@ -30,6 +30,7 @@ export const loginValidation = (data: any): Joi.ValidationResult =>
 
 export const addPetValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
+    microchipID: Joi.string().length(10).required(),
     name: petNameSchema.required(),
     gender: petGenderSchema.required(),
     age: Joi.string().required(),
@@ -40,14 +41,15 @@ export const addPetValidation = (data: any): Joi.ValidationResult =>
     levelOfGrooming: petLevelOfGroomingSchema.required(),
     isHouseTrained: Joi.boolean().required(),
     healthCheck: Joi.boolean().required(),
-    microchip: Joi.boolean().required(),
+    allergiesTreated: Joi.boolean().required(),
     wormed: Joi.boolean().required(),
     heartwormTreated: Joi.boolean().required(),
     vaccinated: Joi.boolean().required(),
     deSexed: Joi.boolean().required(),
     bio: Joi.string().required(),
     traits: Joi.string().required(),
-    adoptionFee: Joi.string().required()
+    adoptionFee: Joi.string().required(),
+    shelterID: Joi.string().optional()
   }).validate(data)
 
 export const getAllPetsValidation = (data: any): Joi.ValidationResult =>

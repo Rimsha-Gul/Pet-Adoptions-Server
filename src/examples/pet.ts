@@ -1,6 +1,7 @@
 import { ActivityNeeds, Category, Gender, LevelOfGrooming } from '../models/Pet'
 
 export const petResponseExample = {
+  microchipID: 'A123456789',
   name: 'Meredith',
   gender: 'MALE',
   age: '2yr 4m',
@@ -11,7 +12,7 @@ export const petResponseExample = {
   levelOfGrooming: 'MEDIUM',
   isHouseTrained: 'true',
   healthCheck: 'true',
-  microchip: 'true',
+  allergiesTreated: 'true',
   wormed: 'true',
   heartwormTreated: 'true',
   vaccinated: 'true',
@@ -24,6 +25,7 @@ export const petResponseExample = {
 export const petsResponseExample = {
   pets: [
     {
+      microchipID: 'A123456789',
       name: 'Fluffy',
       gender: Gender.Female,
       age: '2 yR',
@@ -35,7 +37,7 @@ export const petsResponseExample = {
       isHouseTrained: true,
       healthInfo: {
         healthCheck: true,
-        microchip: true,
+        allergiesTreated: true,
         wormed: true,
         heartwormTreated: true,
         vaccinated: true,
@@ -50,6 +52,7 @@ export const petsResponseExample = {
       ]
     },
     {
+      microchipID: 'B123456789',
       name: 'Buddy',
       gender: Gender.Male,
       age: '3 yR',
@@ -61,7 +64,7 @@ export const petsResponseExample = {
       isHouseTrained: true,
       healthInfo: {
         healthCheck: true,
-        microchip: true,
+        allergiesTreated: true,
         wormed: true,
         heartwormTreated: true,
         vaccinated: true,

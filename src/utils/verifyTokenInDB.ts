@@ -2,14 +2,14 @@ import User from '../models/User'
 
 export const verifyTokenInDB = async (email: string, token: string) => {
   const user = await User.findOne({ email })
-  if (!user) return undefined
+  if (!user) throw { code: 404, message: 'User not found' }
 
   let currentTokenObj: any
   if (user.tokens.accessToken === token || user.tokens.refreshToken === token) {
     currentTokenObj = token
   }
 
-  if (!currentTokenObj) return undefined
+  if (!currentTokenObj) throw { code: 403, message: 'User not authorized' }
   else {
     return {
       _id: user._id,

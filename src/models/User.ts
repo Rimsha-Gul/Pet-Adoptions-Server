@@ -48,6 +48,7 @@ export interface SignupResponse {
 export interface SessionResponse extends SignupResponse {
   name: string
   email: string
+  role: Role
 }
 
 export interface VerificationResponse extends TokenResponse {

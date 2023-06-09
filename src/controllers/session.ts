@@ -24,7 +24,8 @@ const session = async (req: UserRequest) => {
   if (user) {
     return {
       name: user.name,
-      email: user.email
+      email: user.email,
+      role: user.role
     }
   }
   throw { code: 404, message: 'User not found' }
