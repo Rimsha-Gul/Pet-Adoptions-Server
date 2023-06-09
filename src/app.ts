@@ -1,11 +1,10 @@
-import express, { Express } from 'express'
 import dotenv from 'dotenv'
+dotenv.config()
+import express, { Express } from 'express'
 import mongoose, { ConnectOptions } from 'mongoose'
 import router from './routes'
 import path from 'path'
 import cors from 'cors'
-
-dotenv.config()
 
 const startApp = async () => {
   try {

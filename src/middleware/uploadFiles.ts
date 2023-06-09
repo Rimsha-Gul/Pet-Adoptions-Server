@@ -1,29 +1,19 @@
 import { Request } from 'express'
 import multer, { FileFilterCallback, Options } from 'multer'
-import fs from 'fs'
+//import fs from 'fs'
 import { google, drive_v3 } from 'googleapis'
 
-// let serviceAccountCredentials
-// if (process.env.GOOGLE_SERVICE_ACCOUNT) {
-//   serviceAccountCredentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT)
-// } else {
-//   console.error('Environment variable GOOGLE_SERVICE_ACCOUNT is not defined')
-//   process.exit(1)
-// }
+let serviceAccountCredentials: any
 
-// const auth = new google.auth.GoogleAuth({
-//   credentials: serviceAccountCredentials,
-//   scopes: ['https://www.googleapis.com/auth/drive.file']
-// })
-
-let serviceAccountCredentials
-try {
-  // Load the service account credentials from a file
-  serviceAccountCredentials = JSON.parse(
-    fs.readFileSync('purrfectadoptions-46c9b20cb8c0.json', 'utf8')
-  )
-} catch (error) {
-  console.error('Failed to load service account credentials:', error)
+if (process.env.GOOGLE_SERVICE_ACCOUNT) {
+  try {
+    serviceAccountCredentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT)
+  } catch (e) {
+    console.error('Unable to parse GOOGLE_SERVICE_ACCOUNT:', e)
+    process.exit(1)
+  }
+} else {
+  console.error('Environment variable GOOGLE_SERVICE_ACCOUNT is not defined')
   process.exit(1)
 }
 
