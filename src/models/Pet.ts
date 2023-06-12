@@ -18,9 +18,10 @@ export enum Gender {
 
 export enum ActivityNeeds {
   Low = 'LOW',
+  VeryLow = 'VERY_LOW',
   MidRange = 'MIDRANGE',
   High = 'HIGH',
-  VeryHigh = 'VERYHIGH'
+  VeryHigh = 'VER_YHIGH'
 }
 
 export enum LevelOfGrooming {
@@ -30,6 +31,7 @@ export enum LevelOfGrooming {
 }
 
 export interface PetPayload {
+  microchipID: string
   name: string
   gender: string
   age: string
@@ -40,7 +42,7 @@ export interface PetPayload {
   levelOfGrooming: string
   isHouseTrained: string
   healthCheck: string
-  microchip: string
+  allergiesTreated: string
   wormed: string
   heartwormTreated: string
   vaccinated: string
@@ -51,6 +53,7 @@ export interface PetPayload {
 }
 
 export interface AllPetsResponse {
+  microchipID: string
   name: string
   gender: Gender
   age: string
@@ -62,7 +65,7 @@ export interface AllPetsResponse {
   isHouseTrained: boolean
   healthInfo: {
     healthCheck: boolean
-    microchip: boolean
+    allergiesTreated: boolean
     wormed: boolean
     heartwormTreated: boolean
     vaccinated: boolean
@@ -84,6 +87,7 @@ export interface PetsResponse {
 }
 
 export interface PetResponse {
+  microchipID: string
   name: string
   gender: Gender
   age: string
@@ -94,14 +98,14 @@ export interface PetResponse {
 }
 
 export interface PetDocument extends PetResponse, Document {
-  shelterId: Schema.Types.ObjectId
+  shelterID: Schema.Types.ObjectId
   category: Category
   activityNeeds: ActivityNeeds
   levelOfGrooming: LevelOfGrooming
   isHouseTrained: boolean
   healthInfo: {
     healthCheck: boolean
-    microchip: boolean
+    allergiesTreated: boolean
     wormed: boolean
     heartwormTreated: boolean
     vaccinated: boolean
@@ -113,7 +117,8 @@ export interface PetDocument extends PetResponse, Document {
 
 const PetSchema = new Schema<PetDocument>(
   {
-    shelterId: { type: Schema.Types.ObjectId },
+    shelterID: { type: Schema.Types.ObjectId },
+    microchipID: { type: String, required: true },
     name: { type: String, required: true },
     gender: { type: String, enum: Gender, required: true },
     age: { type: String, required: true },
@@ -126,7 +131,7 @@ const PetSchema = new Schema<PetDocument>(
     isHouseTrained: { type: Boolean, required: true },
     healthInfo: {
       healthCheck: { type: Boolean, required: true },
-      microchip: { type: Boolean, required: true },
+      allergiesTreated: { type: Boolean, required: true },
       wormed: { type: Boolean, required: true },
       heartwormTreated: { type: Boolean, required: true },
       vaccinated: { type: Boolean, required: true },

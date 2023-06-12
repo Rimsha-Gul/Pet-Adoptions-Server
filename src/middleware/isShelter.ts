@@ -13,7 +13,7 @@ const isUserShelter = async (
 ) => {
   try {
     console.log(req.user)
-    if (req.user?.role !== Role.Shelter)
+    if (req.user?.role === Role.User)
       throw { code: 403, message: 'Permission denied' }
     return next()
   } catch (error: any) {

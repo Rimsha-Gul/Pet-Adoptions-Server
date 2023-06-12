@@ -95,15 +95,24 @@ components:
                 - password
             type: object
             additionalProperties: false
+        Role:
+            enum:
+                - ADMIN
+                - SHELTER
+                - USER
+            type: string
         SessionResponse:
             properties:
                 name:
                     type: string
                 email:
                     type: string
+                role:
+                    $ref: '#/components/schemas/Role'
             required:
                 - name
                 - email
+                - role
             type: object
             additionalProperties: false
         Gender:
@@ -113,6 +122,8 @@ components:
             type: string
         PetResponse:
             properties:
+                microchipID:
+                    type: string
                 name:
                     type: string
                 gender:
@@ -130,6 +141,7 @@ components:
                         type: string
                     type: array
             required:
+                - microchipID
                 - name
                 - gender
                 - age
@@ -153,9 +165,10 @@ components:
         ActivityNeeds:
             enum:
                 - LOW
+                - VERY_LOW
                 - MIDRANGE
                 - HIGH
-                - VERYHIGH
+                - VER_YHIGH
             type: string
         LevelOfGrooming:
             enum:
@@ -165,6 +178,8 @@ components:
             type: string
         AllPetsResponse:
             properties:
+                microchipID:
+                    type: string
                 name:
                     type: string
                 gender:
@@ -193,7 +208,7 @@ components:
                             type: boolean
                         wormed:
                             type: boolean
-                        microchip:
+                        allergiesTreated:
                             type: boolean
                         healthCheck:
                             type: boolean
@@ -202,7 +217,7 @@ components:
                         - vaccinated
                         - heartwormTreated
                         - wormed
-                        - microchip
+                        - allergiesTreated
                         - healthCheck
                     type: object
                 bio:
@@ -218,6 +233,7 @@ components:
                         type: string
                     type: array
             required:
+                - microchipID
                 - name
                 - gender
                 - age
@@ -414,7 +430,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/SessionResponse'
                             examples:
-                                'Example 1': {}
+                                'Example 1':
+                                    value: {name: 'John Doe', email: johndoe@example.com, role: USER}
             summary: 'Get a user''s session info'
             tags:
                 - Session
@@ -434,7 +451,7 @@ paths:
                                 $ref: '#/components/schemas/PetResponse'
                             examples:
                                 'Example 1':
-                                    value: {name: Meredith, gender: MALE, age: '2yr 4m', color: white, breed: 'Mini Lop', category: HORSE, activityNeeds: HIGH, levelOfGrooming: MEDIUM, isHouseTrained: 'true', healthCheck: 'true', microchip: 'true', wormed: 'true', heartwormTreated: 'true', vaccinated: 'true', deSexed: 'true', bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: 'playful,athletic,kid-friendly', adoptionFee: $300}
+                                    value: {microchipID: A123456789, name: Meredith, gender: MALE, age: '2yr 4m', color: white, breed: 'Mini Lop', category: HORSE, activityNeeds: HIGH, levelOfGrooming: MEDIUM, isHouseTrained: 'true', healthCheck: 'true', allergiesTreated: 'true', wormed: 'true', heartwormTreated: 'true', vaccinated: 'true', deSexed: 'true', bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: 'playful,athletic,kid-friendly', adoptionFee: $300}
             summary: 'Accepts pet info, adds pet to db and returns pet info'
             tags:
                 - Pet
@@ -449,6 +466,8 @@ paths:
                         schema:
                             type: object
                             properties:
+                                microchipID:
+                                    type: string
                                 name:
                                     type: string
                                 gender:
@@ -469,7 +488,7 @@ paths:
                                     type: string
                                 healthCheck:
                                     type: string
-                                microchip:
+                                allergiesTreated:
                                     type: string
                                 wormed:
                                     type: string
@@ -488,7 +507,10 @@ paths:
                                 images:
                                     items: {type: string, format: binary}
                                     type: array
+                                shelterID:
+                                    type: string
                             required:
+                                - microchipID
                                 - name
                                 - gender
                                 - age
@@ -499,7 +521,7 @@ paths:
                                 - levelOfGrooming
                                 - isHouseTrained
                                 - healthCheck
-                                - microchip
+                                - allergiesTreated
                                 - wormed
                                 - heartwormTreated
                                 - vaccinated
@@ -519,7 +541,7 @@ paths:
                                 $ref: '#/components/schemas/PetsResponse'
                             examples:
                                 'Example 1':
-                                    value: {pets: [{name: Fluffy, gender: FEMALE, age: '2 yR', color: White, breed: Persian, category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, microchip: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Fluffy is a calm and friendly cat...', traits: [Affectionate, independent], adoptionFee: $100, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg']}, {name: Buddy, gender: MALE, age: '3 yR', color: Brown, breed: 'Labrador Retriever', category: DOG, activityNeeds: HIGH, levelOfGrooming: MEDIUM, isHouseTrained: true, healthInfo: {healthCheck: true, microchip: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Buddy is a playful and energetic dog...', traits: [Friendly, loyal], adoptionFee: $150, images: ['https://example.com/images/buddy1.jpg', 'https://example.com/images/buddy2.jpg']}], totalPages: 5, colors: [White, Black, Brown], breeds: [Persian, 'Labrador Retriever', 'Golden Retriever'], genders: [Male, Female], ages: ['1 year', '2 years', '3 years']}
+                                    value: {pets: [{microchipID: A123456789, name: Fluffy, gender: FEMALE, age: '2 yR', color: White, breed: Persian, category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Fluffy is a calm and friendly cat...', traits: [Affectionate, independent], adoptionFee: $100, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg']}, {microchipID: B123456789, name: Buddy, gender: MALE, age: '3 yR', color: Brown, breed: 'Labrador Retriever', category: DOG, activityNeeds: HIGH, levelOfGrooming: MEDIUM, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Buddy is a playful and energetic dog...', traits: [Friendly, loyal], adoptionFee: $150, images: ['https://example.com/images/buddy1.jpg', 'https://example.com/images/buddy2.jpg']}], totalPages: 5, colors: [White, Black, Brown], breeds: [Persian, 'Labrador Retriever', 'Golden Retriever'], genders: [Male, Female], ages: ['1 year', '2 years', '3 years']}
             summary: 'Returns all pets'
             tags:
                 - Pet
