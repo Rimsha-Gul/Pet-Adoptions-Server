@@ -2,6 +2,7 @@ import express from 'express'
 import { AuthController } from '../controllers/auth'
 import { authenticateAccessToken } from '../middleware/authenticateToken'
 import { signUpValidation, loginValidation } from '../utils/validation'
+import { isAdmin } from '../middleware/isAdmin'
 
 const authRouter = express.Router()
 const controller = new AuthController()
@@ -55,5 +56,19 @@ authRouter.delete('/logout', authenticateAccessToken, async (req, res) => {
     return res.status(err.code).send(err.message)
   }
 })
+
+authRouter.get(
+  '/shelters',
+  authenticateAccessToken,
+  isAdmin,
+  async (req, res) => {
+    try {
+      const response = await controller.getShelters(req)
+      return res.send(response)
+    } catch (err: any) {
+      return res.status(err.code).send(err.message)
+    }
+  }
+)
 
 export default authRouter

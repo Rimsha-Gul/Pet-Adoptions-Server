@@ -5,7 +5,8 @@ import User, {
   TokenResponse,
   VerificationResponse,
   VerificationPayload,
-  SendCodePayload
+  SendCodePayload,
+  ShelterResponse
 } from '../models/User'
 import { generateAccessToken } from '../utils/generateAccessToken'
 import { generateRefreshToken } from '../utils/generateRefreshToken'
@@ -15,6 +16,7 @@ import {
   Body,
   Delete,
   Example,
+  Get,
   Post,
   Request,
   Route,
@@ -26,6 +28,7 @@ import { sendEmail } from '../middleware/sendEmail'
 import { generateVerificationCode } from '../utils/generateVerificationCode'
 import { getVerificationCodeEmail } from '../data/emailMessages'
 import {
+  shelterResponseExample,
   signupResponseExample,
   tokenResponseExample,
   verificationResponseExample
@@ -81,6 +84,18 @@ export class AuthController {
   @Delete('/logout')
   public async logout(@Request() req: UserRequest) {
     return logout(req)
+  }
+  /**
+   * @summary Returns ids and names of all shelters
+   *
+   */
+  @Example<ShelterResponse>(shelterResponseExample)
+  @Security('bearerAuth')
+  @Get('/shelters')
+  public async getShelters(
+    @Request() req: UserRequest
+  ): Promise<ShelterResponse[]> {
+    return getShelters(req)
   }
 }
 
@@ -200,4 +215,18 @@ const login = async (body: LoginPayload): Promise<TokenResponse> => {
 const logout = async (req: UserRequest) => {
   await removeTokensInDB((req.user as RequestUser).email)
   return { code: 200, message: 'Logout successful' }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const getShelters = async (_req: UserRequest): Promise<ShelterResponse[]> => {
+  try {
+    const shelters = await User.find({ role: 'SHELTER' }, '_id name')
+    const shelterResponses: ShelterResponse[] = shelters.map((shelter) => ({
+      id: shelter._id.toString(),
+      name: shelter.name
+    }))
+    return shelterResponses
+  } catch (error: any) {
+    throw { code: 500, message: 'Failed to fetch shelters' }
+  }
 }

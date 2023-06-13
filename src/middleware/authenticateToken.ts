@@ -40,7 +40,6 @@ const authenticateToken = async (
     }
     if (!token) throw { code: 401, message: 'Unauthorized' }
     const data: any = jwt.verify(token, key)
-
     try {
       const user = await verifyTokenInDB(data?.email, token)
       req.user = user
@@ -49,6 +48,6 @@ const authenticateToken = async (
       res.status(error.code).send(error.message)
     }
   } catch (error: any) {
-    res.status(error.code).send(error.message)
+    res.status(error.code || 401).send(error.message)
   }
 }

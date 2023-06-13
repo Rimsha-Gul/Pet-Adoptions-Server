@@ -4,6 +4,7 @@ import { authenticateAccessToken } from '../middleware/authenticateToken'
 import { isShelter } from '../middleware/isShelter'
 import { PetRequest } from '../types/PetRequest'
 import upload from '../middleware/uploadFiles'
+import { uploadFiles } from '../utils/uploadFiles'
 
 const petRouter = express.Router()
 const petController = new PetController()
@@ -37,11 +38,8 @@ petRouter.post(
         adoptionFee,
         shelterID
       } = req.body
-
-      const fileIds = await petController.uploadFiles(
-        (req as PetRequest).files,
-        req
-      )
+      console.log(req.body)
+      const fileIds = await uploadFiles((req as PetRequest).files, req)
 
       const response = await petController.addPet(
         microchipID,

@@ -95,6 +95,17 @@ components:
                 - password
             type: object
             additionalProperties: false
+        ShelterResponse:
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+            required:
+                - id
+                - name
+            type: object
+            additionalProperties: false
         Role:
             enum:
                 - ADMIN
@@ -413,6 +424,28 @@ paths:
                                     - code
                                 type: object
             summary: 'Removes JWT tokens and returns success message'
+            tags:
+                - Auth
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
+    /auth/shelters:
+        get:
+            operationId: GetShelters
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: '#/components/schemas/ShelterResponse'
+                                type: array
+                            examples:
+                                'Example 1':
+                                    value: {id: 60df5df17f4c6a01ac63491c, name: 'Furry Friends Sanctuary'}
+            summary: 'Returns ids and names of all shelters'
             tags:
                 - Auth
             security:
