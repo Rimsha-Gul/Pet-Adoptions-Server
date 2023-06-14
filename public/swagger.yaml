@@ -131,37 +131,6 @@ components:
                 - MALE
                 - FEMALE
             type: string
-        PetResponse:
-            properties:
-                microchipID:
-                    type: string
-                name:
-                    type: string
-                gender:
-                    $ref: '#/components/schemas/Gender'
-                age:
-                    type: string
-                color:
-                    type: string
-                breed:
-                    type: string
-                bio:
-                    type: string
-                images:
-                    items:
-                        type: string
-                    type: array
-            required:
-                - microchipID
-                - name
-                - gender
-                - age
-                - color
-                - breed
-                - bio
-                - images
-            type: object
-            additionalProperties: false
         Category:
             enum:
                 - CAT
@@ -187,7 +156,7 @@ components:
                 - MEDIUM
                 - HIGH
             type: string
-        AllPetsResponse:
+        PetsResponse:
             properties:
                 microchipID:
                     type: string
@@ -261,11 +230,19 @@ components:
                 - images
             type: object
             additionalProperties: false
-        PetsResponse:
+        AddPetResponse:
+            properties:
+                pet:
+                    $ref: '#/components/schemas/PetsResponse'
+            required:
+                - pet
+            type: object
+            additionalProperties: false
+        AllPetsResponse:
             properties:
                 pets:
                     items:
-                        $ref: '#/components/schemas/AllPetsResponse'
+                        $ref: '#/components/schemas/PetsResponse'
                     type: array
                 totalPages:
                     type: number
@@ -481,10 +458,10 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/PetResponse'
+                                $ref: '#/components/schemas/AddPetResponse'
                             examples:
                                 'Example 1':
-                                    value: {microchipID: A123456789, name: Meredith, gender: MALE, age: '2yr 4m', color: white, breed: 'Mini Lop', category: HORSE, activityNeeds: HIGH, levelOfGrooming: MEDIUM, isHouseTrained: 'true', healthCheck: 'true', allergiesTreated: 'true', wormed: 'true', heartwormTreated: 'true', vaccinated: 'true', deSexed: 'true', bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: 'playful,athletic,kid-friendly', adoptionFee: $300}
+                                    value: {pet: {microchipID: A123456789, name: Snowball, gender: MALE, age: '2yr 4m', color: white, breed: 'Mini Lop', category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg']}}
             summary: 'Accepts pet info, adds pet to db and returns pet info'
             tags:
                 - Pet
@@ -571,7 +548,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/PetsResponse'
+                                $ref: '#/components/schemas/AllPetsResponse'
                             examples:
                                 'Example 1':
                                     value: {pets: [{microchipID: A123456789, name: Fluffy, gender: FEMALE, age: '2 yR', color: White, breed: Persian, category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Fluffy is a calm and friendly cat...', traits: [Affectionate, independent], adoptionFee: $100, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg']}, {microchipID: B123456789, name: Buddy, gender: MALE, age: '3 yR', color: Brown, breed: 'Labrador Retriever', category: DOG, activityNeeds: HIGH, levelOfGrooming: MEDIUM, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Buddy is a playful and energetic dog...', traits: [Friendly, loyal], adoptionFee: $150, images: ['https://example.com/images/buddy1.jpg', 'https://example.com/images/buddy2.jpg']}], totalPages: 5, colors: [White, Black, Brown], breeds: [Persian, 'Labrador Retriever', 'Golden Retriever'], genders: [Male, Female], ages: ['1 year', '2 years', '3 years']}

@@ -52,7 +52,7 @@ export interface PetPayload {
   adoptionFee: string
 }
 
-export interface AllPetsResponse {
+export interface PetsResponse {
   microchipID: string
   name: string
   gender: Gender
@@ -77,8 +77,12 @@ export interface AllPetsResponse {
   images: string[]
 }
 
-export interface PetsResponse {
-  pets: AllPetsResponse[]
+export interface AddPetResponse {
+  pet: PetsResponse
+}
+
+export interface AllPetsResponse {
+  pets: PetsResponse[]
   totalPages: number
   colors: string[]
   breeds: string[]

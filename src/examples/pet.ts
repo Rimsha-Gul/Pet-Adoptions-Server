@@ -1,25 +1,33 @@
 import { ActivityNeeds, Category, Gender, LevelOfGrooming } from '../models/Pet'
 
 export const petResponseExample = {
-  microchipID: 'A123456789',
-  name: 'Meredith',
-  gender: 'MALE',
-  age: '2yr 4m',
-  color: 'white',
-  breed: 'Mini Lop',
-  category: 'HORSE',
-  activityNeeds: 'HIGH',
-  levelOfGrooming: 'MEDIUM',
-  isHouseTrained: 'true',
-  healthCheck: 'true',
-  allergiesTreated: 'true',
-  wormed: 'true',
-  heartwormTreated: 'true',
-  vaccinated: 'true',
-  deSexed: 'true',
-  bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.',
-  traits: 'playful,athletic,kid-friendly',
-  adoptionFee: '$300'
+  pet: {
+    microchipID: 'A123456789',
+    name: 'Snowball',
+    gender: Gender.Male,
+    age: '2yr 4m',
+    color: 'white',
+    breed: 'Mini Lop',
+    category: Category.Cat,
+    activityNeeds: ActivityNeeds.Low,
+    levelOfGrooming: LevelOfGrooming.High,
+    isHouseTrained: true,
+    healthInfo: {
+      healthCheck: true,
+      allergiesTreated: true,
+      wormed: true,
+      heartwormTreated: true,
+      vaccinated: true,
+      deSexed: true
+    },
+    bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.',
+    traits: ['Affectionate', 'independent'],
+    adoptionFee: '$300',
+    images: [
+      'https://example.com/images/fluffy1.jpg',
+      'https://example.com/images/fluffy2.jpg'
+    ]
+  }
 }
 
 export const petsResponseExample = {

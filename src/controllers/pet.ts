@@ -1,11 +1,10 @@
 import {
   ActivityNeeds,
+  AddPetResponse,
+  AllPetsResponse,
   Category,
   Gender,
-  LevelOfGrooming,
-  PetPayload,
-  PetResponse,
-  PetsResponse
+  LevelOfGrooming
 } from '../models/Pet'
 import {
   Example,
@@ -34,7 +33,7 @@ export class PetController {
    * @summary Accepts pet info, adds pet to db and returns pet info
    *
    */
-  @Example<PetPayload>(petResponseExample)
+  @Example<AddPetResponse>(petResponseExample)
   @Security('bearerAuth')
   @Post('/')
   public async addPet(
@@ -60,7 +59,7 @@ export class PetController {
     @UploadedFiles() images: string[],
     @Request() req: UserRequest,
     @FormField() shelterID?: string
-  ): Promise<PetResponse> {
+  ): Promise<AddPetResponse> {
     return addPet(
       microchipID,
       name,
@@ -91,7 +90,7 @@ export class PetController {
    * @summary Returns all pets
    *
    */
-  @Example<PetsResponse>(petsResponseExample)
+  @Example<AllPetsResponse>(petsResponseExample)
   @Security('bearerAuth')
   @Get('/')
   public async getAllPets(
@@ -104,7 +103,7 @@ export class PetController {
     @Query('breedFilter') breedFilter?: string,
     @Query('genderFilter') genderFilter?: string,
     @Query('ageFilter') ageFilter?: string
-  ): Promise<PetsResponse> {
+  ): Promise<AllPetsResponse> {
     return getAllPets(
       page,
       limit,
@@ -142,7 +141,7 @@ const addPet = async (
   images: string[],
   req: UserRequest,
   shelterID?: string
-): Promise<PetResponse> => {
+): Promise<AddPetResponse> => {
   if (!images) {
     throw { code: 400, message: 'No image file provided.' }
   }
@@ -193,15 +192,15 @@ const addPet = async (
 
   await pet.save()
 
+  // Map the images to their URLs
+  const imageUrls = await Promise.all(images.map((image) => getImageURL(image)))
+
+  // Include the image URLs in the response
   return {
-    microchipID: pet.microchipID,
-    name: pet.name,
-    gender: pet.gender,
-    age: pet.age,
-    color: pet.color,
-    breed: pet.breed,
-    bio: pet.bio,
-    images: pet.images
+    pet: {
+      ...pet.toObject(),
+      images: imageUrls
+    }
   }
 }
 
@@ -215,7 +214,7 @@ const getAllPets = async (
   breedFilter?: string,
   genderFilter?: string,
   ageFilter?: string
-): Promise<PetsResponse> => {
+): Promise<AllPetsResponse> => {
   try {
     console.log(filterOption)
     console.log(colorFilter)
@@ -320,6 +319,8 @@ const getAllPets = async (
     const totalPetsPromise = Pet.countDocuments(query)
 
     // Apply pagination to the query
+    console.log('Skip: ', skip)
+    console.log('Limit: ', limit)
     query = query.skip(skip).limit(limit)
 
     const [petsList, totalPets] = await Promise.all([query, totalPetsPromise])
