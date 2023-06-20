@@ -6,7 +6,8 @@ import User, {
   VerificationResponse,
   VerificationPayload,
   SendCodePayload,
-  ShelterResponse
+  ShelterResponse,
+  RefreshResponse
 } from '../models/User'
 import { generateAccessToken } from '../utils/generateAccessToken'
 import { generateRefreshToken } from '../utils/generateRefreshToken'
@@ -28,6 +29,7 @@ import { sendEmail } from '../middleware/sendEmail'
 import { generateVerificationCode } from '../utils/generateVerificationCode'
 import { getVerificationCodeEmail } from '../data/emailMessages'
 import {
+  refreshResponseExample,
   shelterResponseExample,
   signupResponseExample,
   tokenResponseExample,
@@ -78,6 +80,16 @@ export class AuthController {
   }
 
   /**
+   * @summary Refreshes access token
+   */
+  @Example<RefreshResponse>(refreshResponseExample)
+  @Security('bearerAuth')
+  @Post('/refresh')
+  public async refresh(@Request() req: UserRequest): Promise<RefreshResponse> {
+    return refresh(req)
+  }
+
+  /**
    * @summary Removes JWT tokens and returns success message
    */
   @Security('bearerAuth')
@@ -85,6 +97,7 @@ export class AuthController {
   public async logout(@Request() req: UserRequest) {
     return logout(req)
   }
+
   /**
    * @summary Returns ids and names of all shelters
    *
@@ -210,6 +223,14 @@ const login = async (body: LoginPayload): Promise<TokenResponse> => {
     await user.save()
     return { tokens: user.tokens }
   }
+}
+
+const refresh = async (req: UserRequest): Promise<RefreshResponse> => {
+  if (!req.user || !req.user.email || !req.user.role) {
+    throw { code: 400, message: 'Invalid user data' }
+  }
+  const accessToken = generateAccessToken(req.user.email, req.user.role)
+  return { accessToken }
 }
 
 const logout = async (req: UserRequest) => {

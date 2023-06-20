@@ -95,6 +95,14 @@ components:
                 - password
             type: object
             additionalProperties: false
+        RefreshResponse:
+            properties:
+                accessToken:
+                    type: string
+            required:
+                - accessToken
+            type: object
+            additionalProperties: false
         ShelterResponse:
             properties:
                 id:
@@ -385,6 +393,26 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/LoginPayload'
+    /auth/refresh:
+        post:
+            operationId: Refresh
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/RefreshResponse'
+                            examples:
+                                'Example 1':
+                                    value: {accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...}
+            summary: 'Refreshes access token'
+            tags:
+                - Auth
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
     /auth/logout:
         delete:
             operationId: Logout

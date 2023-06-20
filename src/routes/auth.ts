@@ -1,6 +1,9 @@
 import express from 'express'
 import { AuthController } from '../controllers/auth'
-import { authenticateAccessToken } from '../middleware/authenticateToken'
+import {
+  authenticateAccessToken,
+  authenticateRefreshToken
+} from '../middleware/authenticateToken'
 import { signUpValidation, loginValidation } from '../utils/validation'
 import { isAdmin } from '../middleware/isAdmin'
 
@@ -31,6 +34,15 @@ authRouter.post('/sendVerificationCode', async (req, res) => {
   try {
     console.log(req.body)
     const response = await controller.sendVerificationCode(req.body)
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
+  }
+})
+
+authRouter.post('refresh', authenticateRefreshToken, async (req, res) => {
+  try {
+    const response = await controller.refresh(req)
     return res.send(response)
   } catch (err: any) {
     return res.status(err.code).send(err.message)
