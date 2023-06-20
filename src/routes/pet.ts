@@ -4,6 +4,7 @@ import { authenticateAccessToken } from '../middleware/authenticateToken'
 import { isShelter } from '../middleware/isShelter'
 import { PetRequest } from '../types/PetRequest'
 import upload from '../middleware/uploadFiles'
+import { uploadFiles } from '../utils/uploadFiles'
 
 const petRouter = express.Router()
 const petController = new PetController()
@@ -19,7 +20,7 @@ petRouter.post(
         microchipID,
         name,
         gender,
-        age,
+        birthDate,
         color,
         breed,
         category,
@@ -37,17 +38,14 @@ petRouter.post(
         adoptionFee,
         shelterID
       } = req.body
-
-      const fileIds = await petController.uploadFiles(
-        (req as PetRequest).files,
-        req
-      )
+      console.log(req.body)
+      const fileIds = await uploadFiles((req as PetRequest).files, req)
 
       const response = await petController.addPet(
         microchipID,
         name,
         gender,
-        age,
+        birthDate,
         color,
         breed,
         category,
@@ -100,6 +98,7 @@ petRouter.get('/', authenticateAccessToken, async (req, res) => {
     )
     return res.send(response)
   } catch (err: any) {
+    console.log('Error response')
     return res.status(err.code).send(err.message)
   }
 })

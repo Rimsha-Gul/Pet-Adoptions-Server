@@ -55,6 +55,11 @@ export interface VerificationResponse extends TokenResponse {
   isVerified: boolean
 }
 
+export interface ShelterResponse {
+  id: string
+  name: string
+}
+
 // interface IUserModel extends Model<IUser> {
 //   hashPassword(password: string): string
 // }

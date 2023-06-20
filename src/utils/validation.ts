@@ -33,7 +33,7 @@ export const addPetValidation = (data: any): Joi.ValidationResult =>
     microchipID: Joi.string().length(10).required(),
     name: petNameSchema.required(),
     gender: petGenderSchema.required(),
-    age: Joi.string().required(),
+    birthDate: Joi.date().less('now').required(),
     color: Joi.string().required(),
     breed: Joi.string().required(),
     category: petCategorySchema.required(),

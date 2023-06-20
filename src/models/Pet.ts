@@ -34,7 +34,7 @@ export interface PetPayload {
   microchipID: string
   name: string
   gender: string
-  age: string
+  birthDate: string
   color: string
   breed: string
   category: string
@@ -52,11 +52,11 @@ export interface PetPayload {
   adoptionFee: string
 }
 
-export interface AllPetsResponse {
+export interface PetsResponse {
   microchipID: string
   name: string
   gender: Gender
-  age: string
+  birthDate: string
   color: string
   breed: string
   category: Category
@@ -77,42 +77,22 @@ export interface AllPetsResponse {
   images: string[]
 }
 
-export interface PetsResponse {
-  pets: AllPetsResponse[]
+export interface AddPetResponse {
+  pet: PetsResponse
+}
+
+export interface AllPetsResponse {
+  pets: PetsResponse[]
   totalPages: number
   colors: string[]
   breeds: string[]
   genders: string[]
-  ages: string[]
+  ages: number[]
 }
 
-export interface PetResponse {
-  microchipID: string
-  name: string
-  gender: Gender
-  age: string
-  color: string
-  breed: string
-  bio: string
-  images: string[]
-}
-
-export interface PetDocument extends PetResponse, Document {
+export interface PetDocument extends Omit<PetsResponse, 'birthDate'>, Document {
   shelterID: Schema.Types.ObjectId
-  category: Category
-  activityNeeds: ActivityNeeds
-  levelOfGrooming: LevelOfGrooming
-  isHouseTrained: boolean
-  healthInfo: {
-    healthCheck: boolean
-    allergiesTreated: boolean
-    wormed: boolean
-    heartwormTreated: boolean
-    vaccinated: boolean
-    deSexed: boolean
-  }
-  traits: string[]
-  adoptionFee: string
+  birthDate: Date
 }
 
 const PetSchema = new Schema<PetDocument>(
@@ -121,7 +101,7 @@ const PetSchema = new Schema<PetDocument>(
     microchipID: { type: String, required: true },
     name: { type: String, required: true },
     gender: { type: String, enum: Gender, required: true },
-    age: { type: String, required: true },
+    birthDate: { type: Date, required: true },
     color: { type: String, required: true },
     breed: { type: String, required: true },
     category: { type: String, enum: Category, required: true },

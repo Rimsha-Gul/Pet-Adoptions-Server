@@ -1,11 +1,10 @@
 import {
   ActivityNeeds,
+  AddPetResponse,
+  AllPetsResponse,
   Category,
   Gender,
-  LevelOfGrooming,
-  PetPayload,
-  PetResponse,
-  PetsResponse
+  LevelOfGrooming
 } from '../models/Pet'
 import {
   Example,
@@ -25,9 +24,8 @@ import { UserRequest } from '../types/Request'
 import { RequestUser } from '../types/RequestUser'
 import { petResponseExample, petsResponseExample } from '../examples/pet'
 import { User } from '../models/User'
-import { drive, getOrCreateFolder } from '../middleware/uploadFiles'
-import path from 'path'
-import { Readable } from 'stream'
+import { getImageURL } from '../utils/getImageURL'
+import { calculateAgeFromBirthdate } from '../utils/calculateAgeFromBirthdate'
 
 @Route('pet')
 @Tags('Pet')
@@ -36,14 +34,14 @@ export class PetController {
    * @summary Accepts pet info, adds pet to db and returns pet info
    *
    */
-  @Example<PetPayload>(petResponseExample)
+  @Example<AddPetResponse>(petResponseExample)
   @Security('bearerAuth')
   @Post('/')
   public async addPet(
     @FormField() microchipID: string,
     @FormField() name: string,
     @FormField() gender: Gender,
-    @FormField() age: string,
+    @FormField() birthDate: string,
     @FormField() color: string,
     @FormField() breed: string,
     @FormField() category: Category,
@@ -62,12 +60,12 @@ export class PetController {
     @UploadedFiles() images: string[],
     @Request() req: UserRequest,
     @FormField() shelterID?: string
-  ): Promise<PetResponse> {
+  ): Promise<AddPetResponse> {
     return addPet(
       microchipID,
       name,
       gender,
-      age,
+      birthDate,
       color,
       breed,
       category,
@@ -93,7 +91,7 @@ export class PetController {
    * @summary Returns all pets
    *
    */
-  @Example<PetsResponse>(petsResponseExample)
+  @Example<AllPetsResponse>(petsResponseExample)
   @Security('bearerAuth')
   @Get('/')
   public async getAllPets(
@@ -106,7 +104,7 @@ export class PetController {
     @Query('breedFilter') breedFilter?: string,
     @Query('genderFilter') genderFilter?: string,
     @Query('ageFilter') ageFilter?: string
-  ): Promise<PetsResponse> {
+  ): Promise<AllPetsResponse> {
     return getAllPets(
       page,
       limit,
@@ -119,82 +117,13 @@ export class PetController {
       ageFilter
     )
   }
-
-  public async uploadFiles(
-    files: Express.Multer.File[],
-    req: UserRequest
-  ): Promise<string[]> {
-    const fileIds: string[] = []
-
-    for (const file of files) {
-      const shelterID = req.body.shelterID
-        ? req.body.shelterID
-        : (req.user as RequestUser)._id
-
-      const shelterIDFolderId = await getOrCreateFolder(
-        drive,
-        shelterID.toString(),
-        process.env.DRIVE_PARENT_FOLDER_ID || ''
-      )
-
-      const originalFilename = file.originalname
-      const filenameWithoutExtension = path.parse(originalFilename).name
-      const currentDate = new Date()
-      const month = currentDate.getMonth() + 1
-      const date = currentDate.getDate()
-      const year = currentDate.getFullYear()
-      const formattedDate = `${month}-${date}-${year}`
-      const uniqueSuffix = formattedDate + '-' + Math.round(Math.random() * 1e9)
-      const filename =
-        filenameWithoutExtension +
-        '-' +
-        req.body.microchipID +
-        '-' +
-        uniqueSuffix
-
-      const fileMetadata = {
-        name: filename,
-        parents: [shelterIDFolderId]
-      }
-
-      const readableStream = new Readable()
-      readableStream.push(file.buffer)
-      readableStream.push(null) // Indicates the end of stream
-
-      const media = {
-        mimeType: file.mimetype,
-        body: readableStream
-      }
-
-      try {
-        const response = await drive.files.create({
-          requestBody: fileMetadata,
-          media: media,
-          fields: 'id'
-        })
-
-        if (response.data.id) {
-          fileIds.push(response.data.id)
-        } else {
-          throw {
-            code: 500,
-            message: 'Failed to get the file ID from Google Drive.'
-          }
-        }
-      } catch (err) {
-        throw { code: 500, message: err.message }
-      }
-    }
-
-    return fileIds
-  }
 }
 
 const addPet = async (
   microchipID: string,
   name: string,
   gender: string,
-  age: string,
+  birthDate: string,
   color: string,
   breed: string,
   category: Category,
@@ -213,7 +142,19 @@ const addPet = async (
   images: string[],
   req: UserRequest,
   shelterID?: string
-): Promise<PetResponse> => {
+): Promise<AddPetResponse> => {
+  if (!images) {
+    throw { code: 400, message: 'No image file provided.' }
+  }
+
+  const existingPet = await Pet.findOne({ microchipID: microchipID })
+  if (existingPet) {
+    throw {
+      code: 400,
+      message: 'Pet already exists.'
+    }
+  }
+
   // Retrieve the IDs of users with the role "shelter"
   const shelterUsers = await User.find({ role: 'SHELTER' }, '_id')
   const shelterUserIds = shelterUsers.map((user) => user._id.toString())
@@ -223,16 +164,14 @@ const addPet = async (
     throw { code: 400, message: 'Invalid shelter ID.' }
   }
 
-  if (!images) {
-    throw { code: 400, message: 'No image file provided.' }
-  }
   const petImages: string[] = images
+  const parsedBirthDate: Date = new Date(birthDate)
   const pet = new Pet({
     shelterID: shelterID ? shelterID : (req.user as RequestUser)._id,
     microchipID: microchipID,
     name: name,
     gender: gender,
-    age: age,
+    birthDate: parsedBirthDate,
     color: color,
     breed: breed,
     category: category,
@@ -255,15 +194,15 @@ const addPet = async (
 
   await pet.save()
 
+  // Map the images to their URLs
+  const imageUrls = await Promise.all(images.map((image) => getImageURL(image)))
+
+  // Include the image URLs in the response
   return {
-    microchipID: pet.microchipID,
-    name: pet.name,
-    gender: pet.gender,
-    age: pet.age,
-    color: pet.color,
-    breed: pet.breed,
-    bio: pet.bio,
-    images: pet.images
+    pet: {
+      ...pet.toObject(),
+      images: imageUrls
+    }
   }
 }
 
@@ -277,7 +216,7 @@ const getAllPets = async (
   breedFilter?: string,
   genderFilter?: string,
   ageFilter?: string
-): Promise<PetsResponse> => {
+): Promise<AllPetsResponse> => {
   try {
     console.log(filterOption)
     console.log(colorFilter)
@@ -290,7 +229,7 @@ const getAllPets = async (
     let colors: string[] = []
     let breeds: string[] = []
     let genders: string[] = []
-    let ages: string[] = []
+    let ages: number[] = []
 
     // Apply category filter if a filter option is provided
     if (filterOption) {
@@ -304,8 +243,15 @@ const getAllPets = async (
       colors = Array.from(new Set(allPetsOfCategory.map((pet) => pet.color)))
       breeds = Array.from(new Set(allPetsOfCategory.map((pet) => pet.breed)))
       genders = Array.from(new Set(allPetsOfCategory.map((pet) => pet.gender)))
-      ages = Array.from(new Set(allPetsOfCategory.map((pet) => pet.age)))
+      ages = Array.from(
+        new Set(
+          allPetsOfCategory.map((pet) =>
+            calculateAgeFromBirthdate(pet.birthDate)
+          )
+        )
+      )
     }
+    console.log('ages: ', ages)
 
     // Apply color filter if a colorFilter option is provided
     if (colorFilter) {
@@ -330,45 +276,47 @@ const getAllPets = async (
 
     // Apply age filter if an ageFilter option is provided
     if (ageFilter) {
-      console.log('Filtering by age range')
-      console.log(ageFilter)
-
       const [minAge, maxAge] = ageFilter.split('-').map((age) => parseInt(age))
-      console.log(minAge)
-      console.log(maxAge)
 
       if (!isNaN(minAge) && !isNaN(maxAge)) {
-        // Both minAge and maxAge are provided
-        queryObj.age = {
-          $or: [
-            {
-              $and: [
-                { age: { $gte: `${minAge}yr` } },
-                { age: { $lte: `${maxAge}yr` } }
-              ]
-            },
-            {
-              $and: [
-                { age: { $eq: `${minAge}yr` } },
-                { age: { $gte: `${minAge}m` } }
-              ]
-            },
-            {
-              $and: [
-                { age: { $eq: `${maxAge}yr` } },
-                { age: { $lte: `${maxAge}m` } }
-              ]
-            }
-          ]
+        const currentDate = new Date()
+        const minBirthDate = new Date(
+          currentDate.getFullYear() - minAge,
+          currentDate.getMonth(),
+          currentDate.getDate()
+        )
+        const maxBirthDate = new Date(
+          currentDate.getFullYear() - maxAge - 1,
+          currentDate.getMonth(),
+          currentDate.getDate()
+        )
+        console.log(minBirthDate)
+        console.log(maxBirthDate)
+        queryObj.birthDate = {
+          $gte: maxBirthDate,
+          $lte: minBirthDate
         }
       } else if (!isNaN(minAge)) {
-        // Only minAge is provided
-        queryObj.age = { $gte: minAge }
+        const currentDate = new Date()
+        const minBirthDate = new Date(
+          currentDate.getFullYear() - minAge,
+          currentDate.getMonth(),
+          currentDate.getDate()
+        )
+
+        queryObj.birthDate = { $lte: minBirthDate }
       } else if (!isNaN(maxAge)) {
-        // Only maxAge is provided
-        queryObj.age = { $lte: maxAge }
+        const currentDate = new Date()
+        const maxBirthDate = new Date(
+          currentDate.getFullYear() - maxAge - 1,
+          currentDate.getMonth(),
+          currentDate.getDate()
+        )
+
+        queryObj.birthDate = { $gte: maxBirthDate }
       }
     }
+    console.log('Query Object:', queryObj)
 
     // Apply search filter if a search query is provided
     if (searchQuery) {
@@ -382,6 +330,8 @@ const getAllPets = async (
     const totalPetsPromise = Pet.countDocuments(query)
 
     // Apply pagination to the query
+    console.log('Skip: ', skip)
+    console.log('Limit: ', limit)
     query = query.skip(skip).limit(limit)
 
     const [petsList, totalPets] = await Promise.all([query, totalPetsPromise])
@@ -391,18 +341,18 @@ const getAllPets = async (
     // Map the petsList to include the image URL
     const petsWithImageUrls = await Promise.all(
       petsList.map(async (pet) => {
-        const { images, ...petWithoutImages } = pet.toObject()
+        const { birthDate, images, ...petWithoutImages } = pet.toObject()
         const imageUrls = await Promise.all(
-          images.map(
-            (image) => `https://drive.google.com/uc?export=view&id=${image}`
-          )
+          images.map((image) => getImageURL(image))
         )
         return {
           ...petWithoutImages,
+          birthDate: birthDate.toISOString().split('T')[0],
           images: imageUrls
         }
       })
     )
+    console.log(petsWithImageUrls)
 
     const totalPages = Math.ceil(totalPets / limit)
 
