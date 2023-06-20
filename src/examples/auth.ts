@@ -18,10 +18,6 @@ export const tokenResponseExample = {
   }
 }
 
-export const refreshResponseExample = {
-  accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-}
-
 export const shelterResponseExample = {
   id: '60df5df17f4c6a01ac63491c',
   name: 'Furry Friends Sanctuary'

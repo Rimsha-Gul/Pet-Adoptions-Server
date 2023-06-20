@@ -6,8 +6,7 @@ import User, {
   VerificationResponse,
   VerificationPayload,
   SendCodePayload,
-  ShelterResponse,
-  RefreshResponse
+  ShelterResponse
 } from '../models/User'
 import { generateAccessToken } from '../utils/generateAccessToken'
 import { generateRefreshToken } from '../utils/generateRefreshToken'
@@ -29,7 +28,6 @@ import { sendEmail } from '../middleware/sendEmail'
 import { generateVerificationCode } from '../utils/generateVerificationCode'
 import { getVerificationCodeEmail } from '../data/emailMessages'
 import {
-  refreshResponseExample,
   shelterResponseExample,
   signupResponseExample,
   tokenResponseExample,
@@ -82,10 +80,10 @@ export class AuthController {
   /**
    * @summary Refreshes access token
    */
-  @Example<RefreshResponse>(refreshResponseExample)
+  @Example<TokenResponse>(tokenResponseExample)
   @Security('bearerAuth')
   @Post('/refresh')
-  public async refresh(@Request() req: UserRequest): Promise<RefreshResponse> {
+  public async refresh(@Request() req: UserRequest): Promise<TokenResponse> {
     return refresh(req)
   }
 
@@ -225,12 +223,29 @@ const login = async (body: LoginPayload): Promise<TokenResponse> => {
   }
 }
 
-const refresh = async (req: UserRequest): Promise<RefreshResponse> => {
+const refresh = async (req: UserRequest): Promise<TokenResponse> => {
   if (!req.user || !req.user.email || !req.user.role) {
     throw { code: 400, message: 'Invalid user data' }
   }
-  const accessToken = generateAccessToken(req.user.email, req.user.role)
-  return { accessToken }
+  const user = await User.findOne({ email: req.user.email })
+
+  if (!user) {
+    throw { code: 404, message: 'User not found' }
+  }
+  if (!user.isVerified) {
+    throw { code: 403, message: 'User not verified' }
+  } else {
+    // if user is verified, generate the tokens
+    const accessToken = generateAccessToken(user.email, user.role)
+    const refreshToken = generateRefreshToken(user.email, user.role)
+
+    user.tokens = {
+      accessToken: accessToken,
+      refreshToken: refreshToken
+    }
+    await user.save()
+    return { tokens: user.tokens }
+  }
 }
 
 const logout = async (req: UserRequest) => {

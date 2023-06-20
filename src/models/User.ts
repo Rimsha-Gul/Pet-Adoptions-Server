@@ -34,10 +34,6 @@ export interface VerificationPayload {
   verificationCode: string
 }
 
-export interface RefreshResponse {
-  accessToken: string
-}
-
 export interface TokenResponse {
   tokens: { accessToken: string; refreshToken: string }
 }
