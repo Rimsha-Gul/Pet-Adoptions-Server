@@ -5,7 +5,7 @@ export const petResponseExample = {
     microchipID: 'A123456789',
     name: 'Snowball',
     gender: Gender.Male,
-    age: '2yr 4m',
+    birthDate: '2001-01-01',
     color: 'white',
     breed: 'Mini Lop',
     category: Category.Cat,
@@ -36,7 +36,7 @@ export const petsResponseExample = {
       microchipID: 'A123456789',
       name: 'Fluffy',
       gender: Gender.Female,
-      age: '2 yR',
+      birthDate: '2001-01-01',
       color: 'White',
       breed: 'Persian',
       category: Category.Cat,
@@ -63,7 +63,7 @@ export const petsResponseExample = {
       microchipID: 'B123456789',
       name: 'Buddy',
       gender: Gender.Male,
-      age: '3 yR',
+      birthDate: '2001-01-01',
       color: 'Brown',
       breed: 'Labrador Retriever',
       category: Category.Dog,
@@ -91,5 +91,5 @@ export const petsResponseExample = {
   colors: ['White', 'Black', 'Brown'],
   breeds: ['Persian', 'Labrador Retriever', 'Golden Retriever'],
   genders: ['Male', 'Female'],
-  ages: ['1 year', '2 years', '3 years']
+  ages: [1, 2, 3, 4, 5]
 }

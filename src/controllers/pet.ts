@@ -25,6 +25,7 @@ import { RequestUser } from '../types/RequestUser'
 import { petResponseExample, petsResponseExample } from '../examples/pet'
 import { User } from '../models/User'
 import { getImageURL } from '../utils/getImageURL'
+import { calculateAgeFromBirthdate } from '../utils/calculateAgeFromBirthdate'
 
 @Route('pet')
 @Tags('Pet')
@@ -40,7 +41,7 @@ export class PetController {
     @FormField() microchipID: string,
     @FormField() name: string,
     @FormField() gender: Gender,
-    @FormField() age: string,
+    @FormField() birthDate: string,
     @FormField() color: string,
     @FormField() breed: string,
     @FormField() category: Category,
@@ -64,7 +65,7 @@ export class PetController {
       microchipID,
       name,
       gender,
-      age,
+      birthDate,
       color,
       breed,
       category,
@@ -122,7 +123,7 @@ const addPet = async (
   microchipID: string,
   name: string,
   gender: string,
-  age: string,
+  birthDate: string,
   color: string,
   breed: string,
   category: Category,
@@ -164,12 +165,13 @@ const addPet = async (
   }
 
   const petImages: string[] = images
+  const parsedBirthDate: Date = new Date(birthDate)
   const pet = new Pet({
     shelterID: shelterID ? shelterID : (req.user as RequestUser)._id,
     microchipID: microchipID,
     name: name,
     gender: gender,
-    age: age,
+    birthDate: parsedBirthDate,
     color: color,
     breed: breed,
     category: category,
@@ -227,7 +229,7 @@ const getAllPets = async (
     let colors: string[] = []
     let breeds: string[] = []
     let genders: string[] = []
-    let ages: string[] = []
+    let ages: number[] = []
 
     // Apply category filter if a filter option is provided
     if (filterOption) {
@@ -241,8 +243,15 @@ const getAllPets = async (
       colors = Array.from(new Set(allPetsOfCategory.map((pet) => pet.color)))
       breeds = Array.from(new Set(allPetsOfCategory.map((pet) => pet.breed)))
       genders = Array.from(new Set(allPetsOfCategory.map((pet) => pet.gender)))
-      ages = Array.from(new Set(allPetsOfCategory.map((pet) => pet.age)))
+      ages = Array.from(
+        new Set(
+          allPetsOfCategory.map((pet) =>
+            calculateAgeFromBirthdate(pet.birthDate)
+          )
+        )
+      )
     }
+    console.log('ages: ', ages)
 
     // Apply color filter if a colorFilter option is provided
     if (colorFilter) {
@@ -267,45 +276,47 @@ const getAllPets = async (
 
     // Apply age filter if an ageFilter option is provided
     if (ageFilter) {
-      console.log('Filtering by age range')
-      console.log(ageFilter)
-
       const [minAge, maxAge] = ageFilter.split('-').map((age) => parseInt(age))
-      console.log(minAge)
-      console.log(maxAge)
 
       if (!isNaN(minAge) && !isNaN(maxAge)) {
-        // Both minAge and maxAge are provided
-        queryObj.age = {
-          $or: [
-            {
-              $and: [
-                { age: { $gte: `${minAge}yr` } },
-                { age: { $lte: `${maxAge}yr` } }
-              ]
-            },
-            {
-              $and: [
-                { age: { $eq: `${minAge}yr` } },
-                { age: { $gte: `${minAge}m` } }
-              ]
-            },
-            {
-              $and: [
-                { age: { $eq: `${maxAge}yr` } },
-                { age: { $lte: `${maxAge}m` } }
-              ]
-            }
-          ]
+        const currentDate = new Date()
+        const minBirthDate = new Date(
+          currentDate.getFullYear() - minAge,
+          currentDate.getMonth(),
+          currentDate.getDate()
+        )
+        const maxBirthDate = new Date(
+          currentDate.getFullYear() - maxAge - 1,
+          currentDate.getMonth(),
+          currentDate.getDate()
+        )
+        console.log(minBirthDate)
+        console.log(maxBirthDate)
+        queryObj.birthDate = {
+          $gte: maxBirthDate,
+          $lte: minBirthDate
         }
       } else if (!isNaN(minAge)) {
-        // Only minAge is provided
-        queryObj.age = { $gte: minAge }
+        const currentDate = new Date()
+        const minBirthDate = new Date(
+          currentDate.getFullYear() - minAge,
+          currentDate.getMonth(),
+          currentDate.getDate()
+        )
+
+        queryObj.birthDate = { $lte: minBirthDate }
       } else if (!isNaN(maxAge)) {
-        // Only maxAge is provided
-        queryObj.age = { $lte: maxAge }
+        const currentDate = new Date()
+        const maxBirthDate = new Date(
+          currentDate.getFullYear() - maxAge - 1,
+          currentDate.getMonth(),
+          currentDate.getDate()
+        )
+
+        queryObj.birthDate = { $gte: maxBirthDate }
       }
     }
+    console.log('Query Object:', queryObj)
 
     // Apply search filter if a search query is provided
     if (searchQuery) {
@@ -330,16 +341,18 @@ const getAllPets = async (
     // Map the petsList to include the image URL
     const petsWithImageUrls = await Promise.all(
       petsList.map(async (pet) => {
-        const { images, ...petWithoutImages } = pet.toObject()
+        const { birthDate, images, ...petWithoutImages } = pet.toObject()
         const imageUrls = await Promise.all(
           images.map((image) => getImageURL(image))
         )
         return {
           ...petWithoutImages,
+          birthDate: birthDate.toISOString().split('T')[0],
           images: imageUrls
         }
       })
     )
+    console.log(petsWithImageUrls)
 
     const totalPages = Math.ceil(totalPets / limit)
 

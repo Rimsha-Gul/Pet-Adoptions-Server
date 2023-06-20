@@ -20,7 +20,7 @@ petRouter.post(
         microchipID,
         name,
         gender,
-        age,
+        birthDate,
         color,
         breed,
         category,
@@ -45,7 +45,7 @@ petRouter.post(
         microchipID,
         name,
         gender,
-        age,
+        birthDate,
         color,
         breed,
         category,
@@ -98,6 +98,7 @@ petRouter.get('/', authenticateAccessToken, async (req, res) => {
     )
     return res.send(response)
   } catch (err: any) {
+    console.log('Error response')
     return res.status(err.code).send(err.message)
   }
 })
