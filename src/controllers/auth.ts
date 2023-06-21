@@ -6,7 +6,8 @@ import User, {
   VerificationResponse,
   VerificationPayload,
   SendCodePayload,
-  ShelterResponse
+  ShelterResponse,
+  ChangeEmailPayload
 } from '../models/User'
 import { generateAccessToken } from '../utils/generateAccessToken'
 import { generateRefreshToken } from '../utils/generateRefreshToken'
@@ -18,6 +19,7 @@ import {
   Example,
   Get,
   Post,
+  Put,
   Request,
   Route,
   Security,
@@ -28,6 +30,7 @@ import { sendEmail } from '../middleware/sendEmail'
 import { generateVerificationCode } from '../utils/generateVerificationCode'
 import { getVerificationCodeEmail } from '../data/emailMessages'
 import {
+  changeEmailPayloadExample,
   shelterResponseExample,
   signupResponseExample,
   tokenResponseExample,
@@ -52,8 +55,11 @@ export class AuthController {
    *
    */
   @Post('/sendVerificationCode')
-  public async sendVerificationCode(@Body() body: SendCodePayload) {
-    return sendVerificationCode(body)
+  public async sendVerificationCode(
+    @Body() body: SendCodePayload,
+    @Request() req: UserRequest
+  ) {
+    return sendVerificationCode(body, req)
   }
 
   /**
@@ -85,6 +91,19 @@ export class AuthController {
   @Post('/refresh')
   public async refresh(@Request() req: UserRequest): Promise<TokenResponse> {
     return refresh(req)
+  }
+
+  /**
+   * @summary Changes user's email
+   */
+  @Example<ChangeEmailPayload>(changeEmailPayloadExample)
+  @Security('bearerAuth')
+  @Put('changeEmail')
+  public async changeEmail(
+    @Body() body: ChangeEmailPayload,
+    @Request() req: UserRequest
+  ) {
+    return changeEmail(body, req)
   }
 
   /**
@@ -135,15 +154,33 @@ const signup = async (body: UserPayload): Promise<SignupResponse> => {
   }
 }
 
-const sendVerificationCode = async (body: SendCodePayload) => {
+const sendVerificationCode = async (
+  body: SendCodePayload,
+  req: UserRequest
+) => {
   console.log(body)
-  const { email } = body
-  const user = await User.findOne({ email })
-  if (!user) throw { code: 404, message: 'User not found' }
+  const { email, emailChangeRequest } = body
+  let user
+  if (!emailChangeRequest) {
+    user = await User.findOne({ email })
+    if (!user) throw { code: 404, message: 'User not found' }
+  } else {
+    if (!req.user || !req.user.email || !req.user.role) {
+      throw { code: 400, message: 'Invalid user data' }
+    }
+    user = await User.findOne({ email: req.user.email })
+    if (!user) throw { code: 404, message: 'User not found' }
+  }
   const verificationCode: string = generateVerificationCode()
   try {
-    const email = getVerificationCodeEmail(verificationCode)
-    await sendEmail(user.email, email.subject, email.message)
+    const codeEmail = getVerificationCodeEmail(verificationCode)
+    console.log('Simple email: ', email)
+    console.log('Saved user email: ', user.email)
+    await sendEmail(
+      emailChangeRequest ? email : user.email,
+      codeEmail.subject,
+      codeEmail.message
+    )
     if (user.verificationCode.code) {
       user.verificationCode = {
         code: verificationCode,
@@ -233,6 +270,7 @@ const refresh = async (req: UserRequest): Promise<TokenResponse> => {
     throw { code: 404, message: 'User not found' }
   }
   if (!user.isVerified) {
+    console.log('not verified')
     throw { code: 403, message: 'User not verified' }
   } else {
     // if user is verified, generate the tokens
@@ -244,7 +282,29 @@ const refresh = async (req: UserRequest): Promise<TokenResponse> => {
       refreshToken: refreshToken
     }
     await user.save()
+    console.log('New tokens:', user.tokens)
     return { tokens: user.tokens }
+  }
+}
+
+const changeEmail = async (body: ChangeEmailPayload, req: UserRequest) => {
+  if (!req.user || !req.user.email || !req.user.role) {
+    throw { code: 400, message: 'Invalid user data' }
+  }
+  const user = await User.findOne({ email: req.user.email })
+
+  if (!user) {
+    throw { code: 404, message: 'User not found' }
+  }
+  if (!user.isVerified) {
+    console.log('not verified')
+    throw { code: 403, message: 'User not verified' }
+  } else {
+    // if user is verified, change the email
+    const { email } = body
+    user.email = email
+    await user.save()
+    return { code: 200, message: 'Email changed successfully' }
   }
 }
 

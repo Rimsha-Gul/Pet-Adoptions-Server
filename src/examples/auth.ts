@@ -18,6 +18,10 @@ export const tokenResponseExample = {
   }
 }
 
+export const changeEmailPayloadExample = {
+  email: 'johndoe@example.com'
+}
+
 export const shelterResponseExample = {
   id: '60df5df17f4c6a01ac63491c',
   name: 'Furry Friends Sanctuary'
