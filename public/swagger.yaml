@@ -105,6 +105,14 @@ components:
                 - email
             type: object
             additionalProperties: false
+        CheckPasswordPayload:
+            properties:
+                password:
+                    type: string
+            required:
+                - password
+            type: object
+            additionalProperties: false
         ShelterResponse:
             properties:
                 id:
@@ -415,6 +423,32 @@ paths:
                 -
                     bearerAuth: []
             parameters: []
+    /auth/checkEmail:
+        get:
+            operationId: CheckEmail
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
+                            examples:
+                                'Example 1':
+                                    value: {email: johndoe@example.com}
+            summary: 'Checks if user''s new email already has a linked account'
+            tags:
+                - Auth
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
     /auth/changeEmail:
         put:
             operationId: ChangeEmail
@@ -447,6 +481,70 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/ChangeEmailPayload'
+    /auth/checkPassword:
+        post:
+            operationId: CheckPassword
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
+                            examples:
+                                'Example 1':
+                                    value: {password: '123456'}
+            summary: 'Checks if user''s entered password is correct'
+            tags:
+                - Auth
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CheckPasswordPayload'
+    /auth/changePassword:
+        put:
+            operationId: ChangePassword
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
+                            examples:
+                                'Example 1':
+                                    value: {password: '123456'}
+            summary: 'Changes user''s password'
+            tags:
+                - Auth
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CheckPasswordPayload'
     /auth/logout:
         delete:
             operationId: Logout

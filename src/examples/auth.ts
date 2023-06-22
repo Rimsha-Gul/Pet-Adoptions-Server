@@ -22,6 +22,10 @@ export const changeEmailPayloadExample = {
   email: 'johndoe@example.com'
 }
 
+export const checkPasswordPayloadExample = {
+  password: '123456'
+}
+
 export const shelterResponseExample = {
   id: '60df5df17f4c6a01ac63491c',
   name: 'Furry Friends Sanctuary'

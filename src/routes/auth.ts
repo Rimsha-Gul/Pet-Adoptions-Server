@@ -7,7 +7,8 @@ import {
 import {
   signUpValidation,
   loginValidation,
-  changeEmailValidation
+  changeEmailValidation,
+  checkPasswordValidation
 } from '../utils/validation'
 import { isAdmin } from '../middleware/isAdmin'
 import { conditionalAuthenticateAccessToken } from '../middleware/conditionalAuthenticateToken'
@@ -72,11 +73,45 @@ authRouter.post('/login', async (req, res) => {
   }
 })
 
+authRouter.get('/checkEmail', authenticateAccessToken, async (req, res) => {
+  const { error } = changeEmailValidation(req.query)
+  if (error) return res.status(400).send(error.details[0].message)
+  try {
+    console.log('Check controller')
+    const response = await controller.checkEmail(req)
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
+  }
+})
+
 authRouter.put('/changeEmail', authenticateAccessToken, async (req, res) => {
   const { error } = changeEmailValidation(req.body)
   if (error) return res.status(400).send(error.details[0].message)
   try {
     const response = await controller.changeEmail(req.body, req)
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
+  }
+})
+
+authRouter.post('/checkPassword', authenticateAccessToken, async (req, res) => {
+  const { error } = checkPasswordValidation(req.body)
+  if (error) return res.status(400).send(error.details[0].message)
+  try {
+    const response = await controller.checkPassword(req.body, req)
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
+  }
+})
+
+authRouter.put('/changePassword', authenticateAccessToken, async (req, res) => {
+  const { error } = checkPasswordValidation(req.body)
+  if (error) return res.status(400).send(error.details[0].message)
+  try {
+    const response = await controller.changePassword(req.body, req)
     return res.send(response)
   } catch (err: any) {
     return res.status(err.code).send(err.message)

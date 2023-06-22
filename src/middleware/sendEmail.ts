@@ -14,7 +14,7 @@ export const sendEmail = async (
 
   try {
     const info = await transporter.sendMail(mailOptions)
-    console.log('Signup email sent: ' + info)
+    console.log('Email sent: ' + info)
   } catch (error) {
     console.error('Error sending signup email:', error)
   }

@@ -33,6 +33,11 @@ export const changeEmailValidation = (data: any): Joi.ValidationResult =>
     email: emailSchema.required()
   }).validate(data)
 
+export const checkPasswordValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    password: passwordSchema.required()
+  }).validate(data)
+
 export const addPetValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
     microchipID: Joi.string().length(10).required(),
