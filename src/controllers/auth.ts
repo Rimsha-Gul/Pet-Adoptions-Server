@@ -114,7 +114,7 @@ export class AuthController {
   public async changeEmail(
     @Body() body: ChangeEmailPayload,
     @Request() req: UserRequest
-  ) {
+  ): Promise<TokenResponse> {
     return changeEmail(body, req)
   }
 
@@ -353,7 +353,10 @@ const checkEmail = async (req: UserRequest) => {
   }
 }
 
-const changeEmail = async (body: ChangeEmailPayload, req: UserRequest) => {
+const changeEmail = async (
+  body: ChangeEmailPayload,
+  req: UserRequest
+): Promise<TokenResponse> => {
   if (!req.user || !req.user.email || !req.user.role) {
     throw { code: 400, message: 'Invalid user data' }
   }
@@ -369,8 +372,15 @@ const changeEmail = async (body: ChangeEmailPayload, req: UserRequest) => {
     // if user is verified, change the user's email with new emmail
     const { email } = body
     user.email = email
+    const accessToken = generateAccessToken(user.email, user.role)
+    const refreshToken = generateRefreshToken(user.email, user.role)
+
+    user.tokens = {
+      accessToken: accessToken,
+      refreshToken: refreshToken
+    }
     await user.save()
-    return { code: 200, message: 'Email changed successfully' }
+    return { tokens: user.tokens }
   }
 }
 

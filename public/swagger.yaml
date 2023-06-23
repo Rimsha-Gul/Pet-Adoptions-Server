@@ -458,13 +458,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                properties:
-                                    message: {type: string}
-                                    code: {type: number, format: double}
-                                required:
-                                    - message
-                                    - code
-                                type: object
+                                $ref: '#/components/schemas/TokenResponse'
                             examples:
                                 'Example 1':
                                     value: {email: johndoe@example.com}
