@@ -6,7 +6,9 @@ import User, {
   VerificationResponse,
   VerificationPayload,
   SendCodePayload,
-  ShelterResponse
+  ShelterResponse,
+  ChangeEmailPayload,
+  CheckPasswordPayload
 } from '../models/User'
 import { generateAccessToken } from '../utils/generateAccessToken'
 import { generateRefreshToken } from '../utils/generateRefreshToken'
@@ -18,6 +20,7 @@ import {
   Example,
   Get,
   Post,
+  Put,
   Request,
   Route,
   Security,
@@ -28,6 +31,8 @@ import { sendEmail } from '../middleware/sendEmail'
 import { generateVerificationCode } from '../utils/generateVerificationCode'
 import { getVerificationCodeEmail } from '../data/emailMessages'
 import {
+  changeEmailPayloadExample,
+  checkPasswordPayloadExample,
   shelterResponseExample,
   signupResponseExample,
   tokenResponseExample,
@@ -52,8 +57,11 @@ export class AuthController {
    *
    */
   @Post('/sendVerificationCode')
-  public async sendVerificationCode(@Body() body: SendCodePayload) {
-    return sendVerificationCode(body)
+  public async sendVerificationCode(
+    @Body() body: SendCodePayload,
+    @Request() req: UserRequest
+  ) {
+    return sendVerificationCode(body, req)
   }
 
   /**
@@ -85,6 +93,55 @@ export class AuthController {
   @Post('/refresh')
   public async refresh(@Request() req: UserRequest): Promise<TokenResponse> {
     return refresh(req)
+  }
+
+  /**
+   * @summary Checks if user's new email already has a linked account
+   */
+  @Example<ChangeEmailPayload>(changeEmailPayloadExample)
+  @Security('bearerAuth')
+  @Get('/checkEmail')
+  public async checkEmail(@Request() req: UserRequest) {
+    return checkEmail(req)
+  }
+
+  /**
+   * @summary Changes user's email
+   */
+  @Example<ChangeEmailPayload>(changeEmailPayloadExample)
+  @Security('bearerAuth')
+  @Put('/changeEmail')
+  public async changeEmail(
+    @Body() body: ChangeEmailPayload,
+    @Request() req: UserRequest
+  ): Promise<TokenResponse> {
+    return changeEmail(body, req)
+  }
+
+  /**
+   * @summary Checks if user's entered password is correct
+   */
+  @Example<CheckPasswordPayload>(checkPasswordPayloadExample)
+  @Security('bearerAuth')
+  @Post('/checkPassword')
+  public async checkPassword(
+    @Body() body: CheckPasswordPayload,
+    @Request() req: UserRequest
+  ) {
+    return checkPassword(body, req)
+  }
+
+  /**
+   * @summary Changes user's password
+   */
+  @Example<CheckPasswordPayload>(checkPasswordPayloadExample)
+  @Security('bearerAuth')
+  @Put('/changePassword')
+  public async changePassword(
+    @Body() body: CheckPasswordPayload,
+    @Request() req: UserRequest
+  ) {
+    return changePassword(body, req)
   }
 
   /**
@@ -135,15 +192,33 @@ const signup = async (body: UserPayload): Promise<SignupResponse> => {
   }
 }
 
-const sendVerificationCode = async (body: SendCodePayload) => {
+const sendVerificationCode = async (
+  body: SendCodePayload,
+  req: UserRequest
+) => {
   console.log(body)
-  const { email } = body
-  const user = await User.findOne({ email })
-  if (!user) throw { code: 404, message: 'User not found' }
+  const { email, emailChangeRequest } = body
+  let user
+  if (!emailChangeRequest) {
+    user = await User.findOne({ email })
+    if (!user) throw { code: 404, message: 'User not found' }
+  } else {
+    if (!req.user || !req.user.email || !req.user.role) {
+      throw { code: 400, message: 'Invalid user data' }
+    }
+    user = await User.findOne({ email: req.user.email })
+    if (!user) throw { code: 404, message: 'User not found' }
+  }
   const verificationCode: string = generateVerificationCode()
   try {
-    const email = getVerificationCodeEmail(verificationCode)
-    await sendEmail(user.email, email.subject, email.message)
+    const codeEmail = getVerificationCodeEmail(verificationCode)
+    console.log('Simple email: ', email)
+    console.log('Saved user email: ', user.email)
+    await sendEmail(
+      emailChangeRequest ? email : user.email,
+      codeEmail.subject,
+      codeEmail.message
+    )
     if (user.verificationCode.code) {
       user.verificationCode = {
         code: verificationCode,
@@ -158,6 +233,8 @@ const sendVerificationCode = async (body: SendCodePayload) => {
       }
     }
     await user.save()
+    if (emailChangeRequest)
+      return { code: 200, message: 'Email change request sent successfully' }
     return { code: 200, message: 'Signup email sent successfully' }
   } catch (error) {
     throw { code: 500, message: 'Error sending signup email' }
@@ -233,6 +310,7 @@ const refresh = async (req: UserRequest): Promise<TokenResponse> => {
     throw { code: 404, message: 'User not found' }
   }
   if (!user.isVerified) {
+    console.log('not verified')
     throw { code: 403, message: 'User not verified' }
   } else {
     // if user is verified, generate the tokens
@@ -244,7 +322,113 @@ const refresh = async (req: UserRequest): Promise<TokenResponse> => {
       refreshToken: refreshToken
     }
     await user.save()
+    console.log('New tokens:', user.tokens)
     return { tokens: user.tokens }
+  }
+}
+
+const checkEmail = async (req: UserRequest) => {
+  console.log('check email')
+  if (!req.user || !req.user.email || !req.user.role) {
+    throw { code: 400, message: 'Invalid user data' }
+  }
+
+  const user = await User.findOne({ email: req.user.email })
+  if (!user) {
+    throw { code: 404, message: 'User not found' }
+  }
+
+  if (!user.isVerified) {
+    console.log('not verified')
+    throw { code: 403, message: 'User not verified' }
+  } else {
+    // if user is verified, check if there's already a user with new emmail
+    const { email } = req.query
+    const existingUser = await User.findOne({ email: email })
+    if (existingUser) {
+      console.log('Existing user')
+      throw { code: 409, message: 'A user with this email already exists' }
+    }
+    return { code: 200, message: 'Email is available' }
+  }
+}
+
+const changeEmail = async (
+  body: ChangeEmailPayload,
+  req: UserRequest
+): Promise<TokenResponse> => {
+  if (!req.user || !req.user.email || !req.user.role) {
+    throw { code: 400, message: 'Invalid user data' }
+  }
+  const user = await User.findOne({ email: req.user.email })
+
+  if (!user) {
+    throw { code: 404, message: 'User not found' }
+  }
+  if (!user.isVerified) {
+    console.log('not verified')
+    throw { code: 403, message: 'User not verified' }
+  } else {
+    // if user is verified, change the user's email with new emmail
+    const { email } = body
+    user.email = email
+    const accessToken = generateAccessToken(user.email, user.role)
+    const refreshToken = generateRefreshToken(user.email, user.role)
+
+    user.tokens = {
+      accessToken: accessToken,
+      refreshToken: refreshToken
+    }
+    await user.save()
+    return { tokens: user.tokens }
+  }
+}
+
+const checkPassword = async (body: CheckPasswordPayload, req: UserRequest) => {
+  if (!req.user || !req.user.email || !req.user.role) {
+    throw { code: 400, message: 'Invalid user data' }
+  }
+
+  const user = await User.findOne({ email: req.user.email })
+  if (!user) {
+    throw { code: 404, message: 'User not found' }
+  }
+
+  if (!user.isVerified) {
+    console.log('not verified')
+    throw { code: 403, message: 'User not verified' }
+  } else {
+    // if user is verified, check the entered password
+    const { password } = body
+    const isCorrectPassword = user.comparePassword(password)
+    if (!isCorrectPassword) {
+      throw { code: 400, message: 'Invalid password' }
+    }
+
+    return { code: 200, message: 'Password is correct' }
+  }
+}
+
+const changePassword = async (body: CheckPasswordPayload, req: UserRequest) => {
+  if (!req.user || !req.user.email || !req.user.role) {
+    throw { code: 400, message: 'Invalid user data' }
+  }
+
+  const user = await User.findOne({ email: req.user.email })
+  if (!user) {
+    throw { code: 404, message: 'User not found' }
+  }
+
+  if (!user.isVerified) {
+    console.log('not verified')
+    throw { code: 403, message: 'User not verified' }
+  } else {
+    // if user is verified, change his password
+    const { password } = body
+    user.password = password
+    user.password = User.hashPassword(password)
+    await user.save()
+    return { code: 200, message: 'Password changed successfully' }
   }
 }
 

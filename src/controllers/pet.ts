@@ -352,7 +352,6 @@ const getAllPets = async (
         }
       })
     )
-    console.log(petsWithImageUrls)
 
     const totalPages = Math.ceil(totalPets / limit)
 

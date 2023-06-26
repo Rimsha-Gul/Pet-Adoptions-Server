@@ -16,7 +16,6 @@ export enum Role {
 export interface UserPayload {
   name: string
   email: string
-
   password: string
 }
 
@@ -27,6 +26,7 @@ export interface LoginPayload {
 
 export interface SendCodePayload {
   email: string
+  emailChangeRequest?: boolean
 }
 
 export interface VerificationPayload {
@@ -53,6 +53,14 @@ export interface SessionResponse extends SignupResponse {
 
 export interface VerificationResponse extends TokenResponse {
   isVerified: boolean
+}
+
+export interface ChangeEmailPayload {
+  email: string
+}
+
+export interface CheckPasswordPayload {
+  password: string
 }
 
 export interface ShelterResponse {
