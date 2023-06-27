@@ -27,6 +27,7 @@ export const checkPasswordPayloadExample = {
 }
 
 export const updateProfilePayloadExample = {
+  name: 'John Doe',
   address: '123 Main St',
   bio: 'Pet lover with years of experience fostering cats and dogs. I have a spacious home with a large, secure backyard. I love active pets and have a preference for medium to large dogs.',
   profilePhoto: 'https://example.com/userProfilePhoto.jpg',

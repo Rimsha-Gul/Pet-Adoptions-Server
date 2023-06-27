@@ -30,6 +30,7 @@ export const loginValidation = (data: any): Joi.ValidationResult =>
 
 export const updateProfileValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
+    name: Joi.string(),
     address: Joi.string(),
     bio: Joi.string()
   }).validate(data)

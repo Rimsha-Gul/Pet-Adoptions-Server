@@ -67,6 +67,7 @@ export interface CheckPasswordPayload {
 }
 
 export interface UpdateProfilePayload {
+  name?: string
   address?: string
   bio?: string
   profilePhoto?: string

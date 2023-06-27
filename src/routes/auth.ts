@@ -87,12 +87,13 @@ authRouter.put(
       console.log('try to upload')
       let fileIds: string[] = []
       console.log(req.file)
-      const { address, bio, removeProfilePhoto } = req.body
+      const { name, address, bio, removeProfilePhoto } = req.body
 
       if (removeProfilePhoto) {
-        // Handle removing the profile photo here and return
+        // Handle removing the profile photo
         const response = await controller.updateProfile(
           req,
+          name,
           address,
           bio,
           [] // Pass an empty string to remove photo
@@ -105,6 +106,7 @@ authRouter.put(
         console.log(fileIds)
         const response = await controller.updateProfile(
           req,
+          name,
           address,
           bio,
           fileIds
@@ -112,7 +114,7 @@ authRouter.put(
         return res.send(response)
       }
 
-      const response = await controller.updateProfile(req, address, bio)
+      const response = await controller.updateProfile(req, name, address, bio)
       return res.send(response)
     } catch (err: any) {
       return res.status(err.code).send(err.message)

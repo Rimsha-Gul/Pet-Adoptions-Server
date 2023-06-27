@@ -107,11 +107,12 @@ export class AuthController {
   @Put('/updateProfile')
   public async updateProfile(
     @Request() req: UserRequest,
+    @FormField() name?: string,
     @FormField() address?: string,
     @FormField() bio?: string,
     @UploadedFile() profilePhoto?: string[]
   ) {
-    return updateProfile(req, address, bio, profilePhoto)
+    return updateProfile(req, name, address, bio, profilePhoto)
   }
 
   /**
@@ -348,6 +349,7 @@ const refresh = async (req: UserRequest): Promise<TokenResponse> => {
 
 const updateProfile = async (
   req: UserRequest,
+  name?: string,
   address?: string,
   bio?: string,
   profilePhoto?: string[]
@@ -365,6 +367,7 @@ const updateProfile = async (
     if (!user) {
       throw { code: 404, message: 'User not found' }
     }
+    if (name) user.name = name
     if (address) user.address = address
     if (bio) user.bio = bio
     if (profilePhoto) {
