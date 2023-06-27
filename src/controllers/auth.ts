@@ -8,7 +8,8 @@ import User, {
   SendCodePayload,
   ShelterResponse,
   ChangeEmailPayload,
-  CheckPasswordPayload
+  CheckPasswordPayload,
+  UpdateProfilePayload
 } from '../models/User'
 import { generateAccessToken } from '../utils/generateAccessToken'
 import { generateRefreshToken } from '../utils/generateRefreshToken'
@@ -18,13 +19,15 @@ import {
   Body,
   Delete,
   Example,
+  FormField,
   Get,
   Post,
   Put,
   Request,
   Route,
   Security,
-  Tags
+  Tags,
+  UploadedFile
 } from 'tsoa'
 import { RequestUser } from '../types/RequestUser'
 import { sendEmail } from '../middleware/sendEmail'
@@ -36,6 +39,7 @@ import {
   shelterResponseExample,
   signupResponseExample,
   tokenResponseExample,
+  updateProfilePayloadExample,
   verificationResponseExample
 } from '../examples/auth'
 
@@ -93,6 +97,21 @@ export class AuthController {
   @Post('/refresh')
   public async refresh(@Request() req: UserRequest): Promise<TokenResponse> {
     return refresh(req)
+  }
+
+  /**
+   * @summary Updates user's profile
+   */
+  @Example<UpdateProfilePayload>(updateProfilePayloadExample)
+  @Security('bearerAuth')
+  @Put('/updateProfile')
+  public async updateProfile(
+    @Request() req: UserRequest,
+    @FormField() address?: string,
+    @FormField() bio?: string,
+    @UploadedFile() profilePhoto?: string[]
+  ) {
+    return updateProfile(req, address, bio, profilePhoto)
   }
 
   /**
@@ -324,6 +343,48 @@ const refresh = async (req: UserRequest): Promise<TokenResponse> => {
     await user.save()
     console.log('New tokens:', user.tokens)
     return { tokens: user.tokens }
+  }
+}
+
+const updateProfile = async (
+  req: UserRequest,
+  address?: string,
+  bio?: string,
+  profilePhoto?: string[]
+) => {
+  console.log('try to update')
+  if (!req.user || !req.user.email || !req.user.role) {
+    throw { code: 400, message: 'Invalid user data' }
+  }
+  const userID = req.user._id
+  console.log('user id: ', userID)
+
+  try {
+    console.log('trying to update')
+    const user = await User.findById(userID)
+    if (!user) {
+      throw { code: 404, message: 'User not found' }
+    }
+    if (address) user.address = address
+    if (bio) user.bio = bio
+    if (profilePhoto) {
+      user.profilePhoto = profilePhoto
+    }
+
+    const updatedUser = await user.save()
+    console.log('updated user', updatedUser)
+    return { code: 200, message: 'Profile updated successfully' }
+    // const updatedUser = await User.findByIdAndUpdate(
+    //   userID,
+    //   { address, bio, profilePhoto },
+    //   { new: true, runValidators: true }
+    // )
+    // console.log('updated user', updatedUser)
+    // if (!updatedUser) {
+    //   throw { code: 404, message: 'User not found' }
+    // }
+  } catch (error) {
+    throw { code: 500, message: 'Failed to update user' }
   }
 }
 

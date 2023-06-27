@@ -49,6 +49,9 @@ export interface SessionResponse extends SignupResponse {
   name: string
   email: string
   role: Role
+  address: string
+  bio: string
+  profilePhoto: string
 }
 
 export interface VerificationResponse extends TokenResponse {
@@ -63,17 +66,23 @@ export interface CheckPasswordPayload {
   password: string
 }
 
+export interface UpdateProfilePayload {
+  address?: string
+  bio?: string
+  profilePhoto?: string
+  removeProfilePhoto?: boolean
+}
+
 export interface ShelterResponse {
   id: string
   name: string
 }
 
-// interface IUserModel extends Model<IUser> {
-//   hashPassword(password: string): string
-// }
-
 export interface UserDocument extends UserResponse, Document {
   role: Role
+  address: string
+  bio: string
+  profilePhoto: string[]
   isVerified: boolean
   verificationCode: {
     code: string
@@ -106,7 +115,9 @@ const UserSchema = new Schema<UserDocument>(
     role: { type: String, enum: Role },
     name: { type: String, required: true },
     email: { type: String, required: true },
-
+    address: { type: String },
+    bio: { type: String },
+    profilePhoto: { type: [String] },
     password: { type: String, required: true },
     isVerified: { type: Boolean, required: true, default: false },
     verificationCode: {
