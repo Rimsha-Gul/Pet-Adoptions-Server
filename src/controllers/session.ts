@@ -1,3 +1,4 @@
+import { getImageURL } from '../utils/getImageURL'
 import { sessionResponseExample } from '../examples/session'
 import User, { SessionResponse } from '../models/User'
 import { UserRequest } from '../types/Request'
@@ -22,10 +23,18 @@ const session = async (req: UserRequest) => {
   const email = (req.user as RequestUser).email
   const user = await User.findOne({ email })
   if (user) {
+    let profilePhotoUrl
+    if (user.profilePhoto.length > 0) {
+      console.log(user.profilePhoto)
+      profilePhotoUrl = getImageURL(user.profilePhoto[0])
+    }
     return {
       name: user.name,
       email: user.email,
-      role: user.role
+      role: user.role,
+      address: user.address,
+      bio: user.bio,
+      profilePhoto: profilePhotoUrl
     }
   }
   throw { code: 404, message: 'User not found' }

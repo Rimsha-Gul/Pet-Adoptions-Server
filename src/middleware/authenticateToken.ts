@@ -34,14 +34,12 @@ const authenticateToken = async (
 ) => {
   const authHeader = req.headers['authorization']
   const token = authHeader?.split(' ')[1]
-  console.log('Token early: ', token)
   try {
     req.user = {
       email: 'example@mail.com',
       role: Role.User
     }
     if (!token) {
-      console.log('token: ', token)
       throw { code: 401, message: 'Unauthorized' }
     }
     const data: any = jwt.verify(token, key)

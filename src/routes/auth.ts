@@ -8,10 +8,13 @@ import {
   signUpValidation,
   loginValidation,
   changeEmailValidation,
-  checkPasswordValidation
+  checkPasswordValidation,
+  updateProfileValidation
 } from '../utils/validation'
 import { isAdmin } from '../middleware/isAdmin'
 import { conditionalAuthenticateAccessToken } from '../middleware/conditionalAuthenticateToken'
+import upload from '../middleware/uploadFiles'
+import { uploadFiles } from '../utils/uploadFiles'
 
 const authRouter = express.Router()
 const controller = new AuthController()
@@ -72,6 +75,52 @@ authRouter.post('/login', async (req, res) => {
     return res.status(err.code).send(err.message)
   }
 })
+
+authRouter.put(
+  '/updateProfile',
+  authenticateAccessToken,
+  upload.single('profilePhoto'),
+  async (req, res) => {
+    const { error } = updateProfileValidation(req.body)
+    if (error) return res.status(400).send(error.details[0].message)
+    try {
+      console.log('try to upload')
+      let fileIds: string[] = []
+      console.log(req.file)
+      const { name, address, bio, removeProfilePhoto } = req.body
+
+      if (removeProfilePhoto) {
+        // Handle removing the profile photo
+        const response = await controller.updateProfile(
+          req,
+          name,
+          address,
+          bio,
+          [] // Pass an empty string to remove photo
+        )
+        return res.send(response)
+      }
+
+      if (req.file) {
+        fileIds = await uploadFiles([req.file], req)
+        console.log(fileIds)
+        const response = await controller.updateProfile(
+          req,
+          name,
+          address,
+          bio,
+          fileIds
+        )
+        return res.send(response)
+      }
+
+      const response = await controller.updateProfile(req, name, address, bio)
+      return res.send(response)
+    } catch (err: any) {
+      return res.status(err.code).send(err.message)
+    }
+  }
+)
 
 authRouter.get('/checkEmail', authenticateAccessToken, async (req, res) => {
   const { error } = changeEmailValidation(req.query)

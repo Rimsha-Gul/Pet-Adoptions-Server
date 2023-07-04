@@ -5,12 +5,13 @@ import { RequestUser } from '../types/RequestUser'
 import { Readable } from 'stream'
 
 export const uploadFiles = async (
-  files: Express.Multer.File[],
+  files: Express.Multer.File[] | Express.Multer.File,
   req: UserRequest
 ): Promise<string[]> => {
+  const fileArray = Array.isArray(files) ? files : [files]
   const fileIds: string[] = []
 
-  for (const file of files) {
+  for (const file of fileArray) {
     const shelterID = req.body.shelterID
       ? req.body.shelterID
       : (req.user as RequestUser)._id
@@ -30,7 +31,10 @@ export const uploadFiles = async (
     const formattedDate = `${month}-${date}-${year}`
     const uniqueSuffix = formattedDate + '-' + Math.round(Math.random() * 1e9)
     const filename =
-      filenameWithoutExtension + '-' + req.body.microchipID + '-' + uniqueSuffix
+      filenameWithoutExtension +
+      (req.body.microchipID ? '-' + req.body.microchipID : '') +
+      '-' +
+      uniqueSuffix
 
     const fileMetadata = {
       name: filename,

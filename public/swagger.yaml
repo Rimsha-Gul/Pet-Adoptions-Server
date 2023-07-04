@@ -138,10 +138,19 @@ components:
                     type: string
                 role:
                     $ref: '#/components/schemas/Role'
+                address:
+                    type: string
+                bio:
+                    type: string
+                profilePhoto:
+                    type: string
             required:
                 - name
                 - email
                 - role
+                - address
+                - bio
+                - profilePhoto
             type: object
             additionalProperties: false
         Gender:
@@ -423,6 +432,48 @@ paths:
                 -
                     bearerAuth: []
             parameters: []
+    /auth/updateProfile:
+        put:
+            operationId: UpdateProfile
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
+                            examples:
+                                'Example 1':
+                                    value: {name: 'John Doe', address: '123 Main St', bio: 'Pet lover with years of experience fostering cats and dogs. I have a spacious home with a large, secure backyard. I love active pets and have a preference for medium to large dogs.', profilePhoto: 'https://example.com/userProfilePhoto.jpg', removeProfilePhoto: true}
+            summary: 'Updates user''s profile'
+            tags:
+                - Auth
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
+            requestBody:
+                required: false
+                content:
+                    multipart/form-data:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                address:
+                                    type: string
+                                bio:
+                                    type: string
+                                profilePhoto:
+                                    type: string
+                                    format: binary
     /auth/checkEmail:
         get:
             operationId: CheckEmail
@@ -596,7 +647,7 @@ paths:
                                 $ref: '#/components/schemas/SessionResponse'
                             examples:
                                 'Example 1':
-                                    value: {name: 'John Doe', email: johndoe@example.com, role: USER}
+                                    value: {name: 'John Doe', email: johndoe@example.com, role: USER, address: '123 Main St', bio: 'Pet lover with years of experience fostering cats and dogs. I have a spacious home with a large, secure backyard. I love active pets and have a preference for medium to large dogs.', profilePhoto: 'https://example.com/userProfilePhoto.jpg'}
             summary: 'Get a user''s session info'
             tags:
                 - Session
