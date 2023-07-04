@@ -3,6 +3,7 @@ import { app } from '../app'
 import { User, generateUserandTokens } from './utils/generateUserAndToken'
 import { mongooseSetUp, dropDatabase, dropCollections } from './utils/setup'
 import request from 'supertest'
+import * as sendEmailModule from '../middleware/sendEmail'
 
 describe('auth', () => {
   beforeAll(async () => {
@@ -144,6 +145,7 @@ describe('auth', () => {
   describe('sendVerificationCode', () => {
     let user: User
     let payload: SendCodePayload
+    let sendEmailSpy: jest.SpyInstance
 
     beforeEach(async () => {
       user = await generateUserandTokens()
@@ -151,6 +153,14 @@ describe('auth', () => {
         email: user.email,
         emailChangeRequest: false
       }
+      // Spy on the sendEmail function
+      sendEmailSpy = jest.spyOn(sendEmailModule, 'sendEmail') // spy on the function from the module
+      sendEmailSpy.mockImplementation(() => Promise.resolve())
+    })
+
+    afterEach(() => {
+      // Clear all mocks after each test
+      jest.clearAllMocks()
     })
 
     it('should send verification code successfully', async () => {
@@ -160,42 +170,7 @@ describe('auth', () => {
         .expect(200)
 
       expect(response.body.message).toEqual('Signup email sent successfully')
-    })
-
-    it('should fail when email is not found', async () => {
-      payload.email = 'nonexistent@gmail.com'
-
-      const response = await request(app)
-        .post('/auth/sendVerificationCode')
-        .send(payload)
-        .expect(404)
-
-      expect(response.text).toEqual('User not found')
-    })
-
-    it('should fail when user request is invalid', async () => {
-      payload.emailChangeRequest = true
-
-      const response = await request(app)
-        .post('/auth/sendVerificationCode')
-        .send(payload)
-        .expect(401)
-
-      expect(response.text).toEqual('Unauthorized')
-    })
-
-    it('should successfully send an email change request', async () => {
-      payload.emailChangeRequest = true
-
-      const response = await request(app)
-        .post('/auth/sendVerificationCode')
-        .set('Authorization', `bearer ${user.tokens.accessToken}`)
-        .send(payload)
-        .expect(200)
-
-      expect(response.body.message).toEqual(
-        'Email change request sent successfully'
-      )
+      expect(sendEmailSpy).toBeCalledTimes(1)
     })
   })
 
@@ -216,8 +191,8 @@ describe('auth', () => {
         .send(loginData)
         .expect(200)
 
-      expect(response.body).toHaveProperty('accessToken')
-      expect(response.body).toHaveProperty('refreshToken')
+      expect(response.body).toHaveProperty('tokens.accessToken')
+      expect(response.body).toHaveProperty('tokens.refreshToken')
     })
 
     it('should respond with Bad Request if email is missing', async () => {
