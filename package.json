@@ -10,7 +10,7 @@
     "swagger": "tsoa spec",
     "lint": "eslint --ignore-path .eslintignore --ext .js,.ts .",
     "format": "prettier --ignore-path .prettierignore --write \"**/*.+(js|ts|json|yaml)\"",
-    "test": "jest --coverage --silent --detectOpenHandles"
+    "test": "jest  --runInBand --coverage --detectOpenHandles"
   },
   "keywords": [],
   "author": "",

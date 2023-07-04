@@ -41,7 +41,7 @@ authRouter.post(
   conditionalAuthenticateAccessToken,
   async (req, res) => {
     try {
-      console.log(req.body)
+      //console.log(req.body)
       const response = await controller.sendVerificationCode(req.body, req)
       return res.send(response)
     } catch (err: any) {
@@ -56,8 +56,8 @@ authRouter.post('/refresh', authenticateRefreshToken, async (req, res) => {
     const response = await controller.refresh(req)
     return res.send(response)
   } catch (err: any) {
-    console.log(err.code)
-    console.log(err.message)
+    //console.log(err.code)
+    //console.log(err.message)
     return res.status(err.code).send(err.message)
   }
 })

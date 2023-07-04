@@ -196,24 +196,24 @@ const sendVerificationCode = async (
   body: SendCodePayload,
   req: UserRequest
 ) => {
-  console.log(body)
+  //console.log(body)
   const { email, emailChangeRequest } = body
   let user
   if (!emailChangeRequest) {
     user = await User.findOne({ email })
     if (!user) throw { code: 404, message: 'User not found' }
   } else {
-    if (!req.user || !req.user.email || !req.user.role) {
-      throw { code: 400, message: 'Invalid user data' }
+    if (req.user) {
+      user = await User.findOne({ email: req.user.email })
+      if (!user) throw { code: 404, message: 'User not found' }
     }
-    user = await User.findOne({ email: req.user.email })
-    if (!user) throw { code: 404, message: 'User not found' }
   }
   const verificationCode: string = generateVerificationCode()
   try {
     const codeEmail = getVerificationCodeEmail(verificationCode)
-    console.log('Simple email: ', email)
-    console.log('Saved user email: ', user.email)
+    // console.log('Simple email: ', email)
+    //console.log('Saved user email: ', user.email)
+    console.log('sending email')
     await sendEmail(
       emailChangeRequest ? email : user.email,
       codeEmail.subject,
@@ -301,10 +301,7 @@ const login = async (body: LoginPayload): Promise<TokenResponse> => {
 }
 
 const refresh = async (req: UserRequest): Promise<TokenResponse> => {
-  if (!req.user || !req.user.email || !req.user.role) {
-    throw { code: 400, message: 'Invalid user data' }
-  }
-  const user = await User.findOne({ email: req.user.email })
+  const user = await User.findOne({ email: req.user?.email })
 
   if (!user) {
     throw { code: 404, message: 'User not found' }
