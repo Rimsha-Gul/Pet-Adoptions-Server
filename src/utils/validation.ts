@@ -28,6 +28,13 @@ export const loginValidation = (data: any): Joi.ValidationResult =>
     password: passwordSchema.required()
   }).validate(data)
 
+export const updateProfileValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    name: Joi.string(),
+    address: Joi.string(),
+    bio: Joi.string()
+  }).validate(data)
+
 export const changeEmailValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
     email: emailSchema.required()
