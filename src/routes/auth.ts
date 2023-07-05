@@ -81,13 +81,18 @@ authRouter.put(
   authenticateAccessToken,
   upload.single('profilePhoto'),
   async (req, res) => {
+    const { name, address, bio, removeProfilePhoto } = req.body
+    if (!req.file && !name && !address && !bio && !removeProfilePhoto) {
+      return res.status(400).send('At least one field must be provided')
+    }
+
     const { error } = updateProfileValidation(req.body)
     if (error) return res.status(400).send(error.details[0].message)
+
     try {
       console.log('try to upload')
       let fileIds: string[] = []
       console.log(req.file)
-      const { name, address, bio, removeProfilePhoto } = req.body
 
       if (removeProfilePhoto) {
         // Handle removing the profile photo

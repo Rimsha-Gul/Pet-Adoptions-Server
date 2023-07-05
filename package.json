@@ -37,6 +37,7 @@
     "nodemailer": "^6.9.2",
     "sinon": "^15.2.0",
     "swagger-ui-express": "^4.6.3",
+    "tmp-promise": "^3.0.3",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {

@@ -32,7 +32,8 @@ export const updateProfileValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
     name: Joi.string(),
     address: Joi.string(),
-    bio: Joi.string()
+    bio: Joi.string(),
+    removeProfilePhoto: Joi.boolean()
   }).validate(data)
 
 export const changeEmailValidation = (data: any): Joi.ValidationResult =>

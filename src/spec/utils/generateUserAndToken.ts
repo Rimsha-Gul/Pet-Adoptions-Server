@@ -14,6 +14,17 @@ export interface User {
     createdAt: Date
     updatedAt: Date
   }
+  address?: string
+  bio?: string
+  profilePhoto?: string[]
+}
+
+export interface Admin {
+  name: string
+  email: string
+  password: string
+  tokens: { accessToken: string; refreshToken: string }
+  isVerified: boolean
 }
 
 export const generateUserandTokens = async (): Promise<User> => {
@@ -192,4 +203,54 @@ export const generateUserNotVerifiedandTokens = async (): Promise<User> => {
       updatedAt: savedUserWithTokensAndCode.verificationCode.updatedAt
     }
   }
+}
+
+export const generateAdminandTokens = async (): Promise<Admin> => {
+  const password = UserModel.hashPassword('123456')
+  const user = new UserModel({
+    role: Role.Admin,
+    name: 'Admin Test User',
+    email: 'admintest@gmail.com',
+    password: password
+  })
+  const savedUser = await user.save()
+  const accessToken = generateAccessToken(user.email, user.role)
+  const refreshToken = generateRefreshToken(user.email, user.role)
+
+  const savedUserWithTokens = await UserModel.findOneAndUpdate(
+    {
+      email: savedUser.email
+    },
+    {
+      $set: {
+        isVerified: true,
+        tokens: {
+          accessToken: accessToken,
+          refreshToken: refreshToken
+        }
+      }
+    },
+    { new: true }
+  )
+
+  await user.save()
+
+  return {
+    tokens: {
+      accessToken: savedUserWithTokens
+        ? savedUserWithTokens.tokens.accessToken
+        : ' ',
+      refreshToken: savedUserWithTokens
+        ? savedUserWithTokens.tokens.refreshToken
+        : ' '
+    },
+    name: user.name,
+    email: user.email,
+    password: user.password,
+    isVerified: true
+  }
+}
+
+export const removeAllUsers = async () => {
+  await UserModel.deleteMany({})
 }

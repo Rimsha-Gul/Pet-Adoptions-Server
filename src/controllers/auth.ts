@@ -352,15 +352,13 @@ const updateProfile = async (
   profilePhoto?: string[]
 ) => {
   console.log('try to update')
-  if (!req.user || !req.user.email || !req.user.role) {
-    throw { code: 400, message: 'Invalid user data' }
-  }
-  const userID = req.user._id
-  console.log('user id: ', userID)
+
+  const userEmail = req?.user?.email
+  console.log('user email: ', userEmail)
 
   try {
     console.log('trying to update')
-    const user = await User.findById(userID)
+    const user = await User.findOne({ email: userEmail })
     if (!user) {
       throw { code: 404, message: 'User not found' }
     }
@@ -390,11 +388,7 @@ const updateProfile = async (
 
 const checkEmail = async (req: UserRequest) => {
   console.log('check email')
-  if (!req.user || !req.user.email || !req.user.role) {
-    throw { code: 400, message: 'Invalid user data' }
-  }
-
-  const user = await User.findOne({ email: req.user.email })
+  const user = await User.findOne({ email: req?.user?.email })
   if (!user) {
     throw { code: 404, message: 'User not found' }
   }
@@ -418,10 +412,7 @@ const changeEmail = async (
   body: ChangeEmailPayload,
   req: UserRequest
 ): Promise<TokenResponse> => {
-  if (!req.user || !req.user.email || !req.user.role) {
-    throw { code: 400, message: 'Invalid user data' }
-  }
-  const user = await User.findOne({ email: req.user.email })
+  const user = await User.findOne({ email: req?.user?.email })
 
   if (!user) {
     throw { code: 404, message: 'User not found' }
@@ -446,11 +437,7 @@ const changeEmail = async (
 }
 
 const checkPassword = async (body: CheckPasswordPayload, req: UserRequest) => {
-  if (!req.user || !req.user.email || !req.user.role) {
-    throw { code: 400, message: 'Invalid user data' }
-  }
-
-  const user = await User.findOne({ email: req.user.email })
+  const user = await User.findOne({ email: req?.user?.email })
   if (!user) {
     throw { code: 404, message: 'User not found' }
   }
@@ -471,11 +458,7 @@ const checkPassword = async (body: CheckPasswordPayload, req: UserRequest) => {
 }
 
 const changePassword = async (body: CheckPasswordPayload, req: UserRequest) => {
-  if (!req.user || !req.user.email || !req.user.role) {
-    throw { code: 400, message: 'Invalid user data' }
-  }
-
-  const user = await User.findOne({ email: req.user.email })
+  const user = await User.findOne({ email: req?.user?.email })
   if (!user) {
     throw { code: 404, message: 'User not found' }
   }
