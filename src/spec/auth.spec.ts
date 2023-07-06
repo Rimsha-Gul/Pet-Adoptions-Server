@@ -17,7 +17,6 @@ import sinon from 'sinon'
 import { generateShelters, removeAllShelters } from './utils/generateShelters'
 import tmp from 'tmp-promise'
 import multer from 'multer'
-import fs from 'fs'
 import express from 'express'
 import { AuthController } from '../controllers/auth'
 import { authenticateAccessToken } from '../middleware/authenticateToken'
@@ -95,6 +94,51 @@ describe('auth', () => {
         .expect(400)
 
       expect(response.text).toEqual(`"password" is required`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if name is empty', async () => {
+      const signupData = {
+        name: '',
+        email: user.email,
+        password: '123456'
+      }
+      const response = await request(app)
+        .post('/auth/signup')
+        .send(signupData)
+        .expect(400)
+
+      expect(response.text).toEqual(`"name" is not allowed to be empty`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if email is empty', async () => {
+      const signupData = {
+        name: user.name,
+        email: '',
+        password: '123456'
+      }
+      const response = await request(app)
+        .post('/auth/signup')
+        .send(signupData)
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" is not allowed to be empty`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if password is empty', async () => {
+      const signupData = {
+        name: user.name,
+        email: user.email,
+        password: ''
+      }
+      const response = await request(app)
+        .post('/auth/signup')
+        .send(signupData)
+        .expect(400)
+
+      expect(response.text).toEqual(`"password" is not allowed to be empty`)
       expect(response.body).toEqual({})
     })
 
@@ -226,6 +270,74 @@ describe('auth', () => {
       )
       expect(sendEmailSpy).toBeCalledTimes(1)
     })
+
+    it('should respond with Bad Request if email is missing', async () => {
+      const incompletePayload = {}
+      const response = await request(app)
+        .post('/auth/sendVerificationCode')
+        .send(incompletePayload)
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" is required`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if email is empty', async () => {
+      payload.email = ''
+      const response = await request(app)
+        .post('/auth/sendVerificationCode')
+        .send(payload)
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" is not allowed to be empty`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if emailChangeRequest is string', async () => {
+      const incorrectPayload = { email: user.email, emailChangeRequest: 'test' }
+      const response = await request(app)
+        .post('/auth/sendVerificationCode')
+        .send(incorrectPayload)
+        .expect(400)
+
+      expect(response.text).toEqual(`"emailChangeRequest" must be a boolean`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if emailChangeRequest is number', async () => {
+      const incorrectPayload = { email: user.email, emailChangeRequest: 1 }
+      const response = await request(app)
+        .post('/auth/sendVerificationCode')
+        .send(incorrectPayload)
+        .expect(400)
+
+      expect(response.text).toEqual(`"emailChangeRequest" must be a boolean`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if email is invalid', async () => {
+      payload.email = 'test@gmailcom'
+
+      const response = await request(app)
+        .post('/auth/sendVerificationCode')
+        .send(payload)
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" must be a valid email`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if email is number', async () => {
+      const incorrectPayload = { email: 1 }
+
+      const response = await request(app)
+        .post('/auth/sendVerificationCode')
+        .send(incorrectPayload)
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" must be a string`)
+      expect(response.body).toEqual({})
+    })
   })
 
   describe('verifyEmail', () => {
@@ -240,8 +352,6 @@ describe('auth', () => {
         email: user.email,
         verificationCode: user.verificationCode.code
       }
-      console.log(user)
-      console.log(payload)
 
       const response = await request(app)
         .post('/auth/verifyEmail')
@@ -306,6 +416,100 @@ describe('auth', () => {
 
       sinon.restore() // Restore the stubbed method
     })
+
+    it('should respond with Bad Request if email is missing', async () => {
+      const incompletePayload = { verificationCode: user.verificationCode.code }
+      const response = await request(app)
+        .post('/auth/verifyEmail')
+        .send(incompletePayload)
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" is required`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if verificationCode is missing', async () => {
+      const incompletePayload = { email: user.email }
+      const response = await request(app)
+        .post('/auth/verifyEmail')
+        .send(incompletePayload)
+        .expect(400)
+
+      expect(response.text).toEqual(`"verificationCode" is required`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if email is empty', async () => {
+      const payload = {
+        email: '',
+        verificationCode: user.verificationCode.code
+      }
+      const response = await request(app)
+        .post('/auth/verifyEmail')
+        .send(payload)
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" is not allowed to be empty`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if verificationCode is empty', async () => {
+      const payload = {
+        email: user.email,
+        verificationCode: ''
+      }
+      const response = await request(app)
+        .post('/auth/verifyEmail')
+        .send(payload)
+        .expect(400)
+
+      expect(response.text).toEqual(
+        `"verificationCode" is not allowed to be empty`
+      )
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if email is invalid', async () => {
+      const payload = {
+        email: 'test@gmailcom',
+        verificationCode: user.verificationCode.code
+      }
+
+      const response = await request(app)
+        .post('/auth/verifyEmail')
+        .send(payload)
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" must be a valid email`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if email is number', async () => {
+      const incorrectPayload = {
+        email: 1,
+        verificationCode: user.verificationCode.code
+      }
+
+      const response = await request(app)
+        .post('/auth/verifyEmail')
+        .send(incorrectPayload)
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" must be a string`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if verificationCode is number', async () => {
+      const incorrectPayload = { email: user.email, verificationCode: 1 }
+
+      const response = await request(app)
+        .post('/auth/verifyEmail')
+        .send(incorrectPayload)
+        .expect(400)
+
+      expect(response.text).toEqual(`"verificationCode" must be a string`)
+      expect(response.body).toEqual({})
+    })
   })
 
   describe('refresh', () => {
@@ -326,13 +530,10 @@ describe('auth', () => {
     })
 
     it('should throw an error if user does not exist', async () => {
-      console.log(user)
-
       const invalidRefreshToken = generateRefreshToken(
         'rimsha@tetrahex.com',
         'USER'
       )
-      console.log(invalidRefreshToken)
 
       const response = await request(app)
         .post('/auth/refresh')
@@ -352,6 +553,13 @@ describe('auth', () => {
         .expect(403)
 
       expect(response.text).toEqual('User not verified')
+    })
+
+    it('should respond with Unauthorized if token is missing', async () => {
+      const response = await request(app).post(`/auth/refresh`).expect(401)
+
+      expect(response.text).toEqual(`Unauthorized`)
+      expect(response.body).toEqual({})
     })
   })
 
@@ -390,12 +598,8 @@ describe('auth', () => {
     })
 
     it('should throw an error if email already exists', async () => {
-      // Generate another user
-      console.log('problematic test')
-      const anotherUser = await generateUserandTokens()
-
       const response = await request(app)
-        .get(`/auth/checkEmail?email=${anotherUser.email}`)
+        .get(`/auth/checkEmail?email=${user.email}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(409)
 
@@ -411,6 +615,38 @@ describe('auth', () => {
         .expect(200)
 
       expect(response.body.message).toEqual('Email is available')
+    })
+
+    it('should respond with Bad Request if email is missing', async () => {
+      const response = await request(app)
+        .get(`/auth/checkEmail`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" is required`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if email is empty', async () => {
+      const newEmail = ''
+      const response = await request(app)
+        .get(`/auth/checkEmail?email=${newEmail}`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" is not allowed to be empty`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if email is invalid', async () => {
+      const newEmail = 'test@gmailcom'
+      const response = await request(app)
+        .get(`/auth/checkEmail?email=${newEmail}`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" must be a valid email`)
+      expect(response.body).toEqual({})
     })
   })
 
@@ -465,6 +701,40 @@ describe('auth', () => {
 
       const changedUser = await UserModel.findOne({ email: newEmail })
       expect(changedUser).not.toBeNull()
+    })
+
+    it('should respond with Bad Request if email is missing', async () => {
+      const response = await request(app)
+        .put(`/auth/changeEmail`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" is required`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if email is empty', async () => {
+      const newEmail = ''
+      const response = await request(app)
+        .put(`/auth/changeEmail`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send({ email: newEmail })
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" is not allowed to be empty`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if email is invalid', async () => {
+      const newEmail = 'test@gmailcom'
+      const response = await request(app)
+        .put(`/auth/changeEmail`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send({ email: newEmail })
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" must be a valid email`)
+      expect(response.body).toEqual({})
     })
   })
 
@@ -525,6 +795,48 @@ describe('auth', () => {
 
       expect(response.body.message).toEqual('Password is correct')
     })
+
+    it('should return bad request if the password is a number', async () => {
+      const password = 123456
+      const response = await request(app)
+        .post('/auth/checkPassword')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send({ password: password })
+        .expect(400)
+
+      expect(response.text).toEqual(`"password" must be a string`)
+    })
+
+    it('should return bad request if the password is missing', async () => {
+      const response = await request(app)
+        .post('/auth/checkPassword')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(`"password" is required`)
+    })
+
+    it('should return bad request if the password is empty', async () => {
+      const password = ''
+      const response = await request(app)
+        .post('/auth/checkPassword')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send({ password: password })
+        .expect(400)
+
+      expect(response.text).toEqual(`"password" is not allowed to be empty`)
+    })
+
+    it('should return bad request if token is mssing', async () => {
+      const correctPassword = '123456'
+      const response = await request(app)
+        .post('/auth/checkPassword')
+        .send({ password: correctPassword })
+        .expect(401)
+
+      expect(response.text).toEqual(`Unauthorized`)
+      expect(response.body).toEqual({})
+    })
   })
 
   describe('changePassword', () => {
@@ -582,6 +894,48 @@ describe('auth', () => {
       const isMatch = updatedUser?.comparePassword(newPassword)
       expect(isMatch).toEqual(true)
     })
+
+    it('should return bad request if the password is a number', async () => {
+      const password = 123456
+      const response = await request(app)
+        .put('/auth/changePassword')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send({ password: password })
+        .expect(400)
+
+      expect(response.text).toEqual(`"password" must be a string`)
+    })
+
+    it('should return bad request if the password is missing', async () => {
+      const response = await request(app)
+        .put('/auth/changePassword')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(`"password" is required`)
+    })
+
+    it('should return bad request if the password is empty', async () => {
+      const password = ''
+      const response = await request(app)
+        .put('/auth/changePassword')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send({ password: password })
+        .expect(400)
+
+      expect(response.text).toEqual(`"password" is not allowed to be empty`)
+    })
+
+    it('should return bad request if token is mssing', async () => {
+      const correctPassword = '123456'
+      const response = await request(app)
+        .put('/auth/changePassword')
+        .send({ password: correctPassword })
+        .expect(401)
+
+      expect(response.text).toEqual(`Unauthorized`)
+      expect(response.body).toEqual({})
+    })
   })
 
   describe('login', () => {
@@ -631,6 +985,34 @@ describe('auth', () => {
       expect(response.body).toEqual({})
     })
 
+    it('should respond with Bad Request if email is empty', async () => {
+      const loginData = {
+        email: '',
+        password: '123456'
+      }
+      const response = await request(app)
+        .post('/auth/login')
+        .send(loginData)
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" is not allowed to be empty`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if password is empty', async () => {
+      const loginData = {
+        email: user.email,
+        password: ''
+      }
+      const response = await request(app)
+        .post('/auth/login')
+        .send(loginData)
+        .expect(400)
+
+      expect(response.text).toEqual(`"password" is not allowed to be empty`)
+      expect(response.body).toEqual({})
+    })
+
     it('should respond with Bad Request if email is number', async () => {
       const loginData = {
         email: 1,
@@ -675,6 +1057,16 @@ describe('auth', () => {
   })
 
   describe('logout', () => {
+    it('should respond with success message if logout is successfull', async () => {
+      const user: User = await generateUserandTokens()
+      const response = await request(app)
+        .delete(`/auth/logout`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.message).toEqual('Logout successful')
+    })
+
     it('should respond with Unauthorized if token is missing', async () => {
       const response = await request(app).delete(`/auth/logout`).expect(401)
 
@@ -725,7 +1117,7 @@ describe('auth', () => {
       })
     })
 
-    it('should return empty list if no shelters', async () => {
+    it('should return empty list if there are no shelters', async () => {
       // remove all shelters
       await removeAllShelters()
 
@@ -738,10 +1130,20 @@ describe('auth', () => {
       expect(response.body.length).toEqual(0)
     })
 
-    it('should throw an error if user is not authenticated', async () => {
+    it('should throw unauthorized if user is not authenticated', async () => {
       const response = await request(app).get(`/auth/shelters`).expect(401)
 
       expect(response.text).toEqual('Unauthorized')
+    })
+
+    it('should throw user not found if user is false admin', async () => {
+      const nonAdminToken = generateAccessToken('falseadmin@gmail.com', 'ADMIN')
+      const response = await request(app)
+        .get(`/auth/shelters`)
+        .auth(nonAdminToken, { type: 'bearer' })
+        .expect(404)
+
+      expect(response.text).toEqual('User not found')
     })
   })
 
@@ -752,7 +1154,6 @@ describe('auth', () => {
         .fn()
         .mockImplementation((_params, callback) => {
           // Simulate a successful upload by invoking the callback with a mock response
-          console.log('uploadFiles called with file:')
           callback(null, { data: { id: 'mockFileId' } })
         })
 
@@ -761,7 +1162,6 @@ describe('auth', () => {
           create: mockDriveFilesCreate
         }
       }
-      console.log('uploadFiles called with files:', mockDrive.files)
       const mockUploadFiles = jest.fn().mockResolvedValue(['mockFileId'])
 
       return {
@@ -784,8 +1184,11 @@ describe('auth', () => {
     })
 
     it('should successfully update profile photo if new one is provided', async () => {
-      const { path: tmpFilePath, cleanup } = await tmp.file()
-      fs.writeFileSync(tmpFilePath, 'This is a test file')
+      const { path: tmpFilePath, cleanup } = await tmp.file({
+        postfix: '.jpg'
+      })
+      //fs.writeFileSync(tmpFilePath, 'This is a test image content')
+
       const upload = multer({ storage: multer.memoryStorage() }) // Use multer's memory storage
       const controller = new AuthController()
 
@@ -798,8 +1201,12 @@ describe('auth', () => {
           try {
             // Handle the request here
             const { name, address, bio } = req.body
-            console.log('req body: ', req.body)
-            console.log('req file: ', req.file)
+            if (req.file) {
+              if (!req.file.mimetype.startsWith('image/')) {
+                return res.status(400).send('Only image files are allowed')
+              }
+            }
+
             const profilePhotoId = req.file ? ['mockFileId'] : undefined
 
             const response = await controller.updateProfile(
@@ -827,11 +1234,123 @@ describe('auth', () => {
         .expect(200)
 
       expect(response.body.message).toEqual('Profile updated successfully')
+
       const updatedUser = await UserModel.findOne({ email: user.email })
       expect(updatedUser).not.toBeNull()
       if (updatedUser) {
         expect(updatedUser.profilePhoto).toEqual(['mockFileId'])
+        expect(updatedUser.profilePhoto).toHaveLength(1) // Assert that there is exactly one profile photo
       }
+
+      await cleanup() // Delete the temporary file after the test
+    })
+
+    it('should throw an error if new profile photo a text file', async () => {
+      const { path: tmpFilePath, cleanup } = await tmp.file({
+        postfix: '.txt'
+      })
+
+      const upload = multer({ storage: multer.memoryStorage() }) // Use multer's memory storage
+      const controller = new AuthController()
+
+      const server = express()
+      server.put(
+        '/auth/updateProfile',
+        authenticateAccessToken,
+        upload.single('profilePhoto'),
+        async (req, res) => {
+          try {
+            // Handle the request here
+            const { name, address, bio } = req.body
+
+            if (req.file) {
+              if (!req.file.mimetype.startsWith('image/')) {
+                return res.status(400).send('Only image files are allowed')
+              }
+            }
+
+            const profilePhotoId = req.file ? ['mockFileId'] : undefined
+
+            const response = await controller.updateProfile(
+              req,
+              name,
+              address,
+              bio,
+              profilePhotoId
+            )
+            // Send the response
+            return res.send(response)
+          } catch (err: any) {
+            return res.status(err.code).send(err.message)
+          }
+        }
+      )
+
+      const response = await request(server)
+        .put('/auth/updateProfile')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .field('name', 'New Name')
+        .field('address', 'New Address')
+        .field('bio', 'New Bio')
+        .attach('profilePhoto', tmpFilePath)
+        .expect(400)
+
+      expect(response.text).toEqual('Only image files are allowed')
+
+      await cleanup() // Delete the temporary file after the test
+    })
+
+    it('should throw an error if new profile photo a pdf file', async () => {
+      const { path: tmpFilePath, cleanup } = await tmp.file({
+        postfix: '.pdf'
+      })
+
+      const upload = multer({ storage: multer.memoryStorage() }) // Use multer's memory storage
+      const controller = new AuthController()
+
+      const server = express()
+      server.put(
+        '/auth/updateProfile',
+        authenticateAccessToken,
+        upload.single('profilePhoto'),
+        async (req, res) => {
+          try {
+            // Handle the request here
+            const { name, address, bio } = req.body
+
+            if (req.file) {
+              if (!req.file.mimetype.startsWith('image/')) {
+                return res.status(400).send('Only image files are allowed')
+              }
+            }
+
+            const profilePhotoId = req.file ? ['mockFileId'] : undefined
+
+            const response = await controller.updateProfile(
+              req,
+              name,
+              address,
+              bio,
+              profilePhotoId
+            )
+            // Send the response
+            return res.send(response)
+          } catch (err: any) {
+            return res.status(err.code).send(err.message)
+          }
+        }
+      )
+
+      const response = await request(server)
+        .put('/auth/updateProfile')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .field('name', 'New Name')
+        .field('address', 'New Address')
+        .field('bio', 'New Bio')
+        .attach('profilePhoto', tmpFilePath)
+        .expect(400)
+
+      expect(response.text).toEqual('Only image files are allowed')
 
       await cleanup() // Delete the temporary file after the test
     })
@@ -856,6 +1375,7 @@ describe('auth', () => {
         expect(updatedUser.name).toEqual(newName)
         expect(updatedUser.address).toEqual(newAddress)
         expect(updatedUser.bio).toEqual(newBio)
+        expect(updatedUser.profilePhoto).toEqual([])
       }
     })
 
@@ -902,9 +1422,37 @@ describe('auth', () => {
       expect(response.text).toEqual('At least one field must be provided')
     })
 
-    // it('should successfully update profile photo if new one is provided', async () => {
-    //   // This test will be complex due to needing to handle file upload.
-    //   // It's highly dependent on your implementation.
-    // })
+    it('should respond with bad request if name is a number', async () => {
+      const invalidNewName = 1
+      const response = await request(app)
+        .put(`/auth/updateProfile`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send({ name: invalidNewName, address: newAddress, bio: newBio })
+        .expect(400)
+
+      expect(response.text).toEqual(`"name" must be a string`)
+    })
+
+    it('should respond with bad request if address is a number', async () => {
+      const invalidNewAddress = 1
+      const response = await request(app)
+        .put(`/auth/updateProfile`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send({ name: newName, address: invalidNewAddress, bio: newBio })
+        .expect(400)
+
+      expect(response.text).toEqual(`"address" must be a string`)
+    })
+
+    it('should respond with bad request if bio is a number', async () => {
+      const invalidNewBio = 1
+      const response = await request(app)
+        .put(`/auth/updateProfile`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send({ name: newName, address: newAddress, bio: invalidNewBio })
+        .expect(400)
+
+      expect(response.text).toEqual(`"bio" must be a string`)
+    })
   })
 })

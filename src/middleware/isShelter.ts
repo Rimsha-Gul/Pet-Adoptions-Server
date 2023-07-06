@@ -12,7 +12,6 @@ const isUserShelter = async (
   next: NextFunction
 ) => {
   try {
-    console.log(req.user)
     if (req.user?.role === Role.User)
       throw { code: 403, message: 'Permission denied' }
     return next()

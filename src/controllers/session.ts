@@ -25,7 +25,6 @@ const session = async (req: UserRequest) => {
   if (user) {
     let profilePhotoUrl
     if (user.profilePhoto.length > 0) {
-      console.log(user.profilePhoto)
       profilePhotoUrl = getImageURL(user.profilePhoto[0])
     }
     return {

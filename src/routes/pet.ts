@@ -38,7 +38,6 @@ petRouter.post(
         adoptionFee,
         shelterID
       } = req.body
-      console.log(req.body)
       const fileIds = await uploadFiles((req as PetRequest).files, req)
 
       const response = await petController.addPet(
@@ -98,7 +97,6 @@ petRouter.get('/', authenticateAccessToken, async (req, res) => {
     )
     return res.send(response)
   } catch (err: any) {
-    console.log('Error response')
     return res.status(err.code).send(err.message)
   }
 })

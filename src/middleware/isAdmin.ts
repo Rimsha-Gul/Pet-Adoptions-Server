@@ -12,7 +12,6 @@ const isUserAdmin = async (
   next: NextFunction
 ) => {
   try {
-    console.log(req.user)
     if (req.user?.role !== Role.Admin)
       throw { code: 403, message: 'Permission denied' }
     return next()

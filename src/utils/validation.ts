@@ -28,6 +28,20 @@ export const loginValidation = (data: any): Joi.ValidationResult =>
     password: passwordSchema.required()
   }).validate(data)
 
+export const sendVerificationCodeValidation = (
+  data: any
+): Joi.ValidationResult =>
+  Joi.object({
+    email: emailSchema.required(),
+    emailChangeRequest: Joi.boolean()
+  }).validate(data)
+
+export const verifyEmailValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    email: emailSchema.required(),
+    verificationCode: Joi.string().required()
+  }).validate(data)
+
 export const updateProfileValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
     name: Joi.string(),

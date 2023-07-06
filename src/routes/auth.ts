@@ -9,7 +9,9 @@ import {
   loginValidation,
   changeEmailValidation,
   checkPasswordValidation,
-  updateProfileValidation
+  updateProfileValidation,
+  sendVerificationCodeValidation,
+  verifyEmailValidation
 } from '../utils/validation'
 import { isAdmin } from '../middleware/isAdmin'
 import { conditionalAuthenticateAccessToken } from '../middleware/conditionalAuthenticateToken'
@@ -30,21 +32,13 @@ authRouter.post('/signup', async (req, res) => {
   }
 })
 
-authRouter.post('/verifyEmail', async (req, res) => {
-  try {
-    const response = await controller.verifyEmail(req.body)
-    return res.send(response)
-  } catch (err: any) {
-    return res.status(err.code).send(err.message)
-  }
-})
-
 authRouter.post(
   '/sendVerificationCode',
   conditionalAuthenticateAccessToken,
   async (req, res) => {
+    const { error } = sendVerificationCodeValidation(req.body)
+    if (error) return res.status(400).send(error.details[0].message)
     try {
-      //console.log(req.body)
       const response = await controller.sendVerificationCode(req.body, req)
       return res.send(response)
     } catch (err: any) {
@@ -53,14 +47,22 @@ authRouter.post(
   }
 )
 
+authRouter.post('/verifyEmail', async (req, res) => {
+  const { error } = verifyEmailValidation(req.body)
+  if (error) return res.status(400).send(error.details[0].message)
+  try {
+    const response = await controller.verifyEmail(req.body)
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
+  }
+})
+
 authRouter.post('/refresh', authenticateRefreshToken, async (req, res) => {
   try {
-    console.log('in refresh')
     const response = await controller.refresh(req)
     return res.send(response)
   } catch (err: any) {
-    //console.log(err.code)
-    //console.log(err.message)
     return res.status(err.code).send(err.message)
   }
 })
@@ -90,9 +92,7 @@ authRouter.put(
     if (error) return res.status(400).send(error.details[0].message)
 
     try {
-      console.log('try to upload')
       let fileIds: string[] = []
-      console.log(req.file)
 
       if (removeProfilePhoto) {
         // Handle removing the profile photo
@@ -108,7 +108,6 @@ authRouter.put(
 
       if (req.file) {
         fileIds = await uploadFiles([req.file], req)
-        console.log(fileIds)
         const response = await controller.updateProfile(
           req,
           name,
@@ -131,7 +130,6 @@ authRouter.get('/checkEmail', authenticateAccessToken, async (req, res) => {
   const { error } = changeEmailValidation(req.query)
   if (error) return res.status(400).send(error.details[0].message)
   try {
-    console.log('Check controller')
     const response = await controller.checkEmail(req)
     return res.send(response)
   } catch (err: any) {

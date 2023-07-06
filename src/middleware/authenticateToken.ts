@@ -17,7 +17,6 @@ export const authenticateRefreshToken: RequestHandler = async (
   res,
   next
 ) => {
-  console.log('refresh refresh')
   await authenticateToken(
     req,
     res,
@@ -34,15 +33,12 @@ const authenticateToken = async (
 ) => {
   const authHeader = req.headers['authorization']
   const token = authHeader?.split(' ')[1]
-  console.log('token: ', token)
-  //console.log('Token early: ', token)
   try {
     req.user = {
       email: 'example@mail.com',
       role: Role.User
     }
     if (!token) {
-      console.log('no token: ', token)
       throw { code: 401, message: 'Unauthorized' }
     }
     const data: any = jwt.verify(token, key)

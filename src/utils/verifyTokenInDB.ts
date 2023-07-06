@@ -11,7 +11,6 @@ export const verifyTokenInDB = async (email: string, token: string) => {
 
   if (!currentTokenObj) throw { code: 403, message: 'User not authorized' }
   else {
-    console.log('verified')
     return {
       _id: user._id,
       email: user.email,
