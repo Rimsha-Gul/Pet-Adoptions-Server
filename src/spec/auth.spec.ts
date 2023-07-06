@@ -391,6 +391,7 @@ describe('auth', () => {
 
     it('should throw an error if email already exists', async () => {
       // Generate another user
+      console.log('problematic test')
       const anotherUser = await generateUserandTokens()
 
       const response = await request(app)
