@@ -4,17 +4,18 @@ import multer, { FileFilterCallback, Options } from 'multer'
 import { google, drive_v3 } from 'googleapis'
 
 let serviceAccountCredentials: any
-
-if (process.env.GOOGLE_SERVICE_ACCOUNT) {
-  try {
-    serviceAccountCredentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT)
-  } catch (e) {
-    console.error('Unable to parse GOOGLE_SERVICE_ACCOUNT:', e)
+if (process.env.NODE_ENV !== 'test') {
+  if (process.env.GOOGLE_SERVICE_ACCOUNT) {
+    try {
+      serviceAccountCredentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT)
+    } catch (e) {
+      console.error('Unable to parse GOOGLE_SERVICE_ACCOUNT:', e)
+      process.exit(1)
+    }
+  } else {
+    console.error('Environment variable GOOGLE_SERVICE_ACCOUNT is not defined')
     process.exit(1)
   }
-} else {
-  console.error('Environment variable GOOGLE_SERVICE_ACCOUNT is not defined')
-  process.exit(1)
 }
 
 const auth = new google.auth.GoogleAuth({

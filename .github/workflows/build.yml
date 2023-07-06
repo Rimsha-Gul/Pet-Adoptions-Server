@@ -29,17 +29,12 @@ jobs:
     - name: Test app
       run: npm test
       env:
-          NODE_ENV: ${{env.NODE_ENV}}
-          PORT: ${{env.PORT}}
-          MONGO_URI: ${{env.MONGO_URI}}
-          ACCESS_TOKEN_SECRET: ${{env.ACCESS_TOKEN_SECRET}}
-          REFRESH_TOKEN_SECRET: ${{env.REFRESH_TOKEN_SECRET}}
-          SESSION_SECRET: ${{env.SESSION_SECRET}}
-          VERIFICATION_SECRET: ${{env.VERIFICATION_SECRET}}
-          NODEMAILER_USER: ${{env.NODEMAILER_USER}}
-          NODEMAILER_PASS: ${{env.NODEMAILER_PASS}}
-          DRIVE_PARENT_FOLDER_ID: ${{env.DRIVE_PARENT_FOLDER_ID}}
-          GOOGLE_SERVICE_ACCOUNT: ${{env.GOOGLE_SERVICE_ACCOUNT}}
+          NODE_ENV: test
+          PORT: 8080
+          ACCESS_TOKEN_SECRET: 'test_access_token_secret'
+          REFRESH_TOKEN_SECRET: 'test_refresh_token_secret'
+          SESSION_SECRET: 'test_session_secret'
+          VERIFICATION_SECRET: 'test_verification_secret'
 
     - name: Build app
       run: npm run build
