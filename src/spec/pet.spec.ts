@@ -207,7 +207,7 @@ describe('pet', () => {
 
       expect(response.body.pet).not.toBeNull()
 
-      await cleanup() // Delete the temporary file after the test
+      await cleanup() // Delete the temporary files after the test
       await cleanup2()
       await cleanup3()
     })
@@ -349,6 +349,9 @@ describe('pet', () => {
       expect(response.body).toEqual({})
 
       await removeAllPets()
+      await cleanup() // Delete the temporary files after the test
+      await cleanup2()
+      await cleanup3()
     })
 
     it('should throw an error if no image file is provided', async () => {
