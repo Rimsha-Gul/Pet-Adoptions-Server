@@ -218,7 +218,7 @@ describe('pet', () => {
         'USER'
       )
 
-      const response = await request(server)
+      const response = await request(app)
         .post('/pet/')
         .auth(nonExistentEmailToken, { type: 'bearer' })
         .field('microchipID', pet.microchipID)
