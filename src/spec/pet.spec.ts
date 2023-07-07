@@ -1,6 +1,10 @@
 import { Pet, generatePets, petData, removeAllPets } from './utils/generatePet'
 import { app } from '../app'
-import { Admin, generateAdminandTokens } from './utils/generateUserAndToken'
+import {
+  Admin,
+  generateAdminandTokens,
+  removeAllUsers
+} from './utils/generateUserAndToken'
 import { dropCollections, dropDatabase, mongooseSetUp } from './utils/setup'
 import request from 'supertest'
 import { generateShelters, removeAllShelters } from './utils/generateShelters'
@@ -31,16 +35,13 @@ describe('pet', () => {
     let user: Admin
     let pet: Pet
 
-    const testsToExclude = [
-      'should throw an error if no image file is provided'
-    ]
-
     const userCheck = [
       'pet add a pet should throw an error if a user(Role: USER) tries to add a pet'
     ]
 
     beforeEach(async () => {
-      let currentTestName = expect.getState().currentTestName
+      await mockFileUpload()
+      const currentTestName = expect.getState().currentTestName
       if (!userCheck.includes(currentTestName || ''))
         user = await generateAdminandTokens(Role.Shelter)
 
@@ -49,14 +50,9 @@ describe('pet', () => {
       const shelters = await User.find({ role: 'SHELTER' })
       pet = petData
       pet.shelterID = shelters[0]._id
-
-      // Check if the current test should run the mockFileUpload or not
-      currentTestName = expect.getState().currentTestName
-      if (!testsToExclude.includes(currentTestName || '')) {
-        await mockFileUpload()
-      }
     })
     afterEach(async () => {
+      await removeAllUsers()
       await removeAllPets()
       await removeAllShelters()
     })
