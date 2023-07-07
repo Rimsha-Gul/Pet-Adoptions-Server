@@ -143,7 +143,7 @@ const addPet = async (
   req: UserRequest,
   shelterID?: string
 ): Promise<AddPetResponse> => {
-  if (!images) {
+  if (!images || images.length === 0) {
     throw { code: 400, message: 'No image file provided.' }
   }
 
@@ -151,7 +151,7 @@ const addPet = async (
   if (existingPet) {
     throw {
       code: 400,
-      message: 'Pet already exists.'
+      message: 'Pet already exists'
     }
   }
 
@@ -160,7 +160,11 @@ const addPet = async (
   const shelterUserIds = shelterUsers.map((user) => user._id.toString())
 
   // Check if the shelterID matches any of the shelter user IDs
-  if (shelterID && !shelterUserIds.includes(shelterID)) {
+  if (
+    !shelterUserIds.includes(
+      shelterID ? shelterID : (req.user as RequestUser)._id?.toString()
+    )
+  ) {
     throw { code: 400, message: 'Invalid shelter ID.' }
   }
 
@@ -218,11 +222,6 @@ const getAllPets = async (
   ageFilter?: string
 ): Promise<AllPetsResponse> => {
   try {
-    console.log(filterOption)
-    console.log(colorFilter)
-    console.log(breedFilter)
-    console.log(genderFilter)
-    console.log(ageFilter)
     const skip = (page - 1) * limit
     const queryObj: { [key: string]: any } = {}
 
@@ -233,7 +232,6 @@ const getAllPets = async (
 
     // Apply category filter if a filter option is provided
     if (filterOption) {
-      console.log('Filtering')
       queryObj.category = filterOption
 
       // Fetch all pets of this category to get unique colors, breeds, genders, and ages
@@ -251,27 +249,20 @@ const getAllPets = async (
         )
       )
     }
-    console.log('ages: ', ages)
 
     // Apply color filter if a colorFilter option is provided
     if (colorFilter) {
-      console.log('Filtering by color')
       queryObj.color = colorFilter
-      // query = query.find({ color: colorFilter })
     }
 
     // Apply breed filter if a breedFilter option is provided
     if (breedFilter) {
-      console.log('Filtering by breed')
       queryObj.breed = breedFilter
-      //query = query.find({ breed: breedFilter })
     }
 
     // Apply gender filter if a genderFilter option is provided
     if (genderFilter) {
-      console.log('Filtering by gender')
       queryObj.gender = genderFilter
-      // query = query.find({ gender: genderFilter })
     }
 
     // Apply age filter if an ageFilter option is provided
@@ -290,8 +281,6 @@ const getAllPets = async (
           currentDate.getMonth(),
           currentDate.getDate()
         )
-        console.log(minBirthDate)
-        console.log(maxBirthDate)
         queryObj.birthDate = {
           $gte: maxBirthDate,
           $lte: minBirthDate
@@ -316,7 +305,6 @@ const getAllPets = async (
         queryObj.birthDate = { $gte: maxBirthDate }
       }
     }
-    console.log('Query Object:', queryObj)
 
     // Apply search filter if a search query is provided
     if (searchQuery) {
@@ -330,13 +318,9 @@ const getAllPets = async (
     const totalPetsPromise = Pet.countDocuments(query)
 
     // Apply pagination to the query
-    console.log('Skip: ', skip)
-    console.log('Limit: ', limit)
     query = query.skip(skip).limit(limit)
 
     const [petsList, totalPets] = await Promise.all([query, totalPetsPromise])
-
-    console.log('Total pets:', totalPets)
 
     // Map the petsList to include the image URL
     const petsWithImageUrls = await Promise.all(

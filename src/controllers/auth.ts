@@ -196,7 +196,7 @@ const signup = async (body: UserPayload): Promise<SignupResponse> => {
   const existingUser = await User.findOne({ email })
 
   if (existingUser) {
-    throw { code: 409, message: 'User already exists.' }
+    throw { code: 409, message: 'User already exists' }
   }
 
   const user = new User({

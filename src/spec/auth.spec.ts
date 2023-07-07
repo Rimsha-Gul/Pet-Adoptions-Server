@@ -1,4 +1,4 @@
-import { SendCodePayload, User as UserModel } from '../models/User'
+import { Role, SendCodePayload, User as UserModel } from '../models/User'
 import { generateAccessToken } from '../utils/generateAccessToken'
 import { generateRefreshToken } from '../utils/generateRefreshToken'
 import { app } from '../app'
@@ -53,6 +53,21 @@ describe('auth', () => {
         .expect(200)
 
       expect(response.body.email).toEqual(signupData.email)
+    })
+
+    it('should respond with error if user already exists', async () => {
+      const signupData = {
+        name: user.name,
+        email: user.email,
+        password: '123456'
+      }
+      const response = await request(app)
+        .post('/auth/signup')
+        .send(signupData)
+        .expect(409)
+
+      expect(response.text).toEqual('User already exists')
+      expect(response.body).toEqual({})
     })
 
     it('should respond with Bad Request if name is missing', async () => {
@@ -201,6 +216,75 @@ describe('auth', () => {
       expect(response.text).toEqual(`"email" must be a valid email`)
       expect(response.body).toEqual({})
     })
+
+    it('should respond with Bad Request if name has length less than 3', async () => {
+      const signupData = {
+        name: 'Ar',
+        email: user.email,
+        password: '123456'
+      }
+      const response = await request(app)
+        .post('/auth/signup')
+        .send(signupData)
+        .expect(400)
+
+      expect(response.text).toEqual(
+        `"name" length must be at least 3 characters long`
+      )
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if name has length greater than 32', async () => {
+      const signupData = {
+        name: 'Abcdefghijklmnopqrstuvwxyzabcdefghi',
+        email: user.email,
+        password: '123456'
+      }
+      const response = await request(app)
+        .post('/auth/signup')
+        .send(signupData)
+        .expect(400)
+
+      expect(response.text).toEqual(
+        `"name" length must be less than or equal to 32 characters long`
+      )
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if password has length less than 6', async () => {
+      const signupData = {
+        name: user.name,
+        email: user.email,
+        password: '12345'
+      }
+      const response = await request(app)
+        .post('/auth/signup')
+        .send(signupData)
+        .expect(400)
+
+      expect(response.text).toEqual(
+        `"password" length must be at least 6 characters long`
+      )
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if password has length greater than 32', async () => {
+      const longPassword = '1'.repeat(1025)
+      const signupData = {
+        name: user.name,
+        email: user.email,
+        password: longPassword
+      }
+      const response = await request(app)
+        .post('/auth/signup')
+        .send(signupData)
+        .expect(400)
+
+      expect(response.text).toEqual(
+        `"password" length must be less than or equal to 1024 characters long`
+      )
+      expect(response.body).toEqual({})
+    })
   })
 
   describe('sendVerificationCode', () => {
@@ -242,6 +326,7 @@ describe('auth', () => {
         .expect(404)
 
       expect(response.text).toEqual('User not found')
+      expect(response.body).toEqual({})
     })
 
     it('should throw an error if user data in req.user is invalid', async () => {
@@ -254,6 +339,7 @@ describe('auth', () => {
         .expect(401)
 
       expect(response.text).toEqual('Unauthorized')
+      expect(response.body).toEqual({})
     })
 
     it('should send email change request successfully', async () => {
@@ -375,6 +461,7 @@ describe('auth', () => {
         .expect(404)
 
       expect(response.text).toEqual('User not found')
+      expect(response.body).toEqual({})
     })
 
     it('should throw an error if verification code is incorrect', async () => {
@@ -389,6 +476,7 @@ describe('auth', () => {
         .expect(400)
 
       expect(response.text).toEqual('Incorrect verification code')
+      expect(response.body).toEqual({})
     })
 
     it('should throw an error if verification code is expired', async () => {
@@ -413,6 +501,7 @@ describe('auth', () => {
         .expect(401)
 
       expect(response.text).toEqual('Verification code expired')
+      expect(response.body).toEqual({})
 
       sinon.restore() // Restore the stubbed method
     })
@@ -541,6 +630,7 @@ describe('auth', () => {
         .expect(404)
 
       expect(response.text).toEqual('User not found')
+      expect(response.body).toEqual({})
     })
 
     it('should throw an error if user is not verified', async () => {
@@ -553,6 +643,7 @@ describe('auth', () => {
         .expect(403)
 
       expect(response.text).toEqual('User not verified')
+      expect(response.body).toEqual({})
     })
 
     it('should respond with Unauthorized if token is missing', async () => {
@@ -583,6 +674,7 @@ describe('auth', () => {
         .expect(404)
 
       expect(response.text).toEqual('User not found')
+      expect(response.body).toEqual({})
     })
 
     it('should throw an error if user is not verified', async () => {
@@ -595,6 +687,7 @@ describe('auth', () => {
         .expect(403)
 
       expect(response.text).toEqual('User not verified')
+      expect(response.body).toEqual({})
     })
 
     it('should throw an error if email already exists', async () => {
@@ -604,6 +697,7 @@ describe('auth', () => {
         .expect(409)
 
       expect(response.text).toEqual('A user with this email already exists')
+      expect(response.body).toEqual({})
     })
 
     it('should return success message if email is available', async () => {
@@ -672,6 +766,7 @@ describe('auth', () => {
         .expect(404)
 
       expect(response.text).toEqual('User not found')
+      expect(response.body).toEqual({})
     })
 
     it('should throw an error if user is not verified', async () => {
@@ -685,6 +780,7 @@ describe('auth', () => {
         .expect(403)
 
       expect(response.text).toEqual('User not verified')
+      expect(response.body).toEqual({})
     })
 
     it('should successfully change email if user is verified and email is available', async () => {
@@ -758,6 +854,7 @@ describe('auth', () => {
         .expect(404)
 
       expect(response.text).toEqual('User not found')
+      expect(response.body).toEqual({})
     })
 
     it('should throw an error if user is not verified', async () => {
@@ -771,6 +868,7 @@ describe('auth', () => {
         .expect(403)
 
       expect(response.text).toEqual('User not verified')
+      expect(response.body).toEqual({})
     })
 
     it('should throw an error if the password is incorrect', async () => {
@@ -783,6 +881,7 @@ describe('auth', () => {
         .expect(400)
 
       expect(response.text).toEqual('Invalid password')
+      expect(response.body).toEqual({})
     })
 
     it('should return a success message if the password is correct', async () => {
@@ -805,6 +904,7 @@ describe('auth', () => {
         .expect(400)
 
       expect(response.text).toEqual(`"password" must be a string`)
+      expect(response.body).toEqual({})
     })
 
     it('should return bad request if the password is missing', async () => {
@@ -814,6 +914,7 @@ describe('auth', () => {
         .expect(400)
 
       expect(response.text).toEqual(`"password" is required`)
+      expect(response.body).toEqual({})
     })
 
     it('should return bad request if the password is empty', async () => {
@@ -825,6 +926,35 @@ describe('auth', () => {
         .expect(400)
 
       expect(response.text).toEqual(`"password" is not allowed to be empty`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if password has length less than 6', async () => {
+      const password = '12345'
+      const response = await request(app)
+        .post('/auth/checkPassword')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send({ password: password })
+        .expect(400)
+
+      expect(response.text).toEqual(
+        `"password" length must be at least 6 characters long`
+      )
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if password has length greater than 32', async () => {
+      const password = '1'.repeat(1025)
+      const response = await request(app)
+        .post('/auth/checkPassword')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send({ password: password })
+        .expect(400)
+
+      expect(response.text).toEqual(
+        `"password" length must be less than or equal to 1024 characters long`
+      )
+      expect(response.body).toEqual({})
     })
 
     it('should return bad request if token is mssing', async () => {
@@ -861,6 +991,7 @@ describe('auth', () => {
         .expect(404)
 
       expect(response.text).toEqual('User not found')
+      expect(response.body).toEqual({})
     })
 
     it('should throw an error if user is not verified', async () => {
@@ -874,6 +1005,7 @@ describe('auth', () => {
         .expect(403)
 
       expect(response.text).toEqual('User not verified')
+      expect(response.body).toEqual({})
     })
 
     it('should successfully change password if user is verified', async () => {
@@ -904,6 +1036,7 @@ describe('auth', () => {
         .expect(400)
 
       expect(response.text).toEqual(`"password" must be a string`)
+      expect(response.body).toEqual({})
     })
 
     it('should return bad request if the password is missing', async () => {
@@ -913,6 +1046,7 @@ describe('auth', () => {
         .expect(400)
 
       expect(response.text).toEqual(`"password" is required`)
+      expect(response.body).toEqual({})
     })
 
     it('should return bad request if the password is empty', async () => {
@@ -924,6 +1058,35 @@ describe('auth', () => {
         .expect(400)
 
       expect(response.text).toEqual(`"password" is not allowed to be empty`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if password has length less than 6', async () => {
+      const password = '12345'
+      const response = await request(app)
+        .put('/auth/changePassword')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send({ password: password })
+        .expect(400)
+
+      expect(response.text).toEqual(
+        `"password" length must be at least 6 characters long`
+      )
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if password has length greater than 32', async () => {
+      const password = '1'.repeat(1025)
+      const response = await request(app)
+        .put('/auth/changePassword')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send({ password: password })
+        .expect(400)
+
+      expect(response.text).toEqual(
+        `"password" length must be less than or equal to 1024 characters long`
+      )
+      expect(response.body).toEqual({})
     })
 
     it('should return bad request if token is mssing', async () => {
@@ -1054,6 +1217,39 @@ describe('auth', () => {
       expect(response.text).toEqual(`"email" must be a valid email`)
       expect(response.body).toEqual({})
     })
+
+    it('should respond with Bad Request if password has length less than 6', async () => {
+      const loginData = {
+        email: user.email,
+        password: '12345'
+      }
+      const response = await request(app)
+        .post('/auth/login')
+        .send(loginData)
+        .expect(400)
+
+      expect(response.text).toEqual(
+        `"password" length must be at least 6 characters long`
+      )
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if password has length greater than 32', async () => {
+      const longPassword = '1'.repeat(1025)
+      const loginData = {
+        email: user.email,
+        password: longPassword
+      }
+      const response = await request(app)
+        .post('/auth/login')
+        .send(loginData)
+        .expect(400)
+
+      expect(response.text).toEqual(
+        `"password" length must be less than or equal to 1024 characters long`
+      )
+      expect(response.body).toEqual({})
+    })
   })
 
   describe('logout', () => {
@@ -1083,7 +1279,7 @@ describe('auth', () => {
       await generateShelters()
 
       // Generate an admin user and tokens for testing
-      adminUser = await generateAdminandTokens()
+      adminUser = await generateAdminandTokens(Role.Admin)
     })
 
     afterEach(async () => {
@@ -1100,6 +1296,7 @@ describe('auth', () => {
         .expect(403)
 
       expect(response.text).toEqual('Permission denied')
+      expect(response.body).toEqual({})
     })
 
     it('should get all shelters successfully if user is an admin', async () => {
@@ -1144,6 +1341,7 @@ describe('auth', () => {
         .expect(404)
 
       expect(response.text).toEqual('User not found')
+      expect(response.body).toEqual({})
     })
   })
 
@@ -1187,7 +1385,6 @@ describe('auth', () => {
       const { path: tmpFilePath, cleanup } = await tmp.file({
         postfix: '.jpg'
       })
-      //fs.writeFileSync(tmpFilePath, 'This is a test image content')
 
       const upload = multer({ storage: multer.memoryStorage() }) // Use multer's memory storage
       const controller = new AuthController()
@@ -1296,6 +1493,7 @@ describe('auth', () => {
         .expect(400)
 
       expect(response.text).toEqual('Only image files are allowed')
+      expect(response.body).toEqual({})
 
       await cleanup() // Delete the temporary file after the test
     })
@@ -1351,6 +1549,7 @@ describe('auth', () => {
         .expect(400)
 
       expect(response.text).toEqual('Only image files are allowed')
+      expect(response.body).toEqual({})
 
       await cleanup() // Delete the temporary file after the test
     })
@@ -1392,6 +1591,7 @@ describe('auth', () => {
         .expect(404)
 
       expect(response.text).toEqual('User not found')
+      expect(response.body).toEqual({})
     })
 
     it('should update user profile if user exists and data is valid', async () => {
@@ -1420,6 +1620,7 @@ describe('auth', () => {
         .expect(400)
 
       expect(response.text).toEqual('At least one field must be provided')
+      expect(response.body).toEqual({})
     })
 
     it('should respond with bad request if name is a number', async () => {
@@ -1431,6 +1632,7 @@ describe('auth', () => {
         .expect(400)
 
       expect(response.text).toEqual(`"name" must be a string`)
+      expect(response.body).toEqual({})
     })
 
     it('should respond with bad request if address is a number', async () => {
@@ -1442,6 +1644,7 @@ describe('auth', () => {
         .expect(400)
 
       expect(response.text).toEqual(`"address" must be a string`)
+      expect(response.body).toEqual({})
     })
 
     it('should respond with bad request if bio is a number', async () => {
@@ -1453,6 +1656,7 @@ describe('auth', () => {
         .expect(400)
 
       expect(response.text).toEqual(`"bio" must be a string`)
+      expect(response.body).toEqual({})
     })
   })
 })

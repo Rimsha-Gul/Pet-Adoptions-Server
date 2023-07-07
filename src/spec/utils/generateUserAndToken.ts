@@ -205,10 +205,10 @@ export const generateUserNotVerifiedandTokens = async (): Promise<User> => {
   }
 }
 
-export const generateAdminandTokens = async (): Promise<Admin> => {
+export const generateAdminandTokens = async (role: Role): Promise<Admin> => {
   const password = UserModel.hashPassword('123456')
   const user = new UserModel({
-    role: Role.Admin,
+    role: role,
     name: 'Admin Test User',
     email: 'admintest@gmail.com',
     password: password

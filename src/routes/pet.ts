@@ -5,6 +5,7 @@ import { isShelter } from '../middleware/isShelter'
 import { PetRequest } from '../types/PetRequest'
 import upload from '../middleware/uploadFiles'
 import { uploadFiles } from '../utils/uploadFiles'
+import { addPetValidation } from '../utils/validation'
 
 const petRouter = express.Router()
 const petController = new PetController()
@@ -15,6 +16,8 @@ petRouter.post(
   isShelter,
   upload.array('images', 10),
   async (req, res) => {
+    const { error } = addPetValidation(req.body)
+    if (error) return res.status(400).send(error.details[0].message)
     try {
       const {
         microchipID,
