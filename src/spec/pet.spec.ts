@@ -1,4 +1,9 @@
-import { Pet, generatePets, petData, removeAllPets } from './utils/generatePet'
+import {
+  Pet,
+  generatePet,
+  generatePets,
+  removeAllPets
+} from './utils/generatePet'
 import { app } from '../app'
 import {
   Admin,
@@ -7,7 +12,6 @@ import {
 } from './utils/generateUserAndToken'
 import { dropCollections, dropDatabase, mongooseSetUp } from './utils/setup'
 import request from 'supertest'
-import { generateShelters, removeAllShelters } from './utils/generateShelters'
 import tmp from 'tmp-promise'
 import multer from 'multer'
 import { PetController } from '../controllers/pet'
@@ -15,7 +19,7 @@ import { authenticateAccessToken } from '../middleware/authenticateToken'
 import express from 'express'
 import { Pet as PetModel } from '../models/Pet'
 import { isShelter } from '../middleware/isShelter'
-import User, { Role } from '../models/User'
+import { Role } from '../models/User'
 import { Category } from '../models/Pet'
 import { calculateAgeFromBirthdate } from '../utils/calculateAgeFromBirthdate'
 import { generateAccessToken } from '../utils/generateAccessToken'
@@ -72,11 +76,7 @@ describe('pet', () => {
       if (!userCheck.includes(currentTestName || ''))
         user = await generateAdminandTokens(Role.Shelter)
 
-      await generateShelters()
-
-      const shelters = await User.find({ role: 'SHELTER' })
-      pet = petData
-      pet.shelterID = shelters[0]._id
+      pet = await generatePet()
     })
     afterEach(async () => {
       await cleanup() // Delete the temporary files after the test
@@ -84,7 +84,6 @@ describe('pet', () => {
       await cleanup3()
       await removeAllUsers()
       await removeAllPets()
-      await removeAllShelters()
     })
 
     const mockFileUpload = async () => {
@@ -177,6 +176,40 @@ describe('pet', () => {
         }
       )
     }
+
+    it('should successfully add a pet with all fields provided', async () => {
+      user = await generateAdminandTokens(Role.Admin)
+      const response = await request(server)
+        .post('/pet/')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .field('microchipID', pet.microchipID)
+        .field('name', pet.name)
+        .field('gender', pet.gender)
+        .field('birthDate', pet.birthDate)
+        .field('color', pet.color)
+        .field('breed', pet.breed)
+        .field('category', pet.category)
+        .field('activityNeeds', pet.activityNeeds)
+        .field('levelOfGrooming', pet.levelOfGrooming)
+        .field('isHouseTrained', pet.isHouseTrained)
+        .field('healthCheck', pet.healthCheck)
+        .field('allergiesTreated', pet.allergiesTreated)
+        .field('wormed', pet.wormed)
+        .field('heartwormTreated', pet.heartwormTreated)
+        .field('vaccinated', pet.vaccinated)
+        .field('deSexed', pet.deSexed)
+        .field('bio', pet.bio)
+        .field('traits', pet.traits)
+        .field('adoptionFee', pet.adoptionFee)
+        .field('shelterID', pet.shelterID)
+        .attach('images', tmpFilePath)
+        .attach('images', tmpFilePath2)
+        .attach('images', tmpFilePath3)
+
+        .expect(200)
+
+      expect(response.body.pet).not.toBeNull()
+    })
 
     it('should successfully add a pet with all fields provided', async () => {
       const response = await request(server)
