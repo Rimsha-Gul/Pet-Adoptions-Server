@@ -34,31 +34,6 @@ describe('pet', () => {
   })
 
   describe('add a pet', () => {
-    let user: Admin
-    let pet: Pet
-
-    const userCheck = [
-      'pet add a pet should throw an error if a user(Role: USER) tries to add a pet'
-    ]
-
-    beforeEach(async () => {
-      await mockFileUpload()
-      const currentTestName = expect.getState().currentTestName
-      if (!userCheck.includes(currentTestName || ''))
-        user = await generateAdminandTokens(Role.Shelter)
-
-      await generateShelters()
-
-      const shelters = await User.find({ role: 'SHELTER' })
-      pet = petData
-      pet.shelterID = shelters[0]._id
-    })
-    afterEach(async () => {
-      await removeAllUsers()
-      await removeAllPets()
-      await removeAllShelters()
-    })
-
     // Mock the Google Drive upload functionality
     jest.mock('googleapis', () => {
       const mockDriveFilesCreate = jest
@@ -81,8 +56,36 @@ describe('pet', () => {
       }
     })
 
+    let user: Admin
+    let pet: Pet
+
+    const userCheck = [
+      'pet add a pet should throw an error if a user(Role: USER) tries to add a pet'
+    ]
+
     let tmpFilePath, tmpFilePath2, tmpFilePath3, cleanup, cleanup2, cleanup3
     const server = express()
+
+    beforeEach(async () => {
+      await mockFileUpload()
+      const currentTestName = expect.getState().currentTestName
+      if (!userCheck.includes(currentTestName || ''))
+        user = await generateAdminandTokens(Role.Shelter)
+
+      await generateShelters()
+
+      const shelters = await User.find({ role: 'SHELTER' })
+      pet = petData
+      pet.shelterID = shelters[0]._id
+    })
+    afterEach(async () => {
+      await cleanup() // Delete the temporary files after the test
+      await cleanup2()
+      await cleanup3()
+      await removeAllUsers()
+      await removeAllPets()
+      await removeAllShelters()
+    })
 
     const mockFileUpload = async () => {
       const result1 = await tmp.file({ postfix: '.jpg' })
@@ -204,10 +207,6 @@ describe('pet', () => {
         .expect(200)
 
       expect(response.body.pet).not.toBeNull()
-
-      await cleanup() // Delete the temporary files after the test
-      await cleanup2()
-      await cleanup3()
     })
 
     it('should throw an error if user does not exist', async () => {
@@ -238,9 +237,6 @@ describe('pet', () => {
         .field('bio', pet.bio)
         .field('traits', pet.traits)
         .field('adoptionFee', pet.adoptionFee)
-        .attach('images', tmpFilePath)
-        .attach('images', tmpFilePath2)
-        .attach('images', tmpFilePath3)
         .expect(404)
 
       expect(response.text).toEqual('User not found')
@@ -302,9 +298,6 @@ describe('pet', () => {
         .field('bio', pet.bio)
         .field('traits', pet.traits)
         .field('adoptionFee', pet.adoptionFee)
-        .attach('images', tmpFilePath)
-        .attach('images', tmpFilePath2)
-        .attach('images', tmpFilePath3)
         .expect(403)
 
       expect(response.text).toEqual('Permission denied')
@@ -345,11 +338,6 @@ describe('pet', () => {
 
       expect(response.text).toEqual('Pet already exists')
       expect(response.body).toEqual({})
-
-      await removeAllPets()
-      await cleanup() // Delete the temporary files after the test
-      await cleanup2()
-      await cleanup3()
     })
 
     it('should throw an error if no image file is provided', async () => {
