@@ -90,7 +90,151 @@ export const generatePets = async () => {
       birthDate: '2022-01-01',
       color: 'Brown',
       breed: 'Labrador',
-      category: Category.Dog,
+      category: Category.Cat,
+      activityNeeds: ActivityNeeds.High,
+      levelOfGrooming: LevelOfGrooming.Medium,
+      isHouseTrained: true,
+      healthInfo: {
+        healthCheck: true,
+        allergiesTreated: false,
+        wormed: true,
+        heartwormTreated: true,
+        vaccinated: true,
+        deSexed: true
+      },
+      bio: 'This is Max, a friendly Labrador.',
+      traits: 'Active, Friendly, Playful',
+      adoptionFee: '200 USD'
+    },
+    {
+      shelterID: shelters[1]._id,
+      microchipID: 'A123456778',
+      name: 'Max',
+      gender: Gender.Male,
+      birthDate: '2022-01-01',
+      color: 'Brown',
+      breed: 'Labrador',
+      category: Category.Bird,
+      activityNeeds: ActivityNeeds.High,
+      levelOfGrooming: LevelOfGrooming.Medium,
+      isHouseTrained: true,
+      healthInfo: {
+        healthCheck: true,
+        allergiesTreated: false,
+        wormed: true,
+        heartwormTreated: true,
+        vaccinated: true,
+        deSexed: true
+      },
+      bio: 'This is Max, a friendly Labrador.',
+      traits: 'Active, Friendly, Playful',
+      adoptionFee: '200 USD'
+    },
+    {
+      shelterID: shelters[1]._id,
+      microchipID: 'A123456678',
+      name: 'Max',
+      gender: Gender.Male,
+      birthDate: '2022-01-01',
+      color: 'Brown',
+      breed: 'Labrador',
+      category: Category.Barnyard,
+      activityNeeds: ActivityNeeds.High,
+      levelOfGrooming: LevelOfGrooming.Medium,
+      isHouseTrained: true,
+      healthInfo: {
+        healthCheck: true,
+        allergiesTreated: false,
+        wormed: true,
+        heartwormTreated: true,
+        vaccinated: true,
+        deSexed: true
+      },
+      bio: 'This is Max, a friendly Labrador.',
+      traits: 'Active, Friendly, Playful',
+      adoptionFee: '200 USD'
+    },
+    {
+      shelterID: shelters[1]._id,
+      microchipID: 'A123455678',
+      name: 'Max',
+      gender: Gender.Male,
+      birthDate: '2022-01-01',
+      color: 'Brown',
+      breed: 'Labrador',
+      category: Category.Horse,
+      activityNeeds: ActivityNeeds.High,
+      levelOfGrooming: LevelOfGrooming.Medium,
+      isHouseTrained: true,
+      healthInfo: {
+        healthCheck: true,
+        allergiesTreated: false,
+        wormed: true,
+        heartwormTreated: true,
+        vaccinated: true,
+        deSexed: true
+      },
+      bio: 'This is Max, a friendly Labrador.',
+      traits: 'Active, Friendly, Playful',
+      adoptionFee: '200 USD'
+    },
+    {
+      shelterID: shelters[1]._id,
+      microchipID: 'A123445678',
+      name: 'Max',
+      gender: Gender.Male,
+      birthDate: '2022-01-01',
+      color: 'Brown',
+      breed: 'Labrador',
+      category: Category.Rabbit,
+      activityNeeds: ActivityNeeds.High,
+      levelOfGrooming: LevelOfGrooming.Medium,
+      isHouseTrained: true,
+      healthInfo: {
+        healthCheck: true,
+        allergiesTreated: false,
+        wormed: true,
+        heartwormTreated: true,
+        vaccinated: true,
+        deSexed: true
+      },
+      bio: 'This is Max, a friendly Labrador.',
+      traits: 'Active, Friendly, Playful',
+      adoptionFee: '200 USD'
+    },
+    {
+      shelterID: shelters[1]._id,
+      microchipID: 'A123345678',
+      name: 'Max',
+      gender: Gender.Male,
+      birthDate: '2022-01-01',
+      color: 'Brown',
+      breed: 'Labrador',
+      category: Category.ScalesFinsAndOthers,
+      activityNeeds: ActivityNeeds.High,
+      levelOfGrooming: LevelOfGrooming.Medium,
+      isHouseTrained: true,
+      healthInfo: {
+        healthCheck: true,
+        allergiesTreated: false,
+        wormed: true,
+        heartwormTreated: true,
+        vaccinated: true,
+        deSexed: true
+      },
+      bio: 'This is Max, a friendly Labrador.',
+      traits: 'Active, Friendly, Playful',
+      adoptionFee: '200 USD'
+    },
+    {
+      shelterID: shelters[1]._id,
+      microchipID: 'A122345678',
+      name: 'Max',
+      gender: Gender.Male,
+      birthDate: '2022-01-01',
+      color: 'Brown',
+      breed: 'Labrador',
+      category: Category.SmallAndFurry,
       activityNeeds: ActivityNeeds.High,
       levelOfGrooming: LevelOfGrooming.Medium,
       isHouseTrained: true,
@@ -112,6 +256,6 @@ export const generatePets = async () => {
   await Pet.insertMany(pets)
 }
 
-export const removeAllPets = async () => {
-  await Pet.deleteMany({})
+export const removeAllPets = async (category?: Category) => {
+  await Pet.deleteMany({ category: category })
 }

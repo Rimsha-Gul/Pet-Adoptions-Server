@@ -248,61 +248,63 @@ const getAllPets = async (
           )
         )
       )
-    }
 
-    // Apply color filter if a colorFilter option is provided
-    if (colorFilter) {
-      queryObj.color = colorFilter
-    }
+      // Apply color filter if a colorFilter option is provided
+      if (colorFilter) {
+        queryObj.color = colorFilter
+      }
 
-    // Apply breed filter if a breedFilter option is provided
-    if (breedFilter) {
-      queryObj.breed = breedFilter
-    }
+      // Apply breed filter if a breedFilter option is provided
+      if (breedFilter) {
+        queryObj.breed = breedFilter
+      }
 
-    // Apply gender filter if a genderFilter option is provided
-    if (genderFilter) {
-      queryObj.gender = genderFilter
-    }
+      // Apply gender filter if a genderFilter option is provided
+      if (genderFilter) {
+        queryObj.gender = genderFilter
+      }
 
-    // Apply age filter if an ageFilter option is provided
-    if (ageFilter) {
-      const [minAge, maxAge] = ageFilter.split('-').map((age) => parseInt(age))
+      // Apply age filter if an ageFilter option is provided
+      if (ageFilter) {
+        const [minAge, maxAge] = ageFilter
+          .split('-')
+          .map((age) => parseInt(age))
 
-      if (!isNaN(minAge) && !isNaN(maxAge)) {
-        const currentDate = new Date()
-        const minBirthDate = new Date(
-          currentDate.getFullYear() - minAge,
-          currentDate.getMonth(),
-          currentDate.getDate()
-        )
-        const maxBirthDate = new Date(
-          currentDate.getFullYear() - maxAge - 1,
-          currentDate.getMonth(),
-          currentDate.getDate()
-        )
-        queryObj.birthDate = {
-          $gte: maxBirthDate,
-          $lte: minBirthDate
+        if (!isNaN(minAge) && !isNaN(maxAge)) {
+          const currentDate = new Date()
+          const minBirthDate = new Date(
+            currentDate.getFullYear() - minAge,
+            currentDate.getMonth(),
+            currentDate.getDate()
+          )
+          const maxBirthDate = new Date(
+            currentDate.getFullYear() - maxAge - 1,
+            currentDate.getMonth(),
+            currentDate.getDate()
+          )
+          queryObj.birthDate = {
+            $gte: maxBirthDate,
+            $lte: minBirthDate
+          }
+        } else if (!isNaN(minAge)) {
+          const currentDate = new Date()
+          const minBirthDate = new Date(
+            currentDate.getFullYear() - minAge,
+            currentDate.getMonth(),
+            currentDate.getDate()
+          )
+
+          queryObj.birthDate = { $lte: minBirthDate }
+        } else if (!isNaN(maxAge)) {
+          const currentDate = new Date()
+          const maxBirthDate = new Date(
+            currentDate.getFullYear() - maxAge - 1,
+            currentDate.getMonth(),
+            currentDate.getDate()
+          )
+
+          queryObj.birthDate = { $gte: maxBirthDate }
         }
-      } else if (!isNaN(minAge)) {
-        const currentDate = new Date()
-        const minBirthDate = new Date(
-          currentDate.getFullYear() - minAge,
-          currentDate.getMonth(),
-          currentDate.getDate()
-        )
-
-        queryObj.birthDate = { $lte: minBirthDate }
-      } else if (!isNaN(maxAge)) {
-        const currentDate = new Date()
-        const maxBirthDate = new Date(
-          currentDate.getFullYear() - maxAge - 1,
-          currentDate.getMonth(),
-          currentDate.getDate()
-        )
-
-        queryObj.birthDate = { $gte: maxBirthDate }
       }
     }
 

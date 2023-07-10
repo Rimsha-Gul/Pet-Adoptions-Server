@@ -15,7 +15,9 @@ import { authenticateAccessToken } from '../middleware/authenticateToken'
 import express from 'express'
 import { Pet as PetModel } from '../models/Pet'
 import { isShelter } from '../middleware/isShelter'
-import { Role, User } from '../models/User'
+import User, { Role } from '../models/User'
+import { Category } from '../models/Pet'
+import { calculateAgeFromBirthdate } from '../utils/calculateAgeFromBirthdate'
 import { generateAccessToken } from '../utils/generateAccessToken'
 
 describe('pet', () => {
@@ -2071,6 +2073,1245 @@ describe('pet', () => {
         .expect(400)
 
       expect(response.text).toEqual(`"birthDate" must be less than "now"`)
+      expect(response.body).toEqual({})
+    })
+  })
+
+  describe('get pets', () => {
+    let user: Admin
+
+    beforeEach(async () => {
+      user = await generateAdminandTokens(Role.Shelter)
+      await generatePets()
+    })
+    afterEach(async () => {
+      await removeAllUsers()
+      //await removeAllPets()
+    })
+
+    it('should successfully fetch all pets without filters and return 200', async () => {
+      const response = await request(app)
+        .get('/pet/')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets).toBeInstanceOf(Array)
+      expect(response.body.totalPages).toEqual(3)
+    })
+
+    it('should successfully fetch first 6 pets from page 1(default PAGE=1 and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?limit=6')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets).toBeInstanceOf(Array)
+      expect(response.body.pets.length).toEqual(6)
+      expect(response.body.totalPages).toEqual(2)
+    })
+
+    it('should successfully fetch first 6 pets from page 1 and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?page=1&limit=6')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets).toBeInstanceOf(Array)
+      expect(response.body.pets.length).toEqual(6)
+      expect(response.body.totalPages).toEqual(2)
+    })
+
+    it('should successfully fetch first 2 pets from page 2 and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?page=2&limit=6')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets).toBeInstanceOf(Array)
+      expect(response.body.pets.length).toEqual(2)
+      expect(response.body.totalPages).toEqual(2)
+    })
+
+    it('should successfully fetch first 3(default LIMIT=3) pets from page 1 and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?page=1')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets).toBeInstanceOf(Array)
+      expect(response.body.pets.length).toEqual(3)
+      expect(response.body.totalPages).toEqual(3)
+    })
+
+    it('should successfully fetch default first 3(default LIMIT=3) pets from page 2 and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?page=2')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets).toBeInstanceOf(Array)
+      expect(response.body.pets.length).toEqual(3)
+      expect(response.body.totalPages).toEqual(3)
+    })
+
+    it('should successfully fetch default first 2(default LIMIT=3) pets from page 3 and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?page=3')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets).toBeInstanceOf(Array)
+      expect(response.body.pets.length).toEqual(2)
+      expect(response.body.totalPages).toEqual(3)
+    })
+
+    it('should return zero pets on filter pets by category=BARNYARD and return 200', async () => {
+      await removeAllPets(Category.Barnyard)
+      const response = await request(app)
+        .get('/pet?filterOption=BARNYARD')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.status).toBe(200)
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should return pets whose category is BARNYARD on filter pets by category=BARNYARD and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BARNYARD')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.status).toBe(200)
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every((pet: Pet) => pet.category === 'BARNYARD')
+      ).toBe(true)
+    })
+
+    it('should return zero pets on filter pets by category=BIRD and return 200', async () => {
+      await removeAllPets(Category.Bird)
+      const response = await request(app)
+        .get('/pet?filterOption=BIRD')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.status).toBe(200)
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should return pets whose category is BIRD on filter pets by category=BIRD and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BIRD')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.status).toBe(200)
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every((pet: Pet) => pet.category === 'BIRD')
+      ).toBe(true)
+    })
+
+    it('should return zero pets on filter pets by category=CAT and return 200', async () => {
+      await removeAllPets(Category.Cat)
+      const response = await request(app)
+        .get('/pet?filterOption=CAT')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.status).toBe(200)
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should return pets whose category is CAT on filter pets by category=CAT and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=CAT')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.status).toBe(200)
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every((pet: Pet) => pet.category === 'CAT')
+      ).toBe(true)
+    })
+
+    it('should return zero pets on filter pets by category=DOG and return 200', async () => {
+      await removeAllPets(Category.Dog)
+      const response = await request(app)
+        .get('/pet?filterOption=DOG')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.status).toBe(200)
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should return pets whose category is DOG on filter pets by category=DOG and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=DOG')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.status).toBe(200)
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every((pet: Pet) => pet.category === 'DOG')
+      ).toBe(true)
+    })
+
+    it('should return zero pets on filter pets by category=HORSE and return 200', async () => {
+      await removeAllPets(Category.Horse)
+      const response = await request(app)
+        .get('/pet?filterOption=HORSE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.status).toBe(200)
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should return pets whose category is HORSE on filter pets by category=HORSE and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=HORSE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.status).toBe(200)
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every((pet: Pet) => pet.category === 'HORSE')
+      ).toBe(true)
+    })
+
+    it('should return zero pets on filter pets by category=RABBIT and return 200', async () => {
+      await removeAllPets(Category.Rabbit)
+      const response = await request(app)
+        .get('/pet?filterOption=RABBIT')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.status).toBe(200)
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should return pets whose category is RABBIT on filter pets by category=RABBIT and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=RABBIT')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.status).toBe(200)
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every((pet: Pet) => pet.category === 'RABBIT')
+      ).toBe(true)
+    })
+
+    it('should return zero pets on filter pets by category=SCALES_FINS_AND_OTHERS and return 200', async () => {
+      await removeAllPets(Category.ScalesFinsAndOthers)
+      const response = await request(app)
+        .get('/pet?filterOption=SCALES_FINS_AND_OTHERS')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.status).toBe(200)
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should return pets whose category is SCALES_FINS_AND_OTHERS on filter pets by category=SCALES_FINS_AND_OTHERS and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SCALES_FINS_AND_OTHERS')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.status).toBe(200)
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'SCALES_FINS_AND_OTHERS'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero pets on filter pets by category=SMALL_AND_FURRY and return 200', async () => {
+      await removeAllPets(Category.SmallAndFurry)
+      const response = await request(app)
+        .get('/pet?filterOption=SMALL_AND_FURRY')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.status).toBe(200)
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should return pets whose category is SMALL_AND_FURRY on filter pets by category=SMALL_AND_FURRY and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SMALL_AND_FURRY')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.status).toBe(200)
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'SMALL_AND_FURRY'
+        )
+      ).toBe(true)
+    })
+
+    it('should filter Dogs by color and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=DOG&colorFilter=Brown')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'DOG' && pet.color === 'Brown'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Dogs by color and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=DOG&colorFilter=Black')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Cats by color and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=CAT&colorFilter=Brown')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'CAT' && pet.color === 'Brown'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Cats by color and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=CAT&colorFilter=Black')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Horses by color and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=HORSE&colorFilter=Brown')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'HORSE' && pet.color === 'Brown'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Horses by color and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=HORSE&colorFilter=Black')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Rabbits by color and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=RABBIT&colorFilter=Brown')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'RABBIT' && pet.color === 'Brown'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Rabbits by color and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=RABBIT&colorFilter=Black')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Birds by color and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BIRD&colorFilter=Brown')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'BIRD' && pet.color === 'Brown'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Birds by color and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BIRD&colorFilter=Black')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Small and furry pets by color and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SMALL_AND_FURRY&colorFilter=Brown')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) =>
+            pet.category === 'SMALL_AND_FURRY' && pet.color === 'Brown'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Small and furry pets by color and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SMALL_AND_FURRY&colorFilter=Black')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Scales and fins pets by color and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SCALES_FINS_AND_OTHERS&colorFilter=Brown')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) =>
+            pet.category === 'SCALES_FINS_AND_OTHERS' && pet.color === 'Brown'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Scales and fins pets by color and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SCALES_FINS_AND_OTHERS&colorFilter=Black')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Barnyards pets by color and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BARNYARD&colorFilter=Brown')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'BARNYARD' && pet.color === 'Brown'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Barnyards pets by color and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BARNYARD&colorFilter=Black')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Dogs by breed and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=DOG&breedFilter=Labrador')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'DOG' && pet.breed === 'Labrador'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Dogs by breed and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=DOG&breedFilter=Persian')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Cats by breed and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=CAT&breedFilter=Labrador')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'CAT' && pet.breed === 'Labrador'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Cats by breed and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=CAT&breedFilter=Persian')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Horses by breed and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=HORSE&breedFilter=Labrador')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'HORSE' && pet.breed === 'Labrador'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Horses by breed and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=HORSE&breedFilter=Persian')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Rabbits by breed and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=RABBIT&breedFilter=Labrador')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'RABBIT' && pet.breed === 'Labrador'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Rabbits by breed and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=RABBIT&breedFilter=Persian')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Birds by breed and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BIRD&breedFilter=Labrador')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'BIRD' && pet.breed === 'Labrador'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Birds by breed and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BIRD&breedFilter=Persian')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Small and furry pets by breed and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SMALL_AND_FURRY&breedFilter=Labrador')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) =>
+            pet.category === 'SMALL_AND_FURRY' && pet.breed === 'Labrador'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Small and furry pets by breed and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SMALL_AND_FURRY&breedFilter=Persian')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Scales and fins pets by breed and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SCALES_FINS_AND_OTHERS&breedFilter=Labrador')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) =>
+            pet.category === 'SCALES_FINS_AND_OTHERS' &&
+            pet.breed === 'Labrador'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Scales and fins pets by breed and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SCALES_FINS_AND_OTHERS&breedFilter=Persian')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Barnyard pets by breed and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BARNYARD&breedFilter=Labrador')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'BARNYARD' && pet.breed === 'Labrador'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Barnyard pets by breed and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BARNYARD&breedFilter=Persian')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Dogs by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=DOG&genderFilter=MALE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'DOG' && pet.gender === 'MALE'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Dogs by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=DOG&genderFilter=FEMALE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Cats by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=CAT&genderFilter=MALE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'CAT' && pet.gender === 'MALE'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Cats by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=CAT&genderFilter=FEMALE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Horses by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=HORSE&genderFilter=MALE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'HORSE' && pet.gender === 'MALE'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Horses by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=HORSE&genderFilter=FEMALE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Rabbits by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=RABBIT&genderFilter=MALE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'RABBIT' && pet.gender === 'MALE'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Rabbits by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=RABBIT&genderFilter=FEMALE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Birds by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BIRD&genderFilter=MALE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'BIRD' && pet.gender === 'MALE'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Birds by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BIRD&genderFilter=FEMALE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Small and furry pets by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SMALL_AND_FURRY&genderFilter=MALE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) =>
+            pet.category === 'SMALL_AND_FURRY' && pet.gender === 'MALE'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Small and furry pets by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SMALL_AND_FURRY&genderFilter=FEMALE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Scales and fins pets by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SCALES_FINS_AND_OTHERS&genderFilter=MALE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) =>
+            pet.category === 'SCALES_FINS_AND_OTHERS' && pet.gender === 'MALE'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Scales and fins pets by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SCALES_FINS_AND_OTHERS&genderFilter=FEMALE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Barnyard pets by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BARNYARD&genderFilter=MALE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+      expect(
+        response.body.pets.every(
+          (pet: Pet) => pet.category === 'BARNYARD' && pet.gender === 'MALE'
+        )
+      ).toBe(true)
+    })
+
+    it('should return zero Barnyard pets by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BARNYARD&genderFilter=FEMALE')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Dogs by age and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=DOG&ageFilter=1-2')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+
+      expect(
+        response.body.pets.every((pet: Pet) => {
+          const birthdate = new Date(pet.birthDate)
+          const age = calculateAgeFromBirthdate(birthdate)
+          return age >= 1 && age <= 2 && pet.category === 'DOG'
+        })
+      ).toBe(true)
+    })
+
+    it('should return zero Dogs by age and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=DOG&ageFilter=2-5')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Cats by age and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=CAT&ageFilter=1-2')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+
+      expect(
+        response.body.pets.every((pet: Pet) => {
+          const birthdate = new Date(pet.birthDate)
+          const age = calculateAgeFromBirthdate(birthdate)
+          return age >= 1 && age <= 2 && pet.category === 'CAT'
+        })
+      ).toBe(true)
+    })
+
+    it('should return zero Cats by age and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=CAT&ageFilter=2-5')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Horses by age and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=HORSE&ageFilter=1-2')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+
+      expect(
+        response.body.pets.every((pet: Pet) => {
+          const birthdate = new Date(pet.birthDate)
+          const age = calculateAgeFromBirthdate(birthdate)
+          return age >= 1 && age <= 2 && pet.category === 'HORSE'
+        })
+      ).toBe(true)
+    })
+
+    it('should return zero Horses by age and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=HORSE&ageFilter=2-5')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Rabbits by age and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=RABBIT&ageFilter=1-2')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+
+      expect(
+        response.body.pets.every((pet: Pet) => {
+          const birthdate = new Date(pet.birthDate)
+          const age = calculateAgeFromBirthdate(birthdate)
+          return age >= 1 && age <= 2 && pet.category === 'RABBIT'
+        })
+      ).toBe(true)
+    })
+
+    it('should return zero Rabbits by age and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=RABBIT&ageFilter=2-5')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Birds by age and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BIRD&ageFilter=1-2')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+
+      expect(
+        response.body.pets.every((pet: Pet) => {
+          const birthdate = new Date(pet.birthDate)
+          const age = calculateAgeFromBirthdate(birthdate)
+          return age >= 1 && age <= 2 && pet.category === 'BIRD'
+        })
+      ).toBe(true)
+    })
+
+    it('should return zero Birds by age and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BIRD&ageFilter=2-5')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Small and furry pets by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SMALL_AND_FURRY&ageFilter=1-2')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+
+      expect(
+        response.body.pets.every((pet: Pet) => {
+          const birthdate = new Date(pet.birthDate)
+          const age = calculateAgeFromBirthdate(birthdate)
+          return age >= 1 && age <= 2 && pet.category === 'SMALL_AND_FURRY'
+        })
+      ).toBe(true)
+    })
+
+    it('should return zero Small and furry pets by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SMALL_AND_FURRY&ageFilter=2-5')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Scales and fins pets by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SCALES_FINS_AND_OTHERS&ageFilter=1-2')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+
+      expect(
+        response.body.pets.every((pet: Pet) => {
+          const birthdate = new Date(pet.birthDate)
+          const age = calculateAgeFromBirthdate(birthdate)
+          return (
+            age >= 1 && age <= 2 && pet.category === 'SCALES_FINS_AND_OTHERS'
+          )
+        })
+      ).toBe(true)
+    })
+
+    it('should return zero Scales and fins pets by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=SCALES_FINS_AND_OTHERS&ageFilter=2-5')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should filter Barnyard pets by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BARNYARD&ageFilter=1-2')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+
+      expect(
+        response.body.pets.every((pet: Pet) => {
+          const birthdate = new Date(pet.birthDate)
+          const age = calculateAgeFromBirthdate(birthdate)
+          return age >= 1 && age <= 2 && pet.category === 'BARNYARD'
+        })
+      ).toBe(true)
+    })
+
+    it('should return zero Barnyard pets by gender and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=BARNYARD&ageFilter=2-5')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(0)
+      expect(response.body.totalPages).toEqual(0)
+    })
+
+    it('should search pets by name or bio and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?searchQuery=friendly')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(
+        response.body.pets.some(
+          (pet: Pet) =>
+            pet.name.toLowerCase().includes('friendly') ||
+            pet.bio.toLowerCase().includes('friendly')
+        )
+      ).toBe(true)
+    })
+
+    it('should respond with Bad Request if category is invalid enum type', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=Dog')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(
+        `"filterOption" must be one of [CAT, DOG, HORSE, RABBIT, BIRD, SMALL_AND_FURRY, SCALES_FINS_AND_OTHERS, BARNYARD, ]`
+      )
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if gender is invalid enum type', async () => {
+      const response = await request(app)
+        .get('/pet?genderFilter=Male')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(
+        `"genderFilter" must be one of [MALE, FEMALE, ]`
+      )
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if page is zero', async () => {
+      const response = await request(app)
+        .get('/pet?page=0')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(`"page" must be greater than or equal to 1`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if limit is zero', async () => {
+      const response = await request(app)
+        .get('/pet?limit=0')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(
+        `"limit" must be greater than or equal to 1`
+      )
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if page is a string', async () => {
+      const response = await request(app)
+        .get('/pet?page=page')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(`"page" must be a number`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if limit is a string', async () => {
+      const response = await request(app)
+        .get('/pet?limit=limit')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(`"limit" must be a number`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if category is a number', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=1')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(
+        `"filterOption" must be one of [CAT, DOG, HORSE, RABBIT, BIRD, SMALL_AND_FURRY, SCALES_FINS_AND_OTHERS, BARNYARD, ]`
+      )
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if gender is a number', async () => {
+      const response = await request(app)
+        .get('/pet?genderFilter=1')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(
+        `"genderFilter" must be one of [MALE, FEMALE, ]`
+      )
       expect(response.body).toEqual({})
     })
   })
