@@ -213,7 +213,7 @@ describe('pet', () => {
     it('should throw an error if user does not exist', async () => {
       const nonExistentEmailToken = generateAccessToken(
         'nonexistent@gmail.com',
-        'USER'
+        'SHELTER'
       )
 
       const response = await request(app)
