@@ -17,7 +17,6 @@ export const authenticateRefreshToken: RequestHandler = async (
   res,
   next
 ) => {
-  console.log('refresh refresh')
   await authenticateToken(
     req,
     res,

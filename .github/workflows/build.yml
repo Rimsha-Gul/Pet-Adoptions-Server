@@ -1,13 +1,14 @@
 name: Lint and build app
 
 on:
-  push:
   pull_request:
-    branches:
-      - main
 jobs:
-  lint:
+  build:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [lts/*]
     
     steps:
     - name: Checkout code
@@ -24,30 +25,16 @@ jobs:
       
     - name: Run linters
       run: npm run lint
-      
-  build:
-    needs: lint
-    runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        node-version: [lts/*]
-        
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-          
-      - name: Install dependencies
-        run: npm ci
-        
-      - name: Build app
-        run: npm run build
-        env:
-          PORT: ${{env.PORT}}
-          MONGO_URI: ${{env.MONGO_URI}}
-          ACCESS_TOKEN_SECRET: ${{env.ACCESS_TOKEN_SECRET}}
-          REFRESH_TOKEN_SECRET: ${{env.REFRESH_TOKEN_SECRET}}
-          SESSION_SECRET: ${{env.SESSION_SECRET}}
+
+    - name: Test app
+      run: npm test
+      env:
+          NODE_ENV: test
+          PORT: 8080
+          ACCESS_TOKEN_SECRET: 'test_access_token_secret'
+          REFRESH_TOKEN_SECRET: 'test_refresh_token_secret'
+          SESSION_SECRET: 'test_session_secret'
+          VERIFICATION_SECRET: 'test_verification_secret'
+
+    - name: Build app
+      run: npm run build

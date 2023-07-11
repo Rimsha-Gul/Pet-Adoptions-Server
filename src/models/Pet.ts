@@ -21,7 +21,7 @@ export enum ActivityNeeds {
   VeryLow = 'VERY_LOW',
   MidRange = 'MIDRANGE',
   High = 'HIGH',
-  VeryHigh = 'VER_YHIGH'
+  VeryHigh = 'VERY_HIGH'
 }
 
 export enum LevelOfGrooming {

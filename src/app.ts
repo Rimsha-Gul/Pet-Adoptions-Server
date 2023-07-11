@@ -6,45 +6,36 @@ import router from './routes'
 import path from 'path'
 import cors from 'cors'
 
-const startApp = async () => {
-  try {
-    /***********************************
-     *         Mongo DB Connection      *
-     ***********************************/
+const app: Express = express()
 
-    await mongoose
-      .connect(`${process.env.MONGO_URI}`, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-      } as ConnectOptions)
-      .then(() => {
-        console.log('MongoDB Connected')
-      })
-      .catch((err) => {
-        console.error('MongoDB Connection Error: ', err)
-        throw err
-      })
+app.use(express.json())
+app.use(cors())
 
-    /***********************************
-     *      Listening for requests     *
-     ***********************************/
-    const app: Express = express()
+app.use(express.static(path.join(__dirname, '../public')))
+app.use('/', router)
 
-    app.use(express.json())
-    app.use(cors())
+/***********************************
+ *        Mongo DB Connection      *
+ ***********************************/
 
-    app.use(express.static(path.join(__dirname, '../public')))
-    app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
-    app.use('/', router)
+// NOTE: when exporting app.js as agent for supertest
+// we should exclude connecting to the real database
 
-    const port = process.env.PORT
+let dbPromise: Promise<void> | null = null
 
-    app.listen(`${port}`, () => {
-      console.log(`⚡️[server]: Server is running at http://localhost:${port}`)
+if (process.env.NODE_ENV !== 'test') {
+  dbPromise = mongoose
+    .connect(`${process.env.MONGO_URI}`, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    } as ConnectOptions)
+    .then(() => {
+      console.log('MongoDB Connected')
     })
-  } catch (err) {
-    console.error('Error starting the server: ', err)
-  }
+    .catch((err) => {
+      console.error('MongoDB Connection Error: ', err)
+      throw err
+    })
 }
 
-startApp()
+export { app, dbPromise }

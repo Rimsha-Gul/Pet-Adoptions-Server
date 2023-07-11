@@ -5,6 +5,7 @@ import { isShelter } from '../middleware/isShelter'
 import { PetRequest } from '../types/PetRequest'
 import upload from '../middleware/uploadFiles'
 import { uploadFiles } from '../utils/uploadFiles'
+import { addPetValidation, getAllPetsValidation } from '../utils/validation'
 
 const petRouter = express.Router()
 const petController = new PetController()
@@ -15,6 +16,8 @@ petRouter.post(
   isShelter,
   upload.array('images', 10),
   async (req, res) => {
+    const { error } = addPetValidation(req.body)
+    if (error) return res.status(400).send(error.details[0].message)
     try {
       const {
         microchipID,
@@ -38,7 +41,6 @@ petRouter.post(
         adoptionFee,
         shelterID
       } = req.body
-      console.log(req.body)
       const fileIds = await uploadFiles((req as PetRequest).files, req)
 
       const response = await petController.addPet(
@@ -74,9 +76,11 @@ petRouter.post(
 
 petRouter.get('/', authenticateAccessToken, async (req, res) => {
   try {
+    const { error } = getAllPetsValidation(req.query)
+    if (error) return res.status(400).send(error.details[0].message)
     const {
-      page,
-      limit,
+      page = '1',
+      limit = '3',
       searchQuery,
       filterOption,
       colorFilter,
@@ -98,7 +102,6 @@ petRouter.get('/', authenticateAccessToken, async (req, res) => {
     )
     return res.send(response)
   } catch (err: any) {
-    console.log('Error response')
     return res.status(err.code).send(err.message)
   }
 })

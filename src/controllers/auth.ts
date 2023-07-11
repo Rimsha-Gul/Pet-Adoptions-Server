@@ -196,7 +196,7 @@ const signup = async (body: UserPayload): Promise<SignupResponse> => {
   const existingUser = await User.findOne({ email })
 
   if (existingUser) {
-    throw { code: 409, message: 'User already exists.' }
+    throw { code: 409, message: 'User already exists' }
   }
 
   const user = new User({
@@ -216,24 +216,20 @@ const sendVerificationCode = async (
   body: SendCodePayload,
   req: UserRequest
 ) => {
-  console.log(body)
   const { email, emailChangeRequest } = body
   let user
   if (!emailChangeRequest) {
     user = await User.findOne({ email })
     if (!user) throw { code: 404, message: 'User not found' }
   } else {
-    if (!req.user || !req.user.email || !req.user.role) {
-      throw { code: 400, message: 'Invalid user data' }
+    if (req.user) {
+      user = await User.findOne({ email: req.user.email })
+      if (!user) throw { code: 404, message: 'User not found' }
     }
-    user = await User.findOne({ email: req.user.email })
-    if (!user) throw { code: 404, message: 'User not found' }
   }
   const verificationCode: string = generateVerificationCode()
   try {
     const codeEmail = getVerificationCodeEmail(verificationCode)
-    console.log('Simple email: ', email)
-    console.log('Saved user email: ', user.email)
     await sendEmail(
       emailChangeRequest ? email : user.email,
       codeEmail.subject,
@@ -272,7 +268,6 @@ const verifyEmail = async (
     const currentTimestamp = Date.now()
     const userUpdationTimestamp = user.verificationCode.updatedAt.getTime()
     const timeDifference = currentTimestamp - userUpdationTimestamp
-    console.log(timeDifference)
     if (timeDifference > 60000) {
       throw { code: 401, message: 'Verification code expired' }
     }
@@ -321,16 +316,12 @@ const login = async (body: LoginPayload): Promise<TokenResponse> => {
 }
 
 const refresh = async (req: UserRequest): Promise<TokenResponse> => {
-  if (!req.user || !req.user.email || !req.user.role) {
-    throw { code: 400, message: 'Invalid user data' }
-  }
-  const user = await User.findOne({ email: req.user.email })
+  const user = await User.findOne({ email: req.user?.email })
 
   if (!user) {
     throw { code: 404, message: 'User not found' }
   }
   if (!user.isVerified) {
-    console.log('not verified')
     throw { code: 403, message: 'User not verified' }
   } else {
     // if user is verified, generate the tokens
@@ -342,7 +333,6 @@ const refresh = async (req: UserRequest): Promise<TokenResponse> => {
       refreshToken: refreshToken
     }
     await user.save()
-    console.log('New tokens:', user.tokens)
     return { tokens: user.tokens }
   }
 }
@@ -354,16 +344,10 @@ const updateProfile = async (
   bio?: string,
   profilePhoto?: string[]
 ) => {
-  console.log('try to update')
-  if (!req.user || !req.user.email || !req.user.role) {
-    throw { code: 400, message: 'Invalid user data' }
-  }
-  const userID = req.user._id
-  console.log('user id: ', userID)
+  const userEmail = req?.user?.email
 
   try {
-    console.log('trying to update')
-    const user = await User.findById(userID)
+    const user = await User.findOne({ email: userEmail })
     if (!user) {
       throw { code: 404, message: 'User not found' }
     }
@@ -374,43 +358,26 @@ const updateProfile = async (
       user.profilePhoto = profilePhoto
     }
 
-    const updatedUser = await user.save()
-    console.log('updated user', updatedUser)
+    await user.save()
     return { code: 200, message: 'Profile updated successfully' }
-    // const updatedUser = await User.findByIdAndUpdate(
-    //   userID,
-    //   { address, bio, profilePhoto },
-    //   { new: true, runValidators: true }
-    // )
-    // console.log('updated user', updatedUser)
-    // if (!updatedUser) {
-    //   throw { code: 404, message: 'User not found' }
-    // }
   } catch (error) {
     throw { code: 500, message: 'Failed to update user' }
   }
 }
 
 const checkEmail = async (req: UserRequest) => {
-  console.log('check email')
-  if (!req.user || !req.user.email || !req.user.role) {
-    throw { code: 400, message: 'Invalid user data' }
-  }
-
-  const user = await User.findOne({ email: req.user.email })
+  const user = await User.findOne({ email: req?.user?.email })
   if (!user) {
     throw { code: 404, message: 'User not found' }
   }
 
   if (!user.isVerified) {
-    console.log('not verified')
     throw { code: 403, message: 'User not verified' }
   } else {
     // if user is verified, check if there's already a user with new emmail
     const { email } = req.query
     const existingUser = await User.findOne({ email: email })
     if (existingUser) {
-      console.log('Existing user')
       throw { code: 409, message: 'A user with this email already exists' }
     }
     return { code: 200, message: 'Email is available' }
@@ -421,16 +388,12 @@ const changeEmail = async (
   body: ChangeEmailPayload,
   req: UserRequest
 ): Promise<TokenResponse> => {
-  if (!req.user || !req.user.email || !req.user.role) {
-    throw { code: 400, message: 'Invalid user data' }
-  }
-  const user = await User.findOne({ email: req.user.email })
+  const user = await User.findOne({ email: req?.user?.email })
 
   if (!user) {
     throw { code: 404, message: 'User not found' }
   }
   if (!user.isVerified) {
-    console.log('not verified')
     throw { code: 403, message: 'User not verified' }
   } else {
     // if user is verified, change the user's email with new emmail
@@ -449,17 +412,10 @@ const changeEmail = async (
 }
 
 const checkPassword = async (body: CheckPasswordPayload, req: UserRequest) => {
-  if (!req.user || !req.user.email || !req.user.role) {
-    throw { code: 400, message: 'Invalid user data' }
-  }
-
-  const user = await User.findOne({ email: req.user.email })
-  if (!user) {
-    throw { code: 404, message: 'User not found' }
-  }
+  const user = await User.findOne({ email: req?.user?.email })
+  if (!user) throw { code: 404, message: 'User not found' }
 
   if (!user.isVerified) {
-    console.log('not verified')
     throw { code: 403, message: 'User not verified' }
   } else {
     // if user is verified, check the entered password
@@ -474,17 +430,10 @@ const checkPassword = async (body: CheckPasswordPayload, req: UserRequest) => {
 }
 
 const changePassword = async (body: CheckPasswordPayload, req: UserRequest) => {
-  if (!req.user || !req.user.email || !req.user.role) {
-    throw { code: 400, message: 'Invalid user data' }
-  }
-
-  const user = await User.findOne({ email: req.user.email })
-  if (!user) {
-    throw { code: 404, message: 'User not found' }
-  }
+  const user = await User.findOne({ email: req?.user?.email })
+  if (!user) throw { code: 404, message: 'User not found' }
 
   if (!user.isVerified) {
-    console.log('not verified')
     throw { code: 403, message: 'User not verified' }
   } else {
     // if user is verified, change his password

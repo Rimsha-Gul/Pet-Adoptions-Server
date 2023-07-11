@@ -6,7 +6,7 @@ export const conditionalAuthenticateAccessToken: RequestHandler = (
   res,
   next
 ) => {
-  if (req.body.emailChangeRequest) {
+  if (req.body.emailChangeRequest === true) {
     return authenticateAccessToken(req, res, next)
   } else {
     next()

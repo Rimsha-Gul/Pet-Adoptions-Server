@@ -10,6 +10,5 @@ export function calculateAgeFromBirthdate(birthdate: Date): number {
   ) {
     age--
   }
-  console.log('converted age: ', age)
   return age
 }
