@@ -60,6 +60,9 @@ export const generatePet = async () => {
 export const generatePets = async () => {
   await generateShelters()
   const shelters = await User.find({ role: 'SHELTER' })
+  const today = new Date()
+  const futureDay = today.getDate() + 2 // two days ahead than current day
+  const birthdate = new Date(2022, today.getMonth(), futureDay)
 
   const petsData = [
     {
@@ -84,14 +87,15 @@ export const generatePets = async () => {
       },
       bio: 'This is Max, a friendly Labrador.',
       traits: 'Active, Friendly, Playful',
-      adoptionFee: '200 USD'
+      adoptionFee: '200 USD',
+      images: ['mockFileID1', 'mockFileID2', 'mockFileID3']
     },
     {
       shelterID: shelters[1]._id.toString(),
       microchipID: 'A123456788',
       name: 'Max',
       gender: Gender.Male,
-      birthDate: '2022-01-01',
+      birthDate: birthdate,
       color: 'Brown',
       breed: 'Labrador',
       category: Category.Cat,
@@ -108,7 +112,8 @@ export const generatePets = async () => {
       },
       bio: 'This is Max, a friendly Labrador.',
       traits: 'Active, Friendly, Playful',
-      adoptionFee: '200 USD'
+      adoptionFee: '200 USD',
+      images: ['mockFileID1', 'mockFileID2', 'mockFileID3']
     },
     {
       shelterID: shelters[1]._id.toString(),
@@ -132,7 +137,8 @@ export const generatePets = async () => {
       },
       bio: 'This is Max, a friendly Labrador.',
       traits: 'Active, Friendly, Playful',
-      adoptionFee: '200 USD'
+      adoptionFee: '200 USD',
+      images: ['mockFileID1', 'mockFileID2', 'mockFileID3']
     },
     {
       shelterID: shelters[1]._id.toString(),
@@ -156,7 +162,8 @@ export const generatePets = async () => {
       },
       bio: 'This is Max, a friendly Labrador.',
       traits: 'Active, Friendly, Playful',
-      adoptionFee: '200 USD'
+      adoptionFee: '200 USD',
+      images: ['mockFileID1', 'mockFileID2', 'mockFileID3']
     },
     {
       shelterID: shelters[1]._id.toString(),
@@ -180,7 +187,8 @@ export const generatePets = async () => {
       },
       bio: 'This is Max, a friendly Labrador.',
       traits: 'Active, Friendly, Playful',
-      adoptionFee: '200 USD'
+      adoptionFee: '200 USD',
+      images: ['mockFileID1', 'mockFileID2', 'mockFileID3']
     },
     {
       shelterID: shelters[1]._id.toString(),
@@ -204,7 +212,8 @@ export const generatePets = async () => {
       },
       bio: 'This is Max, a friendly Labrador.',
       traits: 'Active, Friendly, Playful',
-      adoptionFee: '200 USD'
+      adoptionFee: '200 USD',
+      images: ['mockFileID1', 'mockFileID2', 'mockFileID3']
     },
     {
       shelterID: shelters[1]._id.toString(),
@@ -228,7 +237,8 @@ export const generatePets = async () => {
       },
       bio: 'This is Max, a friendly Labrador.',
       traits: 'Active, Friendly, Playful',
-      adoptionFee: '200 USD'
+      adoptionFee: '200 USD',
+      images: ['mockFileID1', 'mockFileID2', 'mockFileID3']
     },
     {
       shelterID: shelters[1]._id.toString(),
@@ -252,7 +262,8 @@ export const generatePets = async () => {
       },
       bio: 'This is Max, a friendly Labrador.',
       traits: 'Active, Friendly, Playful',
-      adoptionFee: '200 USD'
+      adoptionFee: '200 USD',
+      images: ['mockFileID1', 'mockFileID2', 'mockFileID3']
     }
   ]
 

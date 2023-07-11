@@ -316,11 +316,9 @@ const login = async (body: LoginPayload): Promise<TokenResponse> => {
 }
 
 const refresh = async (req: UserRequest): Promise<TokenResponse> => {
-  const user = await User.findOne({ email: req.user?.email })
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const user = (await User.findOne({ email: req.user?.email }))!
 
-  if (!user) {
-    throw { code: 404, message: 'User not found' }
-  }
   if (!user.isVerified) {
     throw { code: 403, message: 'User not verified' }
   } else {
@@ -346,30 +344,23 @@ const updateProfile = async (
 ) => {
   const userEmail = req?.user?.email
 
-  try {
-    const user = await User.findOne({ email: userEmail })
-    if (!user) {
-      throw { code: 404, message: 'User not found' }
-    }
-    if (name) user.name = name
-    if (address) user.address = address
-    if (bio) user.bio = bio
-    if (profilePhoto) {
-      user.profilePhoto = profilePhoto
-    }
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const user = (await User.findOne({ email: userEmail }))!
 
-    await user.save()
-    return { code: 200, message: 'Profile updated successfully' }
-  } catch (error) {
-    throw { code: 500, message: 'Failed to update user' }
+  if (name) user.name = name
+  if (address) user.address = address
+  if (bio) user.bio = bio
+  if (profilePhoto) {
+    user.profilePhoto = profilePhoto
   }
+
+  await user.save()
+  return { code: 200, message: 'Profile updated successfully' }
 }
 
 const checkEmail = async (req: UserRequest) => {
-  const user = await User.findOne({ email: req?.user?.email })
-  if (!user) {
-    throw { code: 404, message: 'User not found' }
-  }
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const user = (await User.findOne({ email: req?.user?.email }))!
 
   if (!user.isVerified) {
     throw { code: 403, message: 'User not verified' }
@@ -388,11 +379,9 @@ const changeEmail = async (
   body: ChangeEmailPayload,
   req: UserRequest
 ): Promise<TokenResponse> => {
-  const user = await User.findOne({ email: req?.user?.email })
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const user = (await User.findOne({ email: req?.user?.email }))!
 
-  if (!user) {
-    throw { code: 404, message: 'User not found' }
-  }
   if (!user.isVerified) {
     throw { code: 403, message: 'User not verified' }
   } else {
@@ -452,14 +441,10 @@ const logout = async (req: UserRequest) => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getShelters = async (_req: UserRequest): Promise<ShelterResponse[]> => {
-  try {
-    const shelters = await User.find({ role: 'SHELTER' }, '_id name')
-    const shelterResponses: ShelterResponse[] = shelters.map((shelter) => ({
-      id: shelter._id.toString(),
-      name: shelter.name
-    }))
-    return shelterResponses
-  } catch (error: any) {
-    throw { code: 500, message: 'Failed to fetch shelters' }
-  }
+  const shelters = await User.find({ role: 'SHELTER' }, '_id name')
+  const shelterResponses: ShelterResponse[] = shelters.map((shelter) => ({
+    id: shelter._id.toString(),
+    name: shelter.name
+  }))
+  return shelterResponses
 }

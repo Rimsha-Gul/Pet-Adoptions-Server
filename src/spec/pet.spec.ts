@@ -64,7 +64,8 @@ describe('pet', () => {
     let pet: Pet
 
     const userCheck = [
-      'pet add a pet should throw an error if a user(Role: USER) tries to add a pet'
+      'pet add a pet should throw an error if a user(Role: USER) tries to add a pet',
+      'should throw an error if shelterID is invalid'
     ]
 
     let tmpFilePath, tmpFilePath2, tmpFilePath3, cleanup, cleanup2, cleanup3
@@ -177,7 +178,7 @@ describe('pet', () => {
       )
     }
 
-    it('should successfully add a pet with all fields provided', async () => {
+    it('should successfully add a pet by admin with all fields provided', async () => {
       user = await generateAdminandTokens(Role.Admin)
       const response = await request(server)
         .post('/pet/')
@@ -211,7 +212,7 @@ describe('pet', () => {
       expect(response.body.pet).not.toBeNull()
     })
 
-    it('should successfully add a pet with all fields provided', async () => {
+    it('should successfully add a pet by shelter with all fields provided', async () => {
       const response = await request(server)
         .post('/pet/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
@@ -240,6 +241,43 @@ describe('pet', () => {
         .expect(200)
 
       expect(response.body.pet).not.toBeNull()
+    })
+
+    it('should throw an error if shelterID is invalid', async () => {
+      user = await generateAdminandTokens(Role.Admin)
+      pet.shelterID = '1111e9630044288a2b4880b5'
+
+      const response = await request(server)
+        .post('/pet/')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .field('microchipID', pet.microchipID)
+        .field('name', pet.name)
+        .field('gender', pet.gender)
+        .field('birthDate', pet.birthDate)
+        .field('color', pet.color)
+        .field('breed', pet.breed)
+        .field('category', pet.category)
+        .field('activityNeeds', pet.activityNeeds)
+        .field('levelOfGrooming', pet.levelOfGrooming)
+        .field('isHouseTrained', pet.isHouseTrained)
+        .field('healthCheck', pet.healthCheck)
+        .field('allergiesTreated', pet.allergiesTreated)
+        .field('wormed', pet.wormed)
+        .field('heartwormTreated', pet.heartwormTreated)
+        .field('vaccinated', pet.vaccinated)
+        .field('deSexed', pet.deSexed)
+        .field('bio', pet.bio)
+        .field('traits', pet.traits)
+        .field('adoptionFee', pet.adoptionFee)
+        .field('shelterID', pet.shelterID)
+        .attach('images', tmpFilePath)
+        .attach('images', tmpFilePath2)
+        .attach('images', tmpFilePath3)
+
+        .expect(400)
+
+      expect(response.text).toEqual('Invalid shelter ID')
+      expect(response.body).toEqual({})
     })
 
     it('should throw an error if user does not exist', async () => {
@@ -2107,7 +2145,7 @@ describe('pet', () => {
     })
     afterEach(async () => {
       await removeAllUsers()
-      //await removeAllPets()
+      jest.restoreAllMocks()
     })
 
     it('should successfully fetch all pets without filters and return 200', async () => {
@@ -3035,7 +3073,7 @@ describe('pet', () => {
 
     it('should filter Cats by age and return 200', async () => {
       const response = await request(app)
-        .get('/pet?filterOption=CAT&ageFilter=1-2')
+        .get('/pet?filterOption=CAT&ageFilter=0-2')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3046,7 +3084,7 @@ describe('pet', () => {
         response.body.pets.every((pet: Pet) => {
           const birthdate = new Date(pet.birthDate)
           const age = calculateAgeFromBirthdate(birthdate)
-          return age >= 1 && age <= 2 && pet.category === 'CAT'
+          return age >= 0 && age <= 2 && pet.category === 'CAT'
         })
       ).toBe(true)
     })
@@ -3334,6 +3372,57 @@ describe('pet', () => {
         `"genderFilter" must be one of [MALE, FEMALE, ]`
       )
       expect(response.body).toEqual({})
+    })
+
+    it('should return 500 when there is an internal server error', async () => {
+      // Mock the find method to throw an error
+      jest.spyOn(PetModel, 'find').mockImplementation(() => {
+        throw new Error('Failed to fetch pets')
+      })
+
+      const response = await request(app)
+        .get('/pet')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(500)
+
+      expect(response.text).toEqual('Failed to fetch pets')
+      expect(response.body).toEqual({})
+    })
+
+    it('should filter Cats by age and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=CAT&ageFilter=0-')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+
+      expect(
+        response.body.pets.every((pet: Pet) => {
+          const birthdate = new Date(pet.birthDate)
+          const age = calculateAgeFromBirthdate(birthdate)
+          return age >= 0 && age < 1 && pet.category === 'CAT'
+        })
+      ).toBe(true)
+    })
+
+    it('should filter Dogs by age and return 200', async () => {
+      const response = await request(app)
+        .get('/pet?filterOption=DOG&ageFilter=-1')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.totalPages).toEqual(1)
+
+      expect(
+        response.body.pets.every((pet: Pet) => {
+          const birthdate = new Date(pet.birthDate)
+          const age = calculateAgeFromBirthdate(birthdate)
+          return age >= 1 && pet.category === 'DOG'
+        })
+      ).toBe(true)
     })
   })
 })

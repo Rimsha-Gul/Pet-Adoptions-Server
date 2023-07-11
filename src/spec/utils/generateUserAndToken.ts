@@ -4,15 +4,16 @@ import { generateRefreshToken } from '../../utils/generateRefreshToken'
 import { generateVerificationCode } from '../../utils/generateVerificationCode'
 
 export interface User {
+  role: Role
   name: string
   email: string
   password: string
   tokens: { accessToken: string; refreshToken: string }
   isVerified: boolean
   verificationCode: {
-    code: string
-    createdAt: Date
-    updatedAt: Date
+    code?: string
+    createdAt?: Date
+    updatedAt?: Date
   }
   address?: string
   bio?: string
@@ -49,7 +50,8 @@ export const generateUserandTokens = async (): Promise<User> => {
         tokens: {
           accessToken: accessToken,
           refreshToken: refreshToken
-        }
+        },
+        profilePhoto: ['mockFileID']
       }
     },
     { new: true }
@@ -57,41 +59,22 @@ export const generateUserandTokens = async (): Promise<User> => {
   const verificationCode: string = generateVerificationCode()
   let savedUserWithTokensAndCode
   if (savedUserWithTokens) {
-    if (savedUserWithTokens.verificationCode.code) {
-      savedUserWithTokensAndCode = await UserModel.findOneAndUpdate(
-        {
-          email: savedUser.email
-        },
-        {
-          $set: {
-            isVerified: true,
-            verificationCode: {
-              code: verificationCode,
-              createdAt: user.verificationCode.createdAt,
-              updatedAt: new Date()
-            }
+    savedUserWithTokensAndCode = await UserModel.findOneAndUpdate(
+      {
+        email: savedUser.email
+      },
+      {
+        $set: {
+          isVerified: true,
+          verificationCode: {
+            code: verificationCode,
+            createdAt: new Date(),
+            updatedAt: new Date()
           }
-        },
-        { new: true }
-      )
-    } else {
-      savedUserWithTokensAndCode = await UserModel.findOneAndUpdate(
-        {
-          email: savedUser.email
-        },
-        {
-          $set: {
-            isVerified: true,
-            verificationCode: {
-              code: verificationCode,
-              createdAt: new Date(),
-              updatedAt: new Date()
-            }
-          }
-        },
-        { new: true }
-      )
-    }
+        }
+      },
+      { new: true }
+    )
   }
   await user.save()
 
@@ -104,6 +87,7 @@ export const generateUserandTokens = async (): Promise<User> => {
         ? savedUserWithTokens.tokens.refreshToken
         : ' '
     },
+    role: user.role,
     name: user.name,
     email: user.email,
     password: user.password,
@@ -112,7 +96,8 @@ export const generateUserandTokens = async (): Promise<User> => {
       code: savedUserWithTokensAndCode.verificationCode.code,
       createdAt: savedUserWithTokensAndCode.verificationCode.createdAt,
       updatedAt: savedUserWithTokensAndCode.verificationCode.updatedAt
-    }
+    },
+    profilePhoto: user.profilePhoto
   }
 }
 
@@ -121,7 +106,7 @@ export const generateUserNotVerifiedandTokens = async (): Promise<User> => {
   const user = new UserModel({
     role: Role.User,
     name: 'Test User',
-    email: 'test@gmail.com',
+    email: 'unverifiedtest@gmail.com',
     password: password
   })
   const savedUser = await user.save()
@@ -143,45 +128,7 @@ export const generateUserNotVerifiedandTokens = async (): Promise<User> => {
     },
     { new: true }
   )
-  const verificationCode: string = generateVerificationCode()
-  let savedUserWithTokensAndCode
-  if (savedUserWithTokens) {
-    if (savedUserWithTokens.verificationCode.code) {
-      savedUserWithTokensAndCode = await UserModel.findOneAndUpdate(
-        {
-          email: savedUser.email
-        },
-        {
-          $set: {
-            isVerified: false,
-            verificationCode: {
-              code: verificationCode,
-              createdAt: user.verificationCode.createdAt,
-              updatedAt: new Date()
-            }
-          }
-        },
-        { new: true }
-      )
-    } else {
-      savedUserWithTokensAndCode = await UserModel.findOneAndUpdate(
-        {
-          email: savedUser.email
-        },
-        {
-          $set: {
-            isVerified: false,
-            verificationCode: {
-              code: verificationCode,
-              createdAt: new Date(),
-              updatedAt: new Date()
-            }
-          }
-        },
-        { new: true }
-      )
-    }
-  }
+
   await user.save()
 
   return {
@@ -193,15 +140,12 @@ export const generateUserNotVerifiedandTokens = async (): Promise<User> => {
         ? savedUserWithTokens.tokens.refreshToken
         : ' '
     },
+    role: user.role,
     name: user.name,
     email: user.email,
     password: user.password,
     isVerified: false,
-    verificationCode: {
-      code: savedUserWithTokensAndCode.verificationCode.code,
-      createdAt: savedUserWithTokensAndCode.verificationCode.createdAt,
-      updatedAt: savedUserWithTokensAndCode.verificationCode.updatedAt
-    }
+    verificationCode: {}
   }
 }
 

@@ -21,20 +21,18 @@ export class SessionController {
 
 const session = async (req: UserRequest) => {
   const email = (req.user as RequestUser).email
-  const user = await User.findOne({ email })
-  if (user) {
-    let profilePhotoUrl
-    if (user.profilePhoto.length > 0) {
-      profilePhotoUrl = getImageURL(user.profilePhoto[0])
-    }
-    return {
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      address: user.address,
-      bio: user.bio,
-      profilePhoto: profilePhotoUrl
-    }
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const user = (await User.findOne({ email }))!
+  let profilePhotoUrl
+  if (user.profilePhoto.length > 0) {
+    profilePhotoUrl = getImageURL(user.profilePhoto[0])
   }
-  throw { code: 404, message: 'User not found' }
+  return {
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    address: user.address,
+    bio: user.bio,
+    profilePhoto: profilePhotoUrl
+  }
 }

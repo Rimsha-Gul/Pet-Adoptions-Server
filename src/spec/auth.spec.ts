@@ -318,6 +318,33 @@ describe('auth', () => {
       expect(sendEmailSpy).toBeCalledTimes(1)
     })
 
+    it('should send verification code successfully', async () => {
+      const testUser = await generateUserNotVerifiedandTokens()
+      payload.email = testUser.email
+      const response = await request(app)
+        .post('/auth/sendVerificationCode')
+        .send(payload)
+        .expect(200)
+
+      expect(response.body.message).toEqual('Signup email sent successfully')
+      expect(sendEmailSpy).toBeCalledTimes(1)
+    })
+
+    it('should handle error when sending verification code', async () => {
+      // Mock the sendEmail function to throw an error
+      sendEmailSpy.mockImplementation(() => {
+        throw new Error('Failed to send email')
+      })
+
+      const response = await request(app)
+        .post('/auth/sendVerificationCode')
+        .send(payload)
+        .expect(500)
+
+      expect(response.text).toEqual('Error sending signup email')
+      expect(sendEmailSpy).toBeCalledTimes(1)
+    })
+
     it('should throw an error if user does not exist', async () => {
       payload.email = 'nonexistentuser@test.com' // Assign a non-existent email
       const response = await request(app)
@@ -620,7 +647,7 @@ describe('auth', () => {
 
     it('should throw an error if user does not exist', async () => {
       const invalidRefreshToken = generateRefreshToken(
-        'rimsha@tetrahex.com',
+        'nonexistent@gmail.com',
         'USER'
       )
 
@@ -1122,6 +1149,51 @@ describe('auth', () => {
       expect(response.body).toHaveProperty('tokens.refreshToken')
     })
 
+    it('should respond with Bad Request if password is incorrect', async () => {
+      const loginData = {
+        email: user.email,
+        password: '1234567'
+      }
+      const response = await request(app)
+        .post('/auth/login')
+        .send(loginData)
+        .expect(401)
+
+      expect(response.text).toEqual('Invalid credentials')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if user is not verified', async () => {
+      // Create a new user without verifying
+      const newUser = await generateUserNotVerifiedandTokens()
+
+      const loginData = {
+        email: newUser.email,
+        password: '123456'
+      }
+      const response = await request(app)
+        .post('/auth/login')
+        .send(loginData)
+        .expect(403)
+
+      expect(response.text).toEqual('User not verified')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if user does not exist', async () => {
+      const loginData = {
+        email: 'nonexistent@gmail.com',
+        password: '123456'
+      }
+      const response = await request(app)
+        .post('/auth/login')
+        .send(loginData)
+        .expect(404)
+
+      expect(response.text).toEqual('User not found')
+      expect(response.body).toEqual({})
+    })
+
     it('should respond with Bad Request if email is missing', async () => {
       const loginData = {
         password: '123456'
@@ -1269,6 +1341,21 @@ describe('auth', () => {
       expect(response.text).toEqual(`Unauthorized`)
       expect(response.body).toEqual({})
     })
+
+    it('should throw an error if user does not exist', async () => {
+      const invalidAccessToken = generateAccessToken(
+        'nonexistent@gmail.com',
+        'USER'
+      )
+
+      const response = await request(app)
+        .delete(`/auth/logout`)
+        .auth(invalidAccessToken, { type: 'bearer' })
+        .expect(404)
+
+      expect(response.text).toEqual('User not found')
+      expect(response.body).toEqual({})
+    })
   })
 
   describe('getShelters', () => {
@@ -1379,6 +1466,7 @@ describe('auth', () => {
 
     afterEach(async () => {
       await removeAllUsers()
+      jest.restoreAllMocks()
     })
 
     it('should successfully update profile photo if new one is provided', async () => {
