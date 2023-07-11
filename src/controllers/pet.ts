@@ -165,7 +165,7 @@ const addPet = async (
       shelterID ? shelterID : (req.user as RequestUser)._id?.toString()
     )
   ) {
-    throw { code: 400, message: 'Invalid shelter ID.' }
+    throw { code: 400, message: 'Invalid shelter ID' }
   }
 
   const petImages: string[] = images
@@ -211,8 +211,8 @@ const addPet = async (
 }
 
 const getAllPets = async (
-  page = 1,
-  limit = 3,
+  page: number,
+  limit: number,
   _req: ExpressRequest,
   searchQuery?: string,
   filterOption?: string,
