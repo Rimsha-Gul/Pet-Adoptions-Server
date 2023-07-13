@@ -1,5 +1,6 @@
 import Joi from 'joi'
 import { ActivityNeeds, Category, Gender, LevelOfGrooming } from '../models/Pet'
+import { ResidenceType } from '../models/Application'
 
 const nameSchema = Joi.string().min(3).max(32)
 const emailSchema = Joi.string().email()
@@ -14,6 +15,8 @@ const petActivityNeedsSchema = Joi.string().valid(
 const petLevelOfGroomingSchema = Joi.string().valid(
   ...Object.values(LevelOfGrooming)
 )
+const shelterIDSchema = Joi.string().length(24).hex()
+const residenceTypeSchema = Joi.string().valid(...Object.values(ResidenceType))
 
 export const signUpValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
@@ -94,4 +97,38 @@ export const getAllPetsValidation = (data: any): Joi.ValidationResult =>
     breedFilter: Joi.string().allow('').optional(),
     genderFilter: petGenderSchema.allow('').optional(),
     ageFilter: Joi.string().allow('').optional()
+  }).validate(data)
+
+export const applyForPetValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    shelterID: shelterIDSchema.required(),
+    microchipID: Joi.string().length(10).required(),
+    residenceType: residenceTypeSchema.required(),
+    hasRentPetPermission: Joi.boolean().when('residenceType', {
+      is: ResidenceType.Rent,
+      then: Joi.required(),
+      otherwise: Joi.forbidden()
+    }),
+    isWillingHomeInspection: Joi.boolean().required(),
+    hasChildren: Joi.boolean().required(),
+    childrenAges: Joi.string().when('hasChildren', {
+      is: true,
+      then: Joi.required(),
+      otherwise: Joi.forbidden()
+    }),
+    hasOtherPets: Joi.boolean().required(),
+    otherPetsInfo: Joi.string().when('hasOtherPets', {
+      is: true,
+      then: Joi.required(),
+      otherwise: Joi.forbidden()
+    }),
+    petAloneTime: Joi.number().integer().min(0).max(24),
+    hasPlayTimeParks: Joi.boolean().required(),
+    petActivities: Joi.string().required(),
+    handlePetIssues: Joi.string().required(),
+    moveWithPet: Joi.string().required(),
+    canAffordPetsNeeds: Joi.boolean().required(),
+    canAffordPetsMediacal: Joi.boolean().required(),
+    petTravelPlans: Joi.string().required(),
+    petOutlivePlans: Joi.string().required()
   }).validate(data)

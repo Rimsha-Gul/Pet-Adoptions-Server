@@ -175,7 +175,7 @@ components:
                 - VERY_LOW
                 - MIDRANGE
                 - HIGH
-                - VER_YHIGH
+                - VERY_HIGH
             type: string
         LevelOfGrooming:
             enum:
@@ -298,6 +298,71 @@ components:
                 - breeds
                 - genders
                 - ages
+            type: object
+            additionalProperties: false
+        ResidenceType:
+            enum:
+                - ownHouse
+                - rentHouse
+            type: string
+        ApplicationPayload:
+            properties:
+                shelterID:
+                    type: string
+                microchipID:
+                    type: string
+                residenceType:
+                    $ref: '#/components/schemas/ResidenceType'
+                hasRentPetPermission:
+                    type: boolean
+                isWillingHomeInspection:
+                    type: boolean
+                hasChildren:
+                    type: boolean
+                childrenAges:
+                    type: string
+                hasOtherPets:
+                    type: boolean
+                otherPetsInfo:
+                    type: string
+                petAloneTime:
+                    type: number
+                    format: double
+                hasPlayTimeParks:
+                    type: boolean
+                petActivities:
+                    type: string
+                handlePetIssues:
+                    type: string
+                moveWithPet:
+                    type: string
+                canAffordPetsNeeds:
+                    type: boolean
+                canAffordPetsMediacal:
+                    type: boolean
+                petTravelPlans:
+                    type: string
+                petOutlivePlans:
+                    type: string
+            required:
+                - shelterID
+                - microchipID
+                - residenceType
+                - hasRentPetPermission
+                - isWillingHomeInspection
+                - hasChildren
+                - childrenAges
+                - hasOtherPets
+                - otherPetsInfo
+                - petAloneTime
+                - hasPlayTimeParks
+                - petActivities
+                - handlePetIssues
+                - moveWithPet
+                - canAffordPetsNeeds
+                - canAffordPetsMediacal
+                - petTravelPlans
+                - petOutlivePlans
             type: object
             additionalProperties: false
     securitySchemes:
@@ -815,6 +880,38 @@ paths:
                     required: false
                     schema:
                         type: string
+    /application:
+        post:
+            operationId: ApplyForAPet
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
+                            examples:
+                                'Example 1':
+                                    value: {shelterID: 6475e9630044288a2b4880b5, microchipID: A123456789, residenceType: ownHouse, hasRentPetPermission: true, isWillingHomeInspection: true, hasChildren: true, childrenAges: '2,6', hasOtherPets: true, otherPetsInfo: 'Cat 1, Dog 2', petAloneTime: 6, hasPlayTimeParks: true, petActivities: 'Playing fetch, walking', handlePetIssues: 'I will buy new shoes', moveWithPet: 'I will take him with me', canAffordPetsNeeds: true, canAffordPetsMediacal: true, petTravelPlans: 'I will take him wherever I go', petOutlivePlans: 'My pet will inherit my property and my friend Alex will take care of him'}
+            summary: 'Accepts application info and creates application if all fields are valid'
+            tags:
+                - Application
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ApplicationPayload'
 servers:
     -
         url: /
@@ -828,3 +925,6 @@ tags:
     -
         name: Pet
         description: 'Operations about pet'
+    -
+        name: Application
+        description: 'Operations about pet adoption application'

@@ -12,6 +12,7 @@ import {
 } from './utils/generateUserAndToken'
 import { mongooseSetUp, dropDatabase, dropCollections } from './utils/setup'
 import request from 'supertest'
+import * as generateEmailModule from '../utils/generateVerificationCode'
 import * as sendEmailModule from '../middleware/sendEmail'
 import sinon from 'sinon'
 import { generateShelters, removeAllShelters } from './utils/generateShelters'
@@ -290,7 +291,12 @@ describe('auth', () => {
   describe('sendVerificationCode', () => {
     let user: User
     let payload: SendCodePayload
+    let generateVerificationCodeSpy: jest.SpyInstance
     let sendEmailSpy: jest.SpyInstance
+
+    let expectedRecipient
+    const expectedSubject = `Purrfect Adoptions - Email Verification`
+    const expectedMessage = `<p>Your email verification code is: <strong>123456</strong>.</p><p>Do not share this code with anyone else.</p>`
 
     beforeEach(async () => {
       user = await generateUserandTokens()
@@ -298,6 +304,13 @@ describe('auth', () => {
         email: user.email,
         emailChangeRequest: false
       }
+      // Spy on the generateVerificationCode function and mock its implementation
+      generateVerificationCodeSpy = jest.spyOn(
+        generateEmailModule,
+        'generateVerificationCode'
+      )
+      generateVerificationCodeSpy.mockImplementation(() => '123456')
+
       // Spy on the sendEmail function
       sendEmailSpy = jest.spyOn(sendEmailModule, 'sendEmail') // spy on the function from the module
       sendEmailSpy.mockImplementation(() => Promise.resolve())
@@ -316,10 +329,16 @@ describe('auth', () => {
 
       expect(response.body.message).toEqual('Signup email sent successfully')
       expect(sendEmailSpy).toBeCalledTimes(1)
+      expectedRecipient = payload.email
+      expect(sendEmailSpy).toBeCalledWith(
+        expectedRecipient,
+        expectedSubject,
+        expectedMessage
+      )
     })
 
     it('should send verification code successfully', async () => {
-      const testUser = await generateUserNotVerifiedandTokens()
+      const testUser = await generateUserNotVerifiedandTokens() // for sending first time (if veriificationCode.code does not exist)
       payload.email = testUser.email
       const response = await request(app)
         .post('/auth/sendVerificationCode')
@@ -328,6 +347,12 @@ describe('auth', () => {
 
       expect(response.body.message).toEqual('Signup email sent successfully')
       expect(sendEmailSpy).toBeCalledTimes(1)
+      expectedRecipient = payload.email
+      expect(sendEmailSpy).toBeCalledWith(
+        expectedRecipient,
+        expectedSubject,
+        expectedMessage
+      )
     })
 
     it('should handle error when sending verification code', async () => {
@@ -343,6 +368,12 @@ describe('auth', () => {
 
       expect(response.text).toEqual('Error sending signup email')
       expect(sendEmailSpy).toBeCalledTimes(1)
+      expectedRecipient = payload.email
+      expect(sendEmailSpy).toBeCalledWith(
+        expectedRecipient,
+        expectedSubject,
+        expectedMessage
+      )
     })
 
     it('should throw an error if user does not exist', async () => {
@@ -382,6 +413,12 @@ describe('auth', () => {
         'Email change request sent successfully'
       )
       expect(sendEmailSpy).toBeCalledTimes(1)
+      expectedRecipient = payload.email
+      expect(sendEmailSpy).toBeCalledWith(
+        expectedRecipient,
+        expectedSubject,
+        expectedMessage
+      )
     })
 
     it('should respond with Bad Request if email is missing', async () => {

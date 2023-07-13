@@ -16,6 +16,13 @@ petRouter.post(
   isShelter,
   upload.array('images', 10),
   async (req, res) => {
+    if ((req as PetRequest).files) {
+      if (((req as PetRequest).files.length as number) > 10) {
+        return res.status(400).send('You can add a maximum of 10 images')
+      }
+    } else {
+      return res.status(400).send('Images are required')
+    }
     const { error } = addPetValidation(req.body)
     if (error) return res.status(400).send(error.details[0].message)
     try {
@@ -77,7 +84,9 @@ petRouter.post(
 petRouter.get('/', authenticateAccessToken, async (req, res) => {
   try {
     const { error } = getAllPetsValidation(req.query)
-    if (error) return res.status(400).send(error.details[0].message)
+    if (error) {
+      return res.status(400).send(error.details[0].message)
+    }
     const {
       page = '1',
       limit = '3',
