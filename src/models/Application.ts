@@ -5,6 +5,15 @@ export enum ResidenceType {
   Rent = 'rentHouse'
 }
 
+export enum Status {
+  UnderReview = 'Under Review',
+  ApprovedForHomeVisit = 'Approved For Home Visit',
+  HomeVisitScheduled = 'Home Visit Scheduled',
+  HomeVisitCompleted = 'Home Visit Completed',
+  Approved = 'Approved',
+  Denied = 'Denied'
+}
+
 export interface ApplicationPayload {
   shelterID: string
   microchipID: string
@@ -26,11 +35,20 @@ export interface ApplicationPayload {
   petOutlivePlans: string
 }
 
+export interface ApplicationResponse {
+  status: Status
+  submissionDate: Date
+  petName: string
+  shelterName: string
+}
+
 export interface ApplicationDocument
   extends Omit<ApplicationPayload, 'shelterID'>,
     Document {
   shelterID: Schema.Types.ObjectId
   applicantEmail: string
+  status: Status
+  createdAt: Date
 }
 
 const ApplicationSchema = new Schema<ApplicationDocument>(
@@ -53,7 +71,8 @@ const ApplicationSchema = new Schema<ApplicationDocument>(
     canAffordPetsNeeds: { type: Boolean, required: true },
     canAffordPetsMediacal: { type: Boolean, required: true },
     petTravelPlans: { type: String, required: true },
-    petOutlivePlans: { type: String, required: true }
+    petOutlivePlans: { type: String, required: true },
+    status: { type: String, enum: Status }
   },
   { timestamps: true }
 )

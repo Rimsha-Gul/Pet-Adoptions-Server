@@ -26,7 +26,8 @@ export const petResponseExample = {
     images: [
       'https://example.com/images/fluffy1.jpg',
       'https://example.com/images/fluffy2.jpg'
-    ]
+    ],
+    hasAdoptionRequest: false
   }
 }
 
@@ -57,7 +58,8 @@ export const petsResponseExample = {
       images: [
         'https://example.com/images/fluffy1.jpg',
         'https://example.com/images/fluffy2.jpg'
-      ]
+      ],
+      hasAdoptionRequest: false
     },
     {
       microchipID: 'B123456789',
@@ -84,7 +86,8 @@ export const petsResponseExample = {
       images: [
         'https://example.com/images/buddy1.jpg',
         'https://example.com/images/buddy2.jpg'
-      ]
+      ],
+      hasAdoptionRequest: false
     }
   ],
   totalPages: 5,

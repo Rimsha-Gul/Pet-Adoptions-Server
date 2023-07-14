@@ -239,6 +239,8 @@ components:
                     items:
                         type: string
                     type: array
+                hasAdoptionRequest:
+                    type: boolean
             required:
                 - microchipID
                 - name
@@ -255,6 +257,7 @@ components:
                 - traits
                 - adoptionFee
                 - images
+                - hasAdoptionRequest
             type: object
             additionalProperties: false
         AddPetResponse:
@@ -298,6 +301,33 @@ components:
                 - breeds
                 - genders
                 - ages
+            type: object
+            additionalProperties: false
+        Status:
+            enum:
+                - 'Under Review'
+                - 'Approved For Home Visit'
+                - 'Home Visit Scheduled'
+                - 'Home Visit Completed'
+                - Approved
+                - Denied
+            type: string
+        ApplicationResponse:
+            properties:
+                status:
+                    $ref: '#/components/schemas/Status'
+                submissionDate:
+                    type: string
+                    format: date-time
+                petName:
+                    type: string
+                shelterName:
+                    type: string
+            required:
+                - status
+                - submissionDate
+                - petName
+                - shelterName
             type: object
             additionalProperties: false
         ResidenceType:
@@ -732,7 +762,7 @@ paths:
                                 $ref: '#/components/schemas/AddPetResponse'
                             examples:
                                 'Example 1':
-                                    value: {pet: {microchipID: A123456789, name: Snowball, gender: MALE, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg']}}
+                                    value: {pet: {microchipID: A123456789, name: Snowball, gender: MALE, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false}}
             summary: 'Accepts pet info, adds pet to db and returns pet info'
             tags:
                 - Pet
@@ -822,7 +852,7 @@ paths:
                                 $ref: '#/components/schemas/AllPetsResponse'
                             examples:
                                 'Example 1':
-                                    value: {pets: [{microchipID: A123456789, name: Fluffy, gender: FEMALE, birthDate: '2001-01-01', color: White, breed: Persian, category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Fluffy is a calm and friendly cat...', traits: [Affectionate, independent], adoptionFee: $100, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg']}, {microchipID: B123456789, name: Buddy, gender: MALE, birthDate: '2001-01-01', color: Brown, breed: 'Labrador Retriever', category: DOG, activityNeeds: HIGH, levelOfGrooming: MEDIUM, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Buddy is a playful and energetic dog...', traits: [Friendly, loyal], adoptionFee: $150, images: ['https://example.com/images/buddy1.jpg', 'https://example.com/images/buddy2.jpg']}], totalPages: 5, colors: [White, Black, Brown], breeds: [Persian, 'Labrador Retriever', 'Golden Retriever'], genders: [Male, Female], ages: [1, 2, 3, 4, 5]}
+                                    value: {pets: [{microchipID: A123456789, name: Fluffy, gender: FEMALE, birthDate: '2001-01-01', color: White, breed: Persian, category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Fluffy is a calm and friendly cat...', traits: [Affectionate, independent], adoptionFee: $100, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false}, {microchipID: B123456789, name: Buddy, gender: MALE, birthDate: '2001-01-01', color: Brown, breed: 'Labrador Retriever', category: DOG, activityNeeds: HIGH, levelOfGrooming: MEDIUM, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Buddy is a playful and energetic dog...', traits: [Friendly, loyal], adoptionFee: $150, images: ['https://example.com/images/buddy1.jpg', 'https://example.com/images/buddy2.jpg'], hasAdoptionRequest: false}], totalPages: 5, colors: [White, Black, Brown], breeds: [Persian, 'Labrador Retriever', 'Golden Retriever'], genders: [Male, Female], ages: [1, 2, 3, 4, 5]}
             summary: 'Returns all pets'
             tags:
                 - Pet
@@ -889,13 +919,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                properties:
-                                    message: {type: string}
-                                    code: {type: number, format: double}
-                                required:
-                                    - message
-                                    - code
-                                type: object
+                                $ref: '#/components/schemas/ApplicationResponse'
                             examples:
                                 'Example 1':
                                     value: {shelterID: 6475e9630044288a2b4880b5, microchipID: A123456789, residenceType: ownHouse, hasRentPetPermission: true, isWillingHomeInspection: true, hasChildren: true, childrenAges: '2,6', hasOtherPets: true, otherPetsInfo: 'Cat 1, Dog 2', petAloneTime: 6, hasPlayTimeParks: true, petActivities: 'Playing fetch, walking', handlePetIssues: 'I will buy new shoes', moveWithPet: 'I will take him with me', canAffordPetsNeeds: true, canAffordPetsMediacal: true, petTravelPlans: 'I will take him wherever I go', petOutlivePlans: 'My pet will inherit my property and my friend Alex will take care of him'}
@@ -912,6 +936,42 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/ApplicationPayload'
+    /application/status:
+        get:
+            operationId: GetApplicationStatus
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ApplicationResponse'
+            summary: 'Returns application info'
+            tags:
+                - Application
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
+    /application/applications:
+        get:
+            operationId: GetApplications
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: '#/components/schemas/ApplicationResponse'
+                                type: array
+            summary: 'Returns list of applications of a user'
+            tags:
+                - Application
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
 servers:
     -
         url: /

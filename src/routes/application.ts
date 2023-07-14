@@ -17,4 +17,17 @@ applicationRouter.post('/', authenticateAccessToken, async (req, res) => {
   }
 })
 
+applicationRouter.get(
+  '/applications',
+  authenticateAccessToken,
+  async (req, res) => {
+    try {
+      const response = await controller.getApplications(req)
+      return res.send(response)
+    } catch (err: any) {
+      return res.status(err.code).send(err.message)
+    }
+  }
+)
+
 export default applicationRouter
