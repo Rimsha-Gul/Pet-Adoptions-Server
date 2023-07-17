@@ -16,8 +16,8 @@ const petController = new PetController()
 
 petRouter.post(
   '/',
-  isShelter,
   authenticateAccessToken,
+  isShelter,
   upload.array('images', 10),
   async (req, res) => {
     if ((req as PetRequest).files) {

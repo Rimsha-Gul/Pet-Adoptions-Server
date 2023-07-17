@@ -9,8 +9,8 @@ const controller = new ShelterController()
 
 applicationRouter.get(
   '/application',
-  isShelter,
   authenticateAccessToken,
+  isShelter,
   async (req, res) => {
     const { error } = getApplicationValidation(req.query)
     if (error) return res.status(400).send(error.details[0].message)
