@@ -76,6 +76,7 @@ export interface PetsResponse {
   adoptionFee: string
   images: string[]
   hasAdoptionRequest: boolean
+  applicationID?: string
 }
 
 export interface AddPetResponse {
@@ -121,7 +122,8 @@ const PetSchema = new Schema<PetDocument>(
     images: { type: [String], required: true },
     traits: { type: [String], required: true },
     adoptionFee: { type: String, required: true },
-    hasAdoptionRequest: { type: Boolean, default: false }
+    hasAdoptionRequest: { type: Boolean, default: false },
+    applicationID: { type: String }
   },
   { timestamps: true }
 )

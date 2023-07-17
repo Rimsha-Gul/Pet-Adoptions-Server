@@ -8,6 +8,7 @@ import Application, {
 import { UserRequest } from '../types/Request'
 import { Body, Example, Get, Post, Request, Route, Security, Tags } from 'tsoa'
 import { Role, User } from '../models/User'
+import { getImageURL } from '../utils/getImageURL'
 
 @Route('application')
 @Tags('Application')
@@ -24,6 +25,18 @@ export class ApplicationController {
     @Request() req: UserRequest
   ): Promise<ApplicationResponse> {
     return applyForAPet(body, req)
+  }
+
+  /**
+   * @summary Returns an application's details given id
+   *
+   */
+  @Security('bearerAuth')
+  @Get('/')
+  public async getApplicationDetails(
+    @Request() req: UserRequest
+  ): Promise<ApplicationResponse> {
+    return getApplicationDetails(req)
   }
 
   /**
@@ -110,20 +123,56 @@ const applyForAPet = async (
 
   await application.save()
   return {
+    id: application._id,
     status: application.status,
     submissionDate: application.createdAt,
+    petImage: getImageURL(pet.images[0]),
     petName: pet.name,
     shelterName: shelter.name
   }
+}
+
+const getApplicationDetails = async (
+  req: UserRequest
+): Promise<ApplicationResponse> => {
+  const application = await Application.findById(req.query.id)
+
+  if (!application) throw { code: 404, message: 'Application not found' }
+
+  const pet = await Pet.findOne({ microchipID: application.microchipID })
+  const shelter = await User.findOne({
+    role: Role.Shelter,
+    _id: application.shelterID
+  })
+
+  if (!pet) throw { code: 404, message: 'Pet not found' }
+  if (!shelter) throw { code: 404, message: 'Shelter not found' }
+
+  const applicationResponse: ApplicationResponse = {
+    id: application._id,
+    status: application.status,
+    submissionDate: application.createdAt,
+    petImage: getImageURL(pet.images[0]),
+    petName: pet.name,
+    shelterName: shelter.name
+  }
+  return applicationResponse
 }
 
 const getApplications = async (
   req: UserRequest
 ): Promise<ApplicationResponse[]> => {
   // Fetch applications made by the user
-  const applications = await Application.find({
-    applicantEmail: req.user?.email
-  })
+  let applications
+  if (req.user?.role === Role.User) {
+    applications = await Application.find({
+      applicantEmail: req.user?.email
+    })
+  } else if (req.user?.role === Role.Shelter) {
+    applications = await Application.find({
+      shelterID: req.user?._id
+    })
+  }
 
   // Create a new array to hold the response data
   const applicationsResponse: ApplicationResponse[] = []
@@ -135,13 +184,21 @@ const getApplications = async (
       role: Role.Shelter,
       _id: application.shelterID
     })
+    const applicant = await User.findOne({ email: application.applicantEmail })
+
+    if (!pet) throw { code: 404, message: 'Pet not found' }
+    if (!shelter) throw { code: 404, message: 'Shelter not found' }
+    if (!applicant) throw { code: 404, message: 'Applicant not found' }
 
     // Construct the response object
     const applicationResponse: ApplicationResponse = {
+      id: application._id,
       status: application.status,
       submissionDate: application.createdAt,
-      petName: pet?.name || '',
-      shelterName: shelter?.name || ''
+      petImage: getImageURL(pet.images[0]),
+      petName: pet.name,
+      shelterName: shelter.name,
+      applicantName: applicant.name
     }
 
     // Add the response object to the response data array

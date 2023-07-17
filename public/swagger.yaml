@@ -241,6 +241,8 @@ components:
                     type: array
                 hasAdoptionRequest:
                     type: boolean
+                applicationID:
+                    type: string
             required:
                 - microchipID
                 - name
@@ -314,18 +316,26 @@ components:
             type: string
         ApplicationResponse:
             properties:
+                id:
+                    type: string
                 status:
                     $ref: '#/components/schemas/Status'
                 submissionDate:
                     type: string
                     format: date-time
+                petImage:
+                    type: string
                 petName:
                     type: string
                 shelterName:
                     type: string
+                applicantName:
+                    type: string
             required:
+                - id
                 - status
                 - submissionDate
+                - petImage
                 - petName
                 - shelterName
             type: object
@@ -842,6 +852,26 @@ paths:
                                 - adoptionFee
                                 - images
         get:
+            operationId: GetPetDetails
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AddPetResponse'
+                            examples:
+                                'Example 1':
+                                    value: {pet: {microchipID: A123456789, name: Snowball, gender: MALE, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false}}
+            summary: 'Returns details of a pet given its id'
+            tags:
+                - Pet
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
+    /pet/all:
+        get:
             operationId: GetAllPets
             responses:
                 '200':
@@ -936,9 +966,8 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/ApplicationPayload'
-    /application/status:
         get:
-            operationId: GetApplicationStatus
+            operationId: GetApplicationDetails
             responses:
                 '200':
                     description: Ok
@@ -946,7 +975,7 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/ApplicationResponse'
-            summary: 'Returns application info'
+            summary: 'Returns an application''s details given id'
             tags:
                 - Application
             security:

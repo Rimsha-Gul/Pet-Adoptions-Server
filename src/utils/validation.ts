@@ -87,6 +87,11 @@ export const addPetValidation = (data: any): Joi.ValidationResult =>
     shelterID: Joi.string().optional()
   }).validate(data)
 
+export const getPetValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    id: Joi.string().length(10).required()
+  }).validate(data)
+
 export const getAllPetsValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
     page: Joi.number().integer().min(1).default(1),
@@ -131,4 +136,9 @@ export const applyForPetValidation = (data: any): Joi.ValidationResult =>
     canAffordPetsMediacal: Joi.boolean().required(),
     petTravelPlans: Joi.string().required(),
     petOutlivePlans: Joi.string().required()
+  }).validate(data)
+
+export const getApplicationValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    id: shelterIDSchema.required()
   }).validate(data)

@@ -35,11 +35,29 @@ export interface ApplicationPayload {
   petOutlivePlans: string
 }
 
+export interface ApplictionResponseShelter
+  extends Omit<ApplicationPayload, 'shelterID'> {
+  id: string
+  status: Status
+  applicantEmail: string
+  applicantName: string
+  submissionDate: Date
+  petImage: string
+  petName: string
+}
+
+export interface ApplictionResponseForShelter {
+  application: ApplictionResponseShelter
+}
+
 export interface ApplicationResponse {
+  id: string
   status: Status
   submissionDate: Date
+  petImage: string
   petName: string
   shelterName: string
+  applicantName?: string
 }
 
 export interface ApplicationDocument

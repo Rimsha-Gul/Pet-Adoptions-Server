@@ -5,15 +5,19 @@ import { isShelter } from '../middleware/isShelter'
 import { PetRequest } from '../types/PetRequest'
 import upload from '../middleware/uploadFiles'
 import { uploadFiles } from '../utils/uploadFiles'
-import { addPetValidation, getAllPetsValidation } from '../utils/validation'
+import {
+  addPetValidation,
+  getAllPetsValidation,
+  getPetValidation
+} from '../utils/validation'
 
 const petRouter = express.Router()
 const petController = new PetController()
 
 petRouter.post(
   '/',
-  authenticateAccessToken,
   isShelter,
+  authenticateAccessToken,
   upload.array('images', 10),
   async (req, res) => {
     if ((req as PetRequest).files) {
@@ -82,6 +86,19 @@ petRouter.post(
 )
 
 petRouter.get('/', authenticateAccessToken, async (req, res) => {
+  const { error } = getPetValidation(req.query)
+  if (error) {
+    return res.status(400).send(error.details[0].message)
+  }
+  try {
+    const response = await petController.getPetDetails(req)
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
+  }
+})
+
+petRouter.get('/all', authenticateAccessToken, async (req, res) => {
   try {
     const { error } = getAllPetsValidation(req.query)
     if (error) {
