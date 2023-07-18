@@ -1,6 +1,6 @@
 import Joi from 'joi'
 import { ActivityNeeds, Category, Gender, LevelOfGrooming } from '../models/Pet'
-import { ResidenceType } from '../models/Application'
+import { ResidenceType, Status } from '../models/Application'
 
 const nameSchema = Joi.string().min(3).max(32)
 const emailSchema = Joi.string().email()
@@ -15,8 +15,9 @@ const petActivityNeedsSchema = Joi.string().valid(
 const petLevelOfGroomingSchema = Joi.string().valid(
   ...Object.values(LevelOfGrooming)
 )
-const shelterIDSchema = Joi.string().length(24).hex()
+const objectIDSchema = Joi.string().length(24).hex()
 const residenceTypeSchema = Joi.string().valid(...Object.values(ResidenceType))
+const statusSchema = Joi.string().valid(...Object.values(Status))
 
 export const signUpValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
@@ -106,7 +107,7 @@ export const getAllPetsValidation = (data: any): Joi.ValidationResult =>
 
 export const applyForPetValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    shelterID: shelterIDSchema.required(),
+    shelterID: objectIDSchema.required(),
     microchipID: Joi.string().length(10).required(),
     residenceType: residenceTypeSchema.required(),
     hasRentPetPermission: Joi.boolean().when('residenceType', {
@@ -114,7 +115,6 @@ export const applyForPetValidation = (data: any): Joi.ValidationResult =>
       then: Joi.required(),
       otherwise: Joi.forbidden()
     }),
-    isWillingHomeInspection: Joi.boolean().required(),
     hasChildren: Joi.boolean().required(),
     childrenAges: Joi.string().when('hasChildren', {
       is: true,
@@ -140,5 +140,13 @@ export const applyForPetValidation = (data: any): Joi.ValidationResult =>
 
 export const getApplicationValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    id: shelterIDSchema.required()
+    id: objectIDSchema.required()
+  }).validate(data)
+
+export const updateApplicationStatusValidation = (
+  data: any
+): Joi.ValidationResult =>
+  Joi.object({
+    id: objectIDSchema.required(),
+    status: statusSchema.required()
   }).validate(data)

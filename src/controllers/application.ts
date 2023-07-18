@@ -61,7 +61,6 @@ const applyForAPet = async (
     microchipID,
     residenceType,
     hasRentPetPermission,
-    isWillingHomeInspection,
     hasChildren,
     childrenAges,
     hasOtherPets,
@@ -104,7 +103,6 @@ const applyForAPet = async (
     applicantEmail: req.user?.email,
     residenceType: residenceType,
     hasRentPetPermission: hasRentPetPermission,
-    isWillingHomeInspection: isWillingHomeInspection,
     hasChildren: hasChildren,
     childrenAges: childrenAges,
     hasOtherPets: hasOtherPets,
@@ -125,7 +123,8 @@ const applyForAPet = async (
   return {
     id: application._id,
     status: application.status,
-    submissionDate: application.createdAt,
+    submissionDate: application.createdAt.toISOString().split('T')[0],
+    microchipID: application.microchipID,
     petImage: getImageURL(pet.images[0]),
     petName: pet.name,
     shelterName: shelter.name
@@ -149,13 +148,15 @@ const getApplicationDetails = async (
   if (!shelter) throw { code: 404, message: 'Shelter not found' }
 
   const applicationResponse: ApplicationResponse = {
-    id: application._id,
+    id: application._id.toString(),
     status: application.status,
-    submissionDate: application.createdAt,
+    submissionDate: application.createdAt.toISOString().split('T')[0],
+    microchipID: application.microchipID,
     petImage: getImageURL(pet.images[0]),
     petName: pet.name,
     shelterName: shelter.name
   }
+  console.log(applicationResponse)
   return applicationResponse
 }
 
@@ -192,9 +193,10 @@ const getApplications = async (
 
     // Construct the response object
     const applicationResponse: ApplicationResponse = {
-      id: application._id,
+      id: application._id.toString(),
       status: application.status,
       submissionDate: application.createdAt,
+      microchipID: application.microchipID,
       petImage: getImageURL(pet.images[0]),
       petName: pet.name,
       shelterName: shelter.name,

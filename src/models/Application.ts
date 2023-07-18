@@ -9,9 +9,18 @@ export enum Status {
   UnderReview = 'Under Review',
   ApprovedForHomeVisit = 'Approved For Home Visit',
   HomeVisitScheduled = 'Home Visit Scheduled',
-  HomeVisitCompleted = 'Home Visit Completed',
+  HomeApproved = 'Home Approved',
+  HomeRejected = 'Home Rejected',
+  UserVisitScheduled = 'User Visit Scheduled',
+  UserApprovedShelter = 'User Approved Shelter',
+  UserRejectedShelter = 'User Rejected Shelter',
   Approved = 'Approved',
-  Denied = 'Denied'
+  Rejected = 'Rejected'
+}
+
+export interface UpdateApplicationPayload {
+  id: string
+  status: Status
 }
 
 export interface ApplicationPayload {
@@ -19,7 +28,6 @@ export interface ApplicationPayload {
   microchipID: string
   residenceType: ResidenceType
   hasRentPetPermission: boolean
-  isWillingHomeInspection: boolean
   hasChildren: boolean
   childrenAges: string
   hasOtherPets: boolean
@@ -53,7 +61,8 @@ export interface ApplictionResponseForShelter {
 export interface ApplicationResponse {
   id: string
   status: Status
-  submissionDate: Date
+  submissionDate: string
+  microchipID: string
   petImage: string
   petName: string
   shelterName: string
@@ -76,7 +85,6 @@ const ApplicationSchema = new Schema<ApplicationDocument>(
     applicantEmail: { type: String, required: true },
     residenceType: { type: String, enum: ResidenceType, required: true },
     hasRentPetPermission: { type: Boolean },
-    isWillingHomeInspection: { type: Boolean, required: true },
     hasChildren: { type: Boolean, required: true },
     childrenAges: { type: String },
     hasOtherPets: { type: Boolean, required: true },
