@@ -1,5 +1,6 @@
 import Joi from 'joi'
 import { ActivityNeeds, Category, Gender, LevelOfGrooming } from '../models/Pet'
+import { ResidenceType, Status } from '../models/Application'
 
 const nameSchema = Joi.string().min(3).max(32)
 const emailSchema = Joi.string().email()
@@ -14,6 +15,9 @@ const petActivityNeedsSchema = Joi.string().valid(
 const petLevelOfGroomingSchema = Joi.string().valid(
   ...Object.values(LevelOfGrooming)
 )
+const objectIDSchema = Joi.string().length(24).hex()
+const residenceTypeSchema = Joi.string().valid(...Object.values(ResidenceType))
+const statusSchema = Joi.string().valid(...Object.values(Status))
 
 export const signUpValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
@@ -84,6 +88,11 @@ export const addPetValidation = (data: any): Joi.ValidationResult =>
     shelterID: Joi.string().optional()
   }).validate(data)
 
+export const getPetValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    id: Joi.string().length(10).required()
+  }).validate(data)
+
 export const getAllPetsValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
     page: Joi.number().integer().min(1).default(1),
@@ -94,4 +103,50 @@ export const getAllPetsValidation = (data: any): Joi.ValidationResult =>
     breedFilter: Joi.string().allow('').optional(),
     genderFilter: petGenderSchema.allow('').optional(),
     ageFilter: Joi.string().allow('').optional()
+  }).validate(data)
+
+export const applyForPetValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    shelterID: objectIDSchema.required(),
+    microchipID: Joi.string().length(10).required(),
+    residenceType: residenceTypeSchema.required(),
+    hasRentPetPermission: Joi.boolean().when('residenceType', {
+      is: ResidenceType.Rent,
+      then: Joi.required(),
+      otherwise: Joi.forbidden()
+    }),
+    hasChildren: Joi.boolean().required(),
+    childrenAges: Joi.string().when('hasChildren', {
+      is: true,
+      then: Joi.required(),
+      otherwise: Joi.forbidden()
+    }),
+    hasOtherPets: Joi.boolean().required(),
+    otherPetsInfo: Joi.string().when('hasOtherPets', {
+      is: true,
+      then: Joi.required(),
+      otherwise: Joi.forbidden()
+    }),
+    petAloneTime: Joi.number().integer().min(0).max(24),
+    hasPlayTimeParks: Joi.boolean().required(),
+    petActivities: Joi.string().required(),
+    handlePetIssues: Joi.string().required(),
+    moveWithPet: Joi.string().required(),
+    canAffordPetsNeeds: Joi.boolean().required(),
+    canAffordPetsMediacal: Joi.boolean().required(),
+    petTravelPlans: Joi.string().required(),
+    petOutlivePlans: Joi.string().required()
+  }).validate(data)
+
+export const getApplicationValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    id: objectIDSchema.required()
+  }).validate(data)
+
+export const updateApplicationStatusValidation = (
+  data: any
+): Joi.ValidationResult =>
+  Joi.object({
+    id: objectIDSchema.required(),
+    status: statusSchema.required()
   }).validate(data)

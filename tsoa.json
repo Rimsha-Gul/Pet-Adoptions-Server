@@ -22,6 +22,10 @@
       {
         "name": "Pet",
         "description": "Operations about pet"
+      },
+      {
+        "name": "Application",
+        "description": "Operations about pet adoption application"
       }
     ],
     "yaml": true,

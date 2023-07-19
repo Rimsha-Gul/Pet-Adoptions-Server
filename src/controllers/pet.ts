@@ -26,6 +26,7 @@ import { petResponseExample, petsResponseExample } from '../examples/pet'
 import { User } from '../models/User'
 import { getImageURL } from '../utils/getImageURL'
 import { calculateAgeFromBirthdate } from '../utils/calculateAgeFromBirthdate'
+import Application from '../models/Application'
 
 @Route('pet')
 @Tags('Pet')
@@ -88,12 +89,25 @@ export class PetController {
   }
 
   /**
+   * @summary Returns details of a pet given its id
+   *
+   */
+  @Example<AddPetResponse>(petResponseExample)
+  @Security('bearerAuth')
+  @Get('/')
+  public async getPetDetails(
+    @Request() req: ExpressRequest
+  ): Promise<AddPetResponse> {
+    return getPetDetails(req)
+  }
+
+  /**
    * @summary Returns all pets
    *
    */
   @Example<AllPetsResponse>(petsResponseExample)
   @Security('bearerAuth')
-  @Get('/')
+  @Get('/all')
   public async getAllPets(
     @Query('page') page: number,
     @Query('limit') limit: number,
@@ -210,10 +224,38 @@ const addPet = async (
   }
 }
 
+const getPetDetails = async (req: UserRequest): Promise<AddPetResponse> => {
+  const petID = req.query.id
+  const pet = await Pet.findOne({ microchipID: petID })
+  if (!pet) throw { code: 404, message: 'Pet not found' }
+
+  const { birthDate, images, ...petWithoutImages } = pet.toObject()
+  const imageUrls = await Promise.all(images.map((image) => getImageURL(image)))
+
+  const petApplication = await Application.findOne({
+    applicantEmail: req.user?.email,
+    microchipID: pet.microchipID
+  })
+  const petHasAdoptionRequest = !!petApplication
+
+  // If an application exists, include the application ID
+  const applicationID = petApplication ? petApplication._id : null
+  console.log(pet)
+  return {
+    pet: {
+      ...petWithoutImages,
+      birthDate: birthDate.toISOString().split('T')[0],
+      images: imageUrls,
+      hasAdoptionRequest: petHasAdoptionRequest,
+      applicationID: applicationID
+    }
+  }
+}
+
 const getAllPets = async (
   page: number,
   limit: number,
-  _req: ExpressRequest,
+  req: UserRequest,
   searchQuery?: string,
   filterOption?: string,
   colorFilter?: string,
@@ -331,10 +373,22 @@ const getAllPets = async (
         const imageUrls = await Promise.all(
           images.map((image) => getImageURL(image))
         )
+
+        const petApplication = await Application.findOne({
+          applicantEmail: req.user?.email,
+          microchipID: pet.microchipID
+        })
+        const petHasAdoptionRequest = !!petApplication
+
+        // If an application exists, include the application ID
+        const applicationID = petApplication ? petApplication._id : null
+
         return {
           ...petWithoutImages,
           birthDate: birthDate.toISOString().split('T')[0],
-          images: imageUrls
+          images: imageUrls,
+          hasAdoptionRequest: petHasAdoptionRequest,
+          applicationID: applicationID
         }
       })
     )

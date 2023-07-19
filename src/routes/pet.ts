@@ -5,7 +5,11 @@ import { isShelter } from '../middleware/isShelter'
 import { PetRequest } from '../types/PetRequest'
 import upload from '../middleware/uploadFiles'
 import { uploadFiles } from '../utils/uploadFiles'
-import { addPetValidation, getAllPetsValidation } from '../utils/validation'
+import {
+  addPetValidation,
+  getAllPetsValidation,
+  getPetValidation
+} from '../utils/validation'
 
 const petRouter = express.Router()
 const petController = new PetController()
@@ -16,6 +20,13 @@ petRouter.post(
   isShelter,
   upload.array('images', 10),
   async (req, res) => {
+    if ((req as PetRequest).files) {
+      if (((req as PetRequest).files.length as number) > 10) {
+        return res.status(400).send('You can add a maximum of 10 images')
+      }
+    } else {
+      return res.status(400).send('Images are required')
+    }
     const { error } = addPetValidation(req.body)
     if (error) return res.status(400).send(error.details[0].message)
     try {
@@ -75,9 +86,24 @@ petRouter.post(
 )
 
 petRouter.get('/', authenticateAccessToken, async (req, res) => {
+  const { error } = getPetValidation(req.query)
+  if (error) {
+    return res.status(400).send(error.details[0].message)
+  }
+  try {
+    const response = await petController.getPetDetails(req)
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
+  }
+})
+
+petRouter.get('/all', authenticateAccessToken, async (req, res) => {
   try {
     const { error } = getAllPetsValidation(req.query)
-    if (error) return res.status(400).send(error.details[0].message)
+    if (error) {
+      return res.status(400).send(error.details[0].message)
+    }
     const {
       page = '1',
       limit = '3',
