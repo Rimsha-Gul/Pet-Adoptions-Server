@@ -2,7 +2,8 @@ import express from 'express'
 import { ApplicationController } from '../controllers/application'
 import {
   applyForPetValidation,
-  getApplicationValidation
+  getApplicationValidation,
+  scheduleHomeVisitValidation
 } from '../utils/validation'
 import { authenticateAccessToken } from '../middleware/authenticateToken'
 
@@ -37,6 +38,21 @@ applicationRouter.get(
   async (req, res) => {
     try {
       const response = await controller.getApplications(req)
+      return res.send(response)
+    } catch (err: any) {
+      return res.status(err.code).send(err.message)
+    }
+  }
+)
+
+applicationRouter.post(
+  '/scheduleHomeVisit',
+  authenticateAccessToken,
+  async (req, res) => {
+    const { error } = scheduleHomeVisitValidation(req.body)
+    if (error) return res.status(400).send(error.details[0].message)
+    try {
+      const response = await controller.scheduleHomeVisit(req.body)
       return res.send(response)
     } catch (err: any) {
       return res.status(err.code).send(err.message)

@@ -25,3 +25,8 @@ export const updateApplicationExample = {
   id: '6475e9630044288a2b4880b5',
   status: Status.UnderReview
 }
+
+export const scheduleHomeVisitPayloadExample = {
+  id: '6475e9630044288a2b4880b5',
+  visitDate: '2020-01-01T12:00:00'
+}

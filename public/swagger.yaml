@@ -308,7 +308,7 @@ components:
         Status:
             enum:
                 - 'Under Review'
-                - 'Approved For Home Visit'
+                - 'Home Visit Requested'
                 - 'Home Visit Scheduled'
                 - 'Home Approved'
                 - 'Home Rejected'
@@ -406,6 +406,17 @@ components:
                 - canAffordPetsMediacal
                 - petTravelPlans
                 - petOutlivePlans
+            type: object
+            additionalProperties: false
+        ScheduleHomeVisitPayload:
+            properties:
+                id:
+                    type: string
+                visitDate:
+                    type: string
+            required:
+                - id
+                - visitDate
             type: object
             additionalProperties: false
         ApplictionResponseShelter:
@@ -1099,6 +1110,38 @@ paths:
                 -
                     bearerAuth: []
             parameters: []
+    /application/scheduleHomeVisit:
+        post:
+            operationId: ScheduleHomeVisit
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
+                            examples:
+                                'Example 1':
+                                    value: {id: 6475e9630044288a2b4880b5, visitDate: '2020-01-01T12:00:00'}
+            summary: 'Accepts application id and date for home visit and sends email t applicant and shelter'
+            tags:
+                - Application
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ScheduleHomeVisitPayload'
     /shelter/application:
         get:
             operationId: GetApplicationDetails

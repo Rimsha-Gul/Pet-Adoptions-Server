@@ -1,14 +1,20 @@
 import { Pet } from '../models/Pet'
-import { applicationExample } from '../examples/application'
+import {
+  applicationExample,
+  scheduleHomeVisitPayloadExample
+} from '../examples/application'
 import Application, {
   ApplicationPayload,
   ApplicationResponse,
+  ScheduleHomeVisitPayload,
   Status
 } from '../models/Application'
 import { UserRequest } from '../types/Request'
 import { Body, Example, Get, Post, Request, Route, Security, Tags } from 'tsoa'
 import { Role, User } from '../models/User'
 import { getImageURL } from '../utils/getImageURL'
+import { getHomeVisitScheduledEmail } from '../data/emailMessages'
+import { sendEmail } from '../middleware/sendEmail'
 
 @Route('application')
 @Tags('Application')
@@ -49,6 +55,17 @@ export class ApplicationController {
     @Request() req: UserRequest
   ): Promise<ApplicationResponse[]> {
     return getApplications(req)
+  }
+
+  /**
+   * @summary Accepts application id and date for home visit and sends email t applicant and shelter
+   *
+   */
+  @Example<ScheduleHomeVisitPayload>(scheduleHomeVisitPayloadExample)
+  @Security('bearerAuth')
+  @Post('/scheduleHomeVisit')
+  public async scheduleHomeVisit(@Body() body: ScheduleHomeVisitPayload) {
+    return scheduleHomeVisit(body)
   }
 }
 
@@ -177,6 +194,9 @@ const getApplications = async (
 
   // Create a new array to hold the response data
   const applicationsResponse: ApplicationResponse[] = []
+  console.log(applications)
+
+  if (!applications) return applicationsResponse
 
   // Iterate over applications to fetch corresponding Pet and User data
   for (const application of applications) {
@@ -207,4 +227,37 @@ const getApplications = async (
     applicationsResponse.push(applicationResponse)
   }
   return applicationsResponse
+}
+
+const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
+  const { id, visitDate } = body
+  const application = await Application.findById(id)
+  if (!application) throw { code: 404, message: 'Application not found' }
+
+  // Convert visitDate to Date object and adjust timezone
+  const visitDateObj = new Date(visitDate)
+  visitDateObj.setMinutes(
+    visitDateObj.getMinutes() - visitDateObj.getTimezoneOffset()
+  )
+
+  application.homeVisitDate = visitDateObj
+
+  const { subject, message } = getHomeVisitScheduledEmail(
+    application._id.toString(),
+    visitDate
+  )
+
+  const shelter = await User.findOne({
+    role: Role.Shelter,
+    _id: application.shelterID
+  })
+  if (!shelter) throw { code: 404, message: 'Shelter not found' }
+
+  await sendEmail(application.applicantEmail, subject, message)
+  await sendEmail(shelter.email, subject, message)
+
+  application.status = Status.HomeVisitScheduled
+  await application.save()
+
+  return { code: 200, message: 'Home Visit has been scheduled' }
 }

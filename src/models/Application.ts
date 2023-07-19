@@ -7,7 +7,7 @@ export enum ResidenceType {
 
 export enum Status {
   UnderReview = 'Under Review',
-  ApprovedForHomeVisit = 'Approved For Home Visit',
+  HomeVisitRequested = 'Home Visit Requested',
   HomeVisitScheduled = 'Home Visit Scheduled',
   HomeApproved = 'Home Approved',
   HomeRejected = 'Home Rejected',
@@ -43,6 +43,11 @@ export interface ApplicationPayload {
   petOutlivePlans: string
 }
 
+export interface ScheduleHomeVisitPayload {
+  id: string
+  visitDate: string
+}
+
 export interface ApplictionResponseShelter
   extends Omit<ApplicationPayload, 'shelterID'> {
   id: string
@@ -76,6 +81,7 @@ export interface ApplicationDocument
   applicantEmail: string
   status: Status
   createdAt: Date
+  homeVisitDate: Date
 }
 
 const ApplicationSchema = new Schema<ApplicationDocument>(
@@ -98,7 +104,8 @@ const ApplicationSchema = new Schema<ApplicationDocument>(
     canAffordPetsMediacal: { type: Boolean, required: true },
     petTravelPlans: { type: String, required: true },
     petOutlivePlans: { type: String, required: true },
-    status: { type: String, enum: Status }
+    status: { type: String, enum: Status },
+    homeVisitDate: { type: Date }
   },
   { timestamps: true }
 )

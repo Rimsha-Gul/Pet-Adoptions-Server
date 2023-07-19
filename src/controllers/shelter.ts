@@ -1,5 +1,6 @@
 import Application, {
   ApplictionResponseForShelter,
+  Status,
   UpdateApplicationPayload
 } from '../models/Application'
 import { UserRequest } from '../types/Request'
@@ -8,6 +9,8 @@ import { Pet } from '../models/Pet'
 import { User } from '../models/User'
 import { getImageURL } from '../utils/getImageURL'
 import { updateApplicationExample } from '../examples/application'
+import { getHomeVisitRequestEmail } from '../data/emailMessages'
+import { sendEmail } from '../middleware/sendEmail'
 
 @Route('shelter')
 @Tags('Shelter')
@@ -70,6 +73,15 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
 
   application.status = status
   await application.save()
+
+  // check if the new status is 'Home Visit Requested' and trigger the email
+  if (status === Status.HomeVisitRequested) {
+    const { subject, message } = getHomeVisitRequestEmail(
+      application._id.toString()
+    )
+    await sendEmail(application.applicantEmail, subject, message)
+    return { code: 200, message: 'Request sent successfully' }
+  }
 
   return { code: 200, message: 'Application status updated successfully' }
 }
