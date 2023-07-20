@@ -336,6 +336,10 @@ components:
                     type: string
                 applicantName:
                     type: string
+                homeVisitDate:
+                    type: string
+                shelterVisitDate:
+                    type: string
             required:
                 - id
                 - status
@@ -1129,7 +1133,39 @@ paths:
                             examples:
                                 'Example 1':
                                     value: {id: 6475e9630044288a2b4880b5, visitDate: '2020-01-01T12:00:00'}
-            summary: 'Accepts application id and date for home visit and sends email t applicant and shelter'
+            summary: 'Accepts application id and date for home visit and sends email to applicant and shelter'
+            tags:
+                - Application
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ScheduleHomeVisitPayload'
+    /application/scheduleShelterVisit:
+        post:
+            operationId: ScheduleShelterVisit
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
+                            examples:
+                                'Example 1':
+                                    value: {id: 6475e9630044288a2b4880b5, visitDate: '2020-01-01T12:00:00'}
+            summary: 'Accepts application id and date for shelter visit and sends email to applicant and shelter'
             tags:
                 - Application
             security:

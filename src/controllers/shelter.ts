@@ -9,7 +9,11 @@ import { Pet } from '../models/Pet'
 import { User } from '../models/User'
 import { getImageURL } from '../utils/getImageURL'
 import { updateApplicationExample } from '../examples/application'
-import { getHomeVisitRequestEmail } from '../data/emailMessages'
+import {
+  getHomeApprovalEmail,
+  getHomeRejectionEmail,
+  getHomeVisitRequestEmail
+} from '../data/emailMessages'
 import { sendEmail } from '../middleware/sendEmail'
 
 @Route('shelter')
@@ -81,6 +85,22 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
     )
     await sendEmail(application.applicantEmail, subject, message)
     return { code: 200, message: 'Request sent successfully' }
+  }
+
+  if (status === Status.HomeApproved) {
+    const { subject, message } = getHomeApprovalEmail(
+      application._id.toString(),
+      application.homeVisitDate
+    )
+    await sendEmail(application.applicantEmail, subject, message)
+  }
+
+  if (status === Status.HomeRejected) {
+    const { subject, message } = getHomeRejectionEmail(
+      application._id.toString(),
+      application.homeVisitDate
+    )
+    await sendEmail(application.applicantEmail, subject, message)
   }
 
   return { code: 200, message: 'Application status updated successfully' }

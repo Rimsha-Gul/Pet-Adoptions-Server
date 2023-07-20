@@ -155,7 +155,7 @@ export const updateApplicationStatusValidation = (
     status: statusSchema.required()
   }).validate(data)
 
-export const scheduleHomeVisitValidation = (data: any): Joi.ValidationResult =>
+export const scheduleVisitValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
     id: objectIDSchema.required(),
     visitDate: Joi.date().greater(today).less(weekFromNow).required()

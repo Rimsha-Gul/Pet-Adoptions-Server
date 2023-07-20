@@ -13,7 +13,12 @@ import { UserRequest } from '../types/Request'
 import { Body, Example, Get, Post, Request, Route, Security, Tags } from 'tsoa'
 import { Role, User } from '../models/User'
 import { getImageURL } from '../utils/getImageURL'
-import { getHomeVisitScheduledEmail } from '../data/emailMessages'
+import {
+  getApplicantHomeVisitScheduledEmail,
+  getApplicantShelterVisitScheduledEmail,
+  getShelterHomeVisitScheduledEmail,
+  getShelterShelterVisitScheduledEmail
+} from '../data/emailMessages'
 import { sendEmail } from '../middleware/sendEmail'
 
 @Route('application')
@@ -58,7 +63,7 @@ export class ApplicationController {
   }
 
   /**
-   * @summary Accepts application id and date for home visit and sends email t applicant and shelter
+   * @summary Accepts application id and date for home visit and sends email to applicant and shelter
    *
    */
   @Example<ScheduleHomeVisitPayload>(scheduleHomeVisitPayloadExample)
@@ -66,6 +71,17 @@ export class ApplicationController {
   @Post('/scheduleHomeVisit')
   public async scheduleHomeVisit(@Body() body: ScheduleHomeVisitPayload) {
     return scheduleHomeVisit(body)
+  }
+
+  /**
+   * @summary Accepts application id and date for shelter visit and sends email to applicant and shelter
+   *
+   */
+  @Example<ScheduleHomeVisitPayload>(scheduleHomeVisitPayloadExample)
+  @Security('bearerAuth')
+  @Post('/scheduleShelterVisit')
+  public async scheduleShelterVisit(@Body() body: ScheduleHomeVisitPayload) {
+    return scheduleShelterVisit(body)
   }
 }
 
@@ -171,9 +187,11 @@ const getApplicationDetails = async (
     microchipID: application.microchipID,
     petImage: getImageURL(pet.images[0]),
     petName: pet.name,
-    shelterName: shelter.name
+    shelterName: shelter.name,
+    homeVisitDate: application.homeVisitDate,
+    shelterVisitDate: application.shelterVisitDate
   }
-  console.log(applicationResponse)
+  console.log('applicationResponse', applicationResponse)
   return applicationResponse
 }
 
@@ -220,7 +238,9 @@ const getApplications = async (
       petImage: getImageURL(pet.images[0]),
       petName: pet.name,
       shelterName: shelter.name,
-      applicantName: applicant.name
+      applicantName: applicant.name,
+      homeVisitDate: application.homeVisitDate,
+      shelterVisitDate: application.shelterVisitDate
     }
 
     // Add the response object to the response data array
@@ -235,17 +255,12 @@ const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
   if (!application) throw { code: 404, message: 'Application not found' }
 
   // Convert visitDate to Date object and adjust timezone
-  const visitDateObj = new Date(visitDate)
-  visitDateObj.setMinutes(
-    visitDateObj.getMinutes() - visitDateObj.getTimezoneOffset()
-  )
+  // const visitDateObj = new Date(visitDate)
+  // visitDateObj.setMinutes(
+  //   visitDateObj.getMinutes() - visitDateObj.getTimezoneOffset()
+  // )
 
-  application.homeVisitDate = visitDateObj
-
-  const { subject, message } = getHomeVisitScheduledEmail(
-    application._id.toString(),
-    visitDate
-  )
+  application.homeVisitDate = visitDate
 
   const shelter = await User.findOne({
     role: Role.Shelter,
@@ -253,11 +268,63 @@ const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
   })
   if (!shelter) throw { code: 404, message: 'Shelter not found' }
 
-  await sendEmail(application.applicantEmail, subject, message)
-  await sendEmail(shelter.email, subject, message)
+  // Sending email to the applicant
+  {
+    const { subject, message } = getApplicantHomeVisitScheduledEmail(
+      application._id.toString(),
+      visitDate
+    )
+    await sendEmail(application.applicantEmail, subject, message)
+  }
+
+  // Sending email to the shelter
+  {
+    const { subject, message } = getShelterHomeVisitScheduledEmail(
+      application._id.toString(),
+      visitDate
+    )
+    await sendEmail(shelter.email, subject, message)
+  }
 
   application.status = Status.HomeVisitScheduled
   await application.save()
 
   return { code: 200, message: 'Home Visit has been scheduled' }
+}
+
+const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
+  const { id, visitDate } = body
+  const application = await Application.findById(id)
+  if (!application) throw { code: 404, message: 'Application not found' }
+
+  application.shelterVisitDate = visitDate
+
+  const shelter = await User.findOne({
+    role: Role.Shelter,
+    _id: application.shelterID
+  })
+  if (!shelter) throw { code: 404, message: 'Shelter not found' }
+
+  // Sending email to the applicant
+  {
+    const { subject, message } = getApplicantShelterVisitScheduledEmail(
+      application._id.toString(),
+      visitDate
+    )
+    await sendEmail(application.applicantEmail, subject, message)
+  }
+
+  // Sending email to the shelter
+  {
+    const { subject, message } = getShelterShelterVisitScheduledEmail(
+      application._id.toString(),
+      visitDate
+    )
+    await sendEmail(shelter.email, subject, message)
+  }
+
+  application.status = Status.UserVisitScheduled
+  await application.save()
+
+  return { code: 200, message: 'Shelter Visit has been scheduled' }
 }
