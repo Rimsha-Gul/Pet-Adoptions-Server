@@ -3,7 +3,8 @@ import { ApplicationController } from '../controllers/application'
 import {
   applyForPetValidation,
   getApplicationValidation,
-  scheduleVisitValidation
+  scheduleVisitValidation,
+  updateApplicationStatusValidation
 } from '../utils/validation'
 import { authenticateAccessToken } from '../middleware/authenticateToken'
 import { isUser } from '../middleware/isUser'
@@ -77,6 +78,21 @@ applicationRouter.post(
     if (error) return res.status(400).send(error.details[0].message)
     try {
       const response = await controller.scheduleShelterVisit(req.body)
+      return res.send(response)
+    } catch (err: any) {
+      return res.status(err.code).send(err.message)
+    }
+  }
+)
+
+applicationRouter.put(
+  '/updateStatus',
+  authenticateAccessToken,
+  async (req, res) => {
+    const { error } = updateApplicationStatusValidation(req.body)
+    if (error) return res.status(400).send(error.details[0].message)
+    try {
+      const response = await controller.updateApplicationStatus(req.body, req)
       return res.send(response)
     } catch (err: any) {
       return res.status(err.code).send(err.message)

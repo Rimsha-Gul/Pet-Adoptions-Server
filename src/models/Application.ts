@@ -74,6 +74,8 @@ export interface ApplicationResponse {
   applicantName?: string
   homeVisitDate?: string
   shelterVisitDate?: string
+  homeVisitEmailSentDate?: string
+  shelterVisitEmailSentDate?: string
 }
 
 export interface ApplicationDocument
@@ -85,6 +87,8 @@ export interface ApplicationDocument
   createdAt: Date
   homeVisitDate: string
   shelterVisitDate: string
+  homeVisitEmailSentDate: string
+  shelterVisitEmailSentDate: string
 }
 
 const ApplicationSchema = new Schema<ApplicationDocument>(
@@ -109,7 +113,9 @@ const ApplicationSchema = new Schema<ApplicationDocument>(
     petOutlivePlans: { type: String, required: true },
     status: { type: String, enum: Status },
     homeVisitDate: { type: String },
-    shelterVisitDate: { type: String }
+    shelterVisitDate: { type: String },
+    homeVisitEmailSentDate: { type: String },
+    shelterVisitEmailSentDate: { type: String }
   },
   { timestamps: true }
 )

@@ -340,6 +340,10 @@ components:
                     type: string
                 shelterVisitDate:
                     type: string
+                homeVisitEmailSentDate:
+                    type: string
+                shelterVisitEmailSentDate:
+                    type: string
             required:
                 - id
                 - status
@@ -421,6 +425,17 @@ components:
             required:
                 - id
                 - visitDate
+            type: object
+            additionalProperties: false
+        UpdateApplicationPayload:
+            properties:
+                id:
+                    type: string
+                status:
+                    $ref: '#/components/schemas/Status'
+            required:
+                - id
+                - status
             type: object
             additionalProperties: false
         ApplictionResponseShelter:
@@ -505,17 +520,6 @@ components:
                     $ref: '#/components/schemas/ApplictionResponseShelter'
             required:
                 - application
-            type: object
-            additionalProperties: false
-        UpdateApplicationPayload:
-            properties:
-                id:
-                    type: string
-                status:
-                    $ref: '#/components/schemas/Status'
-            required:
-                - id
-                - status
             type: object
             additionalProperties: false
     securitySchemes:
@@ -1178,24 +1182,7 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/ScheduleHomeVisitPayload'
-    /shelter/application:
-        get:
-            operationId: GetApplicationDetails
-            responses:
-                '200':
-                    description: Ok
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/ApplictionResponseForShelter'
-            summary: 'Returns an application''s details given id'
-            tags:
-                - Shelter
-            security:
-                -
-                    bearerAuth: []
-            parameters: []
-    /shelter/updateApplicationStatus:
+    /application/updateStatus:
         put:
             operationId: UpdateApplicationStatus
             responses:
@@ -1216,7 +1203,7 @@ paths:
                                     value: {id: 6475e9630044288a2b4880b5, status: 'Under Review'}
             summary: 'Updates an application''s status'
             tags:
-                - Shelter
+                - Application
             security:
                 -
                     bearerAuth: []
@@ -1227,6 +1214,23 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/UpdateApplicationPayload'
+    /shelter/application:
+        get:
+            operationId: GetApplicationDetails
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ApplictionResponseForShelter'
+            summary: 'Returns an application''s details given id'
+            tags:
+                - Shelter
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
 servers:
     -
         url: /
