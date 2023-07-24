@@ -10,7 +10,20 @@ export const getVerificationCodeEmail = (verificationCode: string) => {
 
 export const getHomeVisitRequestEmail = (applicationID: string) => {
   const subject = 'Purrfect Adoptions - Home Visit Request'
-  const message = `<p>Your application for adoption has reached the stage where a home visit is required. Please click <a href="http://127.0.0.1:5173/${applicationID}/scheduleHomeVisit">here</a> to schedule a home visit.</p><p>Thank you for your cooperation!</p>`
+  const nextWeekDate = new Date(
+    Date.now() + 7 * 24 * 60 * 60 * 1000
+  ).toLocaleDateString()
+
+  const message = `
+    <p>Dear Applicant,</p>
+    <p>Your application for adoption, ID: <strong>${applicationID}</strong>, has reached the stage where a home visit is required.</p>
+    <p>As part of our process, we ask that you schedule this visit within the next week, by <strong>${nextWeekDate}</strong>. This visit is an important step in ensuring that the pet will be comfortable and secure in their potential new home.</p>
+    <p>Please click <a href="http://127.0.0.1:5173/${applicationID}/scheduleHomeVisit">here</a> to schedule your home visit.</p>
+    <p>If you have any questions or require any assistance, please feel free to respond to this email.</p>
+    <p>Thank you for your cooperation and your interest in adopting.</p>
+    <p>Best,</p>
+    <p>The Purrfect Adoptions Team</p>
+  `
 
   return {
     subject,
@@ -218,6 +231,25 @@ export const getUserRejectionToShelterEmail = (
     <p>The decision was confirmed on: <strong>${formattedDate}</strong></p>
     <p>While this is an unfortunate outcome, we respect the applicant's decision. We believe it's vital that our pets find the most suitable homes where they will thrive.</p>
     <p>We appreciate your understanding and your commitment to our cause. We trust that the right home will soon be found for our pet.</p>
+  `
+
+  return {
+    subject,
+    message
+  }
+}
+
+export const getShelterInvitationEmail = (invitationLink: string) => {
+  const subject = 'Purrfect Adoptions - Invitation to Join Our Network'
+
+  const message = `
+    <p>Greetings,</p>
+    <p>We are thrilled to extend an invitation to join our growing network of dedicated shelters on Purrfect Adoptions.</p>
+    <p>We have built a platform that brings together shelters and potential pet adopters, with a mission to find loving and suitable homes for as many pets as possible.</p>
+    <p>To accept this invitation and begin the registration process, please click on the following link: <a href="http://127.0.0.1:5173/shelter/invitation/${invitationLink}/">here</a>
+    <p>If you have any questions or need further assistance, please do not hesitate to reply to this email. We look forward to partnering with you in our endeavor to make a positive impact on the lives of pets and adopters alike.</p>
+    <p>Thank you,</p>
+    <p>The Purrfect Adoptions Team</p>
   `
 
   return {

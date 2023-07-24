@@ -2,10 +2,15 @@ import Application, {
   ApplictionResponseForShelter
 } from '../models/Application'
 import { UserRequest } from '../types/Request'
-import { Get, Request, Route, Security, Tags } from 'tsoa'
+import { Body, Example, Get, Post, Request, Route, Security, Tags } from 'tsoa'
 import { Pet } from '../models/Pet'
-import { User } from '../models/User'
+import { EmailPayload, User } from '../models/User'
 import { getImageURL } from '../utils/getImageURL'
+import { emailPayloadExample } from '../examples/auth'
+import { generateInvitationToken } from '../utils/generateInvitationToken'
+import Invitation, { InvitationStatus } from '../models/Invitation'
+import { getShelterInvitationEmail } from '../data/emailMessages'
+import { sendEmail } from '../middleware/sendEmail'
 
 @Route('shelter')
 @Tags('Shelter')
@@ -20,6 +25,20 @@ export class ShelterController {
     @Request() req: UserRequest
   ): Promise<ApplictionResponseForShelter> {
     return getApplicationDetails(req)
+  }
+
+  /**
+   * @summary Returns an application's details given id
+   *
+   */
+  @Security('bearerAuth')
+  @Post('/invite')
+  @Example<EmailPayload>(emailPayloadExample)
+  public async inviteShelter(
+    @Body() body: EmailPayload,
+    @Request() req: UserRequest
+  ) {
+    return inviteShelter(body, req)
   }
 }
 
@@ -48,4 +67,26 @@ const getApplicationDetails = async (
     }
   }
   return applicationResponse
+}
+
+const inviteShelter = async (body: EmailPayload, req: UserRequest) => {
+  const { email } = body
+  const existingShelter = await User.findOne({ email })
+  if (existingShelter) throw { code: 409, message: 'Shelter already  exists' }
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const invitationToken = generateInvitationToken(email, req.user!.role)
+
+  const { subject, message } = getShelterInvitationEmail(invitationToken)
+
+  const invitation = new Invitation({
+    shelterEmail: email,
+    invitationToken: invitationToken,
+    status: InvitationStatus.Pending
+  })
+  await sendEmail(email, subject, message)
+
+  await invitation.save()
+
+  return { code: 200, message: 'Invitation sent successfully' }
 }

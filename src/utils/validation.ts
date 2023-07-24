@@ -58,7 +58,7 @@ export const updateProfileValidation = (data: any): Joi.ValidationResult =>
     removeProfilePhoto: Joi.boolean()
   }).validate(data)
 
-export const changeEmailValidation = (data: any): Joi.ValidationResult =>
+export const emailValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
     email: emailSchema.required()
   }).validate(data)

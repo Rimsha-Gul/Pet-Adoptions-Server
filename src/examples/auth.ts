@@ -18,7 +18,7 @@ export const tokenResponseExample = {
   }
 }
 
-export const changeEmailPayloadExample = {
+export const emailPayloadExample = {
   email: 'johndoe@example.com'
 }
 

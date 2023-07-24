@@ -7,7 +7,7 @@ import {
 import {
   signUpValidation,
   loginValidation,
-  changeEmailValidation,
+  emailValidation,
   checkPasswordValidation,
   updateProfileValidation,
   sendVerificationCodeValidation,
@@ -127,7 +127,7 @@ authRouter.put(
 )
 
 authRouter.get('/checkEmail', authenticateAccessToken, async (req, res) => {
-  const { error } = changeEmailValidation(req.query)
+  const { error } = emailValidation(req.query)
   if (error) return res.status(400).send(error.details[0].message)
   try {
     const response = await controller.checkEmail(req)
@@ -138,7 +138,7 @@ authRouter.get('/checkEmail', authenticateAccessToken, async (req, res) => {
 })
 
 authRouter.put('/changeEmail', authenticateAccessToken, async (req, res) => {
-  const { error } = changeEmailValidation(req.body)
+  const { error } = emailValidation(req.body)
   if (error) return res.status(400).send(error.details[0].message)
   try {
     const response = await controller.changeEmail(req.body, req)
