@@ -169,23 +169,19 @@ const addPet = async (
     }
   }
 
-  // Retrieve the IDs of users with the role "shelter"
-  const shelterUsers = await User.find({ role: 'SHELTER' }, '_id')
-  const shelterUserIds = shelterUsers.map((user) => user._id.toString())
+  const shelter = await User.findById(
+    shelterID ? shelterID : (req.user as RequestUser)._id
+  )
 
-  // Check if the shelterID matches any of the shelter user IDs
-  if (
-    !shelterUserIds.includes(
-      shelterID ? shelterID : (req.user as RequestUser)._id?.toString()
-    )
-  ) {
-    throw { code: 400, message: 'Invalid shelter ID' }
-  }
+  if (!shelter) throw { code: 404, message: 'Shelter not found' }
+  else if (shelter.role !== 'SHELTER')
+    throw { code: 400, message: 'User is not a shelter' }
 
   const petImages: string[] = images
   const parsedBirthDate: Date = new Date(birthDate)
   const pet = new Pet({
     shelterID: shelterID ? shelterID : (req.user as RequestUser)._id,
+    shelterName: shelter.name,
     microchipID: microchipID,
     name: name,
     gender: gender,

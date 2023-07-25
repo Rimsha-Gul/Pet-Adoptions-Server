@@ -53,6 +53,7 @@ export interface PetPayload {
 }
 
 export interface PetsResponse {
+  shelterName: string
   microchipID: string
   name: string
   gender: Gender
@@ -77,6 +78,7 @@ export interface PetsResponse {
   images: string[]
   hasAdoptionRequest: boolean
   applicationID?: string
+  isAdopted: boolean
 }
 
 export interface AddPetResponse {
@@ -100,6 +102,7 @@ export interface PetDocument extends Omit<PetsResponse, 'birthDate'>, Document {
 const PetSchema = new Schema<PetDocument>(
   {
     shelterID: { type: Schema.Types.ObjectId },
+    shelterName: { type: String },
     microchipID: { type: String, required: true },
     name: { type: String, required: true },
     gender: { type: String, enum: Gender, required: true },
@@ -123,7 +126,8 @@ const PetSchema = new Schema<PetDocument>(
     traits: { type: [String], required: true },
     adoptionFee: { type: String, required: true },
     hasAdoptionRequest: { type: Boolean, default: false },
-    applicationID: { type: String }
+    applicationID: { type: String },
+    isAdopted: { type: Boolean }
   },
   { timestamps: true }
 )

@@ -15,7 +15,8 @@ export enum Status {
   UserApprovedShelter = 'User Approved Shelter',
   UserRejectedShelter = 'User Rejected Shelter',
   Approved = 'Approved',
-  Rejected = 'Rejected'
+  Rejected = 'Rejected',
+  Closed = 'Closed'
 }
 
 export interface UpdateApplicationPayload {
@@ -63,7 +64,8 @@ export interface ApplictionResponseForShelter {
   application: ApplictionResponseShelter
 }
 
-export interface ApplicationResponse {
+export interface ApplicationResponse
+  extends Omit<ApplicationPayload, 'shelterID'> {
   id: string
   status: Status
   submissionDate: string
@@ -76,6 +78,10 @@ export interface ApplicationResponse {
   shelterVisitDate?: string
   homeVisitEmailSentDate?: string
   shelterVisitEmailSentDate?: string
+}
+
+export interface ApplictionResponseForUser {
+  application: ApplicationResponse
 }
 
 export interface ApplicationDocument
