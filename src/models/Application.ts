@@ -7,7 +7,7 @@ export enum ResidenceType {
 
 export enum Status {
   UnderReview = 'Under Review',
-  ApprovedForHomeVisit = 'Approved For Home Visit',
+  HomeVisitRequested = 'Home Visit Requested',
   HomeVisitScheduled = 'Home Visit Scheduled',
   HomeApproved = 'Home Approved',
   HomeRejected = 'Home Rejected',
@@ -15,7 +15,8 @@ export enum Status {
   UserApprovedShelter = 'User Approved Shelter',
   UserRejectedShelter = 'User Rejected Shelter',
   Approved = 'Approved',
-  Rejected = 'Rejected'
+  Rejected = 'Rejected',
+  Closed = 'Closed'
 }
 
 export interface UpdateApplicationPayload {
@@ -43,6 +44,11 @@ export interface ApplicationPayload {
   petOutlivePlans: string
 }
 
+export interface ScheduleHomeVisitPayload {
+  id: string
+  visitDate: string
+}
+
 export interface ApplictionResponseShelter
   extends Omit<ApplicationPayload, 'shelterID'> {
   id: string
@@ -58,7 +64,8 @@ export interface ApplictionResponseForShelter {
   application: ApplictionResponseShelter
 }
 
-export interface ApplicationResponse {
+export interface ApplicationResponse
+  extends Omit<ApplicationPayload, 'shelterID'> {
   id: string
   status: Status
   submissionDate: string
@@ -67,6 +74,14 @@ export interface ApplicationResponse {
   petName: string
   shelterName: string
   applicantName?: string
+  homeVisitDate?: string
+  shelterVisitDate?: string
+  homeVisitEmailSentDate?: string
+  shelterVisitEmailSentDate?: string
+}
+
+export interface ApplictionResponseForUser {
+  application: ApplicationResponse
 }
 
 export interface ApplicationDocument
@@ -76,6 +91,10 @@ export interface ApplicationDocument
   applicantEmail: string
   status: Status
   createdAt: Date
+  homeVisitDate: string
+  shelterVisitDate: string
+  homeVisitEmailSentDate: string
+  shelterVisitEmailSentDate: string
 }
 
 const ApplicationSchema = new Schema<ApplicationDocument>(
@@ -98,7 +117,11 @@ const ApplicationSchema = new Schema<ApplicationDocument>(
     canAffordPetsMediacal: { type: Boolean, required: true },
     petTravelPlans: { type: String, required: true },
     petOutlivePlans: { type: String, required: true },
-    status: { type: String, enum: Status }
+    status: { type: String, enum: Status },
+    homeVisitDate: { type: String },
+    shelterVisitDate: { type: String },
+    homeVisitEmailSentDate: { type: String },
+    shelterVisitEmailSentDate: { type: String }
   },
   { timestamps: true }
 )

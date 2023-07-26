@@ -1,13 +1,16 @@
 import Application, {
-  ApplictionResponseForShelter,
-  UpdateApplicationPayload
+  ApplictionResponseForShelter
 } from '../models/Application'
 import { UserRequest } from '../types/Request'
-import { Body, Example, Get, Put, Request, Route, Security, Tags } from 'tsoa'
+import { Body, Example, Get, Post, Request, Route, Security, Tags } from 'tsoa'
 import { Pet } from '../models/Pet'
-import { User } from '../models/User'
+import { EmailPayload, User } from '../models/User'
 import { getImageURL } from '../utils/getImageURL'
-import { updateApplicationExample } from '../examples/application'
+import { emailPayloadExample } from '../examples/auth'
+import { generateInvitationToken } from '../utils/generateInvitationToken'
+import Invitation, { InvitationStatus } from '../models/Invitation'
+import { getShelterInvitationEmail } from '../data/emailMessages'
+import { sendEmail } from '../middleware/sendEmail'
 
 @Route('shelter')
 @Tags('Shelter')
@@ -25,14 +28,17 @@ export class ShelterController {
   }
 
   /**
-   * @summary Updates an application's status
+   * @summary Returns an application's details given id
    *
    */
-  @Example<UpdateApplicationPayload>(updateApplicationExample)
   @Security('bearerAuth')
-  @Put('/updateApplicationStatus')
-  public async updateApplicationStatus(@Body() body: UpdateApplicationPayload) {
-    return updateApplicationStatus(body)
+  @Post('/invite')
+  @Example<EmailPayload>(emailPayloadExample)
+  public async inviteShelter(
+    @Body() body: EmailPayload,
+    @Request() req: UserRequest
+  ) {
+    return inviteShelter(body, req)
   }
 }
 
@@ -63,13 +69,24 @@ const getApplicationDetails = async (
   return applicationResponse
 }
 
-const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
-  const { id, status } = body
-  const application = await Application.findById(id)
-  if (!application) throw { code: 404, message: 'Application not found' }
+const inviteShelter = async (body: EmailPayload, req: UserRequest) => {
+  const { email } = body
+  const existingShelter = await User.findOne({ email })
+  if (existingShelter) throw { code: 409, message: 'Shelter already  exists' }
 
-  application.status = status
-  await application.save()
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const invitationToken = generateInvitationToken(email, req.user!.role)
 
-  return { code: 200, message: 'Application status updated successfully' }
+  const { subject, message } = getShelterInvitationEmail(invitationToken)
+
+  const invitation = new Invitation({
+    shelterEmail: email,
+    invitationToken: invitationToken,
+    status: InvitationStatus.Pending
+  })
+  await sendEmail(email, subject, message)
+
+  await invitation.save()
+
+  return { code: 200, message: 'Invitation sent successfully' }
 }

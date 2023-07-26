@@ -274,9 +274,9 @@ describe('pet', () => {
         .attach('images', tmpFilePath2)
         .attach('images', tmpFilePath3)
 
-        .expect(400)
+        .expect(404)
 
-      expect(response.text).toEqual('Invalid shelter ID')
+      expect(response.text).toEqual('Shelter not found')
       expect(response.body).toEqual({})
     })
 

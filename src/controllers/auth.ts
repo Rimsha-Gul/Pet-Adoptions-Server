@@ -7,7 +7,7 @@ import User, {
   VerificationPayload,
   SendCodePayload,
   ShelterResponse,
-  ChangeEmailPayload,
+  EmailPayload,
   CheckPasswordPayload,
   UpdateProfilePayload
 } from '../models/User'
@@ -34,7 +34,7 @@ import { sendEmail } from '../middleware/sendEmail'
 import { generateVerificationCode } from '../utils/generateVerificationCode'
 import { getVerificationCodeEmail } from '../data/emailMessages'
 import {
-  changeEmailPayloadExample,
+  emailPayloadExample,
   checkPasswordPayloadExample,
   shelterResponseExample,
   signupResponseExample,
@@ -118,7 +118,7 @@ export class AuthController {
   /**
    * @summary Checks if user's new email already has a linked account
    */
-  @Example<ChangeEmailPayload>(changeEmailPayloadExample)
+  @Example<EmailPayload>(emailPayloadExample)
   @Security('bearerAuth')
   @Get('/checkEmail')
   public async checkEmail(@Request() req: UserRequest) {
@@ -128,11 +128,11 @@ export class AuthController {
   /**
    * @summary Changes user's email
    */
-  @Example<ChangeEmailPayload>(changeEmailPayloadExample)
+  @Example<EmailPayload>(emailPayloadExample)
   @Security('bearerAuth')
   @Put('/changeEmail')
   public async changeEmail(
-    @Body() body: ChangeEmailPayload,
+    @Body() body: EmailPayload,
     @Request() req: UserRequest
   ): Promise<TokenResponse> {
     return changeEmail(body, req)
@@ -360,7 +360,7 @@ const updateProfile = async (
 
 const checkEmail = async (req: UserRequest) => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const user = (await User.findOne({ email: req?.user?.email }))!
+  const user = (await User.findOne({ email: req.user?.email }))!
 
   if (!user.isVerified) {
     throw { code: 403, message: 'User not verified' }
@@ -376,7 +376,7 @@ const checkEmail = async (req: UserRequest) => {
 }
 
 const changeEmail = async (
-  body: ChangeEmailPayload,
+  body: EmailPayload,
   req: UserRequest
 ): Promise<TokenResponse> => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

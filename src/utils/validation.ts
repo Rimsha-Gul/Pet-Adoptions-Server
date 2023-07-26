@@ -19,6 +19,10 @@ const objectIDSchema = Joi.string().length(24).hex()
 const residenceTypeSchema = Joi.string().valid(...Object.values(ResidenceType))
 const statusSchema = Joi.string().valid(...Object.values(Status))
 
+const today = new Date()
+const weekFromNow = new Date()
+weekFromNow.setDate(weekFromNow.getDate() + 7)
+
 export const signUpValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
     name: nameSchema.required(),
@@ -54,7 +58,7 @@ export const updateProfileValidation = (data: any): Joi.ValidationResult =>
     removeProfilePhoto: Joi.boolean()
   }).validate(data)
 
-export const changeEmailValidation = (data: any): Joi.ValidationResult =>
+export const emailValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
     email: emailSchema.required()
   }).validate(data)
@@ -149,4 +153,10 @@ export const updateApplicationStatusValidation = (
   Joi.object({
     id: objectIDSchema.required(),
     status: statusSchema.required()
+  }).validate(data)
+
+export const scheduleVisitValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    id: objectIDSchema.required(),
+    visitDate: Joi.date().greater(today).less(weekFromNow).required()
   }).validate(data)

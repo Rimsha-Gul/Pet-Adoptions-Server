@@ -2,6 +2,7 @@ import { ActivityNeeds, Category, Gender, LevelOfGrooming } from '../models/Pet'
 
 export const petResponseExample = {
   pet: {
+    shelterName: 'Purrfect Adoption Center',
     microchipID: 'A123456789',
     name: 'Snowball',
     gender: Gender.Male,
@@ -27,13 +28,15 @@ export const petResponseExample = {
       'https://example.com/images/fluffy1.jpg',
       'https://example.com/images/fluffy2.jpg'
     ],
-    hasAdoptionRequest: false
+    hasAdoptionRequest: false,
+    isAdopted: false
   }
 }
 
 export const petsResponseExample = {
   pets: [
     {
+      shelterName: 'Purrfect Adoption Center',
       microchipID: 'A123456789',
       name: 'Fluffy',
       gender: Gender.Female,
@@ -59,9 +62,11 @@ export const petsResponseExample = {
         'https://example.com/images/fluffy1.jpg',
         'https://example.com/images/fluffy2.jpg'
       ],
-      hasAdoptionRequest: false
+      hasAdoptionRequest: false,
+      isAdopted: true
     },
     {
+      shelterName: 'Furry Adoption Center',
       microchipID: 'B123456789',
       name: 'Buddy',
       gender: Gender.Male,
@@ -87,7 +92,8 @@ export const petsResponseExample = {
         'https://example.com/images/buddy1.jpg',
         'https://example.com/images/buddy2.jpg'
       ],
-      hasAdoptionRequest: false
+      hasAdoptionRequest: false,
+      isAdopted: false
     }
   ],
   totalPages: 5,

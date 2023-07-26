@@ -58,7 +58,7 @@ export interface VerificationResponse extends TokenResponse {
   isVerified: boolean
 }
 
-export interface ChangeEmailPayload {
+export interface EmailPayload {
   email: string
 }
 
