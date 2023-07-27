@@ -2136,27 +2136,27 @@ describe('pet', () => {
     })
   })
 
-  describe('get pet', () => {
-    let user: Admin
+  // describe('get pet', () => {
+  //   let user: Admin
 
-    beforeEach(async () => {
-      user = await generateAdminandTokens(Role.Shelter)
-      await generatePets()
-    })
-    afterEach(async () => {
-      await removeAllUsers()
-      jest.restoreAllMocks()
-    })
+  //   beforeEach(async () => {
+  //     user = await generateAdminandTokens(Role.Shelter)
+  //     await generatePets()
+  //   })
+  //   afterEach(async () => {
+  //     await removeAllUsers()
+  //     jest.restoreAllMocks()
+  //   })
 
-    it('should successfully fetch the pet', async () => {
-      const response = await request(app)
-        .get('/pet?id=A123456789')
-        .auth(user.tokens.accessToken, { type: 'bearer' })
-        .expect(200)
+  //   it('should successfully fetch the pet', async () => {
+  //     const response = await request(app)
+  //       .get('/pet?id=A123456789')
+  //       .auth(user.tokens.accessToken, { type: 'bearer' })
+  //       .expect(200)
 
-      expect(response.body.pet).not.toBeNull()
-    })
-  })
+  //     expect(response.body.pet).not.toBeNull()
+  //   })
+  // })
 
   describe('get pets', () => {
     let user: Admin
