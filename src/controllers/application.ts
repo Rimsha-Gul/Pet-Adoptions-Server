@@ -5,6 +5,7 @@ import {
   updateApplicationExample
 } from '../examples/application'
 import Application, {
+  AllApplicationsResponse,
   ApplicationPayload,
   ApplictionResponseForUser,
   ScheduleHomeVisitPayload,
@@ -18,6 +19,7 @@ import {
   Get,
   Post,
   Put,
+  Query,
   Request,
   Route,
   Security,
@@ -31,6 +33,7 @@ import {
   getHomeApprovalEmail,
   getHomeRejectionEmail,
   getHomeVisitRequestEmail,
+  getPetAdoptionNotificationEmail,
   getShelterApprovalEmail,
   getShelterHomeVisitScheduledEmail,
   getShelterRejectionEmail,
@@ -77,9 +80,19 @@ export class ApplicationController {
   @Security('bearerAuth')
   @Get('/applications')
   public async getApplications(
-    @Request() req: UserRequest
-  ): Promise<ApplictionResponseForUser[]> {
-    return getApplications(req)
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+    @Request() req: UserRequest,
+    @Query('searchQuery') searchQuery?: string,
+    @Query('applicationStatusFilter') applicationStatusFilter?: string
+  ): Promise<AllApplicationsResponse> {
+    return getApplications(
+      page,
+      limit,
+      req,
+      searchQuery,
+      applicationStatusFilter
+    )
   }
 
   /**
@@ -238,56 +251,169 @@ const getApplicationDetails = async (
 }
 
 const getApplications = async (
-  req: UserRequest
-): Promise<ApplictionResponseForUser[]> => {
-  // Fetch applications made by the user
-  let applications
-  if (req.user?.role === Role.User) {
-    applications = await Application.find({
-      applicantEmail: req.user?.email
-    })
-  } else if (req.user?.role === Role.Shelter) {
-    applications = await Application.find({
-      shelterID: req.user?._id
-    })
-  }
+  page: number,
+  limit: number,
+  req: UserRequest,
+  searchQuery?: string,
+  applicationStatusFilter?: string
+): Promise<AllApplicationsResponse> => {
+  try {
+    //console.log(applicationStatusFilter)
+    console.log('searchQuery', searchQuery)
+    const skip = (page - 1) * limit
+    // Fetch applications with pagination
+    let filter: { [key: string]: any } = {}
 
-  // Create a new array to hold the response data
-  const applicationsResponse: ApplictionResponseForUser[] = []
-  console.log(applications)
+    if (req.user?.role === Role.User) {
+      filter = { ...filter, applicantEmail: req.user?.email }
+    } else if (req.user?.role === Role.Shelter) {
+      filter = { ...filter, shelterID: req.user?._id }
+    }
 
-  if (!applications) return applicationsResponse
+    const pipeline = [
+      { $match: filter },
+      {
+        $lookup: {
+          from: 'users', // name of the collection
+          localField: 'shelterID',
+          foreignField: '_id',
+          as: 'shelter'
+        }
+      },
+      { $unwind: '$shelter' },
+      // Add lookup stage for pets
+      {
+        $lookup: {
+          from: 'pets',
+          localField: 'microchipID',
+          foreignField: 'microchipID',
+          as: 'pet'
+        }
+      },
+      { $unwind: '$pet' },
+      // Add lookup stage for applicants
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'applicantEmail',
+          foreignField: 'email',
+          as: 'applicant'
+        }
+      },
+      { $unwind: '$applicant' }
+    ]
+    // First, get the total count of documents after filtering and all shelter names
+    // Get all statuses without pagination or status filter
+    const allApplications = await Application.aggregate(pipeline)
+    // console.log(allApplications)
+    const applicationStatuses = [
+      ...new Set(allApplications.map((app) => app.status))
+    ].sort()
+    //console.log('statuses', applicationStatuses)
 
-  // Iterate over applications to fetch corresponding Pet and User data
-  for (const application of applications) {
-    const pet = await Pet.findOne({ microchipID: application.microchipID })
-    const shelter = await User.findOne({
-      role: Role.Shelter,
-      _id: application.shelterID
-    })
-    const applicant = await User.findOne({ email: application.applicantEmail })
+    // Add status and shelter name filters to pipeline if defined
+    if (applicationStatusFilter) {
+      pipeline.push({ $match: { status: applicationStatusFilter } })
+    }
 
-    if (!pet) throw { code: 404, message: 'Pet not found' }
-    if (!shelter) throw { code: 404, message: 'Shelter not found' }
-    if (!applicant) throw { code: 404, message: 'Applicant not found' }
+    // Add searchQuery filter to pipeline if defined
+    if (searchQuery) {
+      if (req.user?.role === Role.User) {
+        pipeline.push({
+          $match: {
+            $or: [
+              { 'pet.name': { $regex: searchQuery, $options: 'i' } },
+              { 'shelter.name': { $regex: searchQuery, $options: 'i' } }
+            ]
+          }
+        })
+      } else if (req.user?.role === Role.Shelter) {
+        pipeline.push({
+          $match: {
+            $or: [
+              { 'pet.name': { $regex: searchQuery, $options: 'i' } },
+              { 'applicant.name': { $regex: searchQuery, $options: 'i' } }
+            ]
+          }
+        })
+      }
+    }
 
-    // Construct the response object
-    const applicationResponse: ApplictionResponseForUser = {
-      application: {
-        ...application.toObject(),
+    // console.log('updated pipeline', pipeline)
+    // First, get the total count of documents after filtering and all shelter names
+    const countPipeline = [...pipeline, { $count: 'total' }]
+    const count = await Application.aggregate(countPipeline)
+    // console.log('count', count)
+    const totalApplications = count[0]?.total || 0
+    console.log('totalApplications', totalApplications)
+
+    // Add pagination stages to the pipeline
+    ;(pipeline as any).push({ $skip: skip }, { $limit: limit })
+    const applications = await Application.aggregate(pipeline)
+    // Fetch all pets and shelters at once
+    const petIds = applications.map((a) => a.microchipID)
+    const shelterIds = applications.map((a) => a.shelterID)
+
+    const [pets, shelters] = await Promise.all([
+      Pet.find({ microchipID: { $in: petIds } }),
+      User.find({ role: Role.Shelter, _id: { $in: shelterIds } })
+    ])
+
+    const petsById = Object.fromEntries(
+      pets.map((pet) => [pet.microchipID, pet])
+    )
+    const sheltersById = Object.fromEntries(
+      shelters.map((shelter) => [shelter._id.toString(), shelter])
+    )
+
+    // Prepare all the Promises
+    const applicationPromises = applications.map(async (application) => {
+      const pet = petsById[application.microchipID]
+      const shelter = sheltersById[application.shelterID]
+
+      const applicantPromise = User.findOne({
+        email: application.applicantEmail
+      })
+      const imageURLPromise = Promise.all(
+        pet.images.map((image) => getImageURL(image))
+      )
+
+      const [applicant, imageURLs] = await Promise.all([
+        applicantPromise,
+        imageURLPromise
+      ])
+
+      if (!pet) throw { code: 404, message: 'Pet not found' }
+      if (!shelter) throw { code: 404, message: 'Shelter not found' }
+      if (!applicant) throw { code: 404, message: 'Applicant not found' }
+
+      // Construct the response object
+      const applicationResponse = {
+        ...application,
         id: application._id.toString(),
         submissionDate: application.createdAt,
-        petImage: getImageURL(pet.images[0]),
+        petImage: imageURLs[0],
         petName: pet.name,
         shelterName: shelter.name,
         applicantName: applicant.name
       }
-    }
+      return applicationResponse
+    })
 
-    // Add the response object to the response data array
-    applicationsResponse.push(applicationResponse)
+    // Run all the promises in parallel
+    const applicationResponses = await Promise.all(applicationPromises)
+    // Calculate the total number of pages
+    const totalPages = Math.ceil(totalApplications / limit)
+
+    // Return the final result
+    return {
+      applications: applicationResponses,
+      totalPages,
+      applicationStatuses
+    }
+  } catch (error: any) {
+    throw { code: 500, message: 'Failed to fetch applications' }
   }
-  return applicationsResponse
 }
 
 const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
@@ -438,11 +564,25 @@ const updateApplicationStatus = async (
     pet.isAdopted = true
     await pet.save()
 
+    // Find all other applications for this pet
+    const otherApplications = await Application.find({
+      microchipID: pet.microchipID,
+      _id: { $ne: application._id }
+    })
+
     // Closing all other applications for this pet
     await Application.updateMany(
       { microchipID: pet.microchipID, _id: { $ne: application._id } },
       { $set: { status: Status.Closed } }
     )
+
+    // Send email to all other applicants
+    otherApplications.forEach(async (otherApp) => {
+      const { subject, message } = getPetAdoptionNotificationEmail(
+        otherApp._id.toString()
+      )
+      await sendEmail(otherApp.applicantEmail, subject, message)
+    })
   }
 
   if (status === Status.Rejected) {

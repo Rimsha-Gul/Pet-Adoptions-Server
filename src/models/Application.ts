@@ -84,6 +84,12 @@ export interface ApplictionResponseForUser {
   application: ApplicationResponse
 }
 
+export interface AllApplicationsResponse {
+  applications: ApplicationResponse[]
+  totalPages: number
+  applicationStatuses: string[]
+}
+
 export interface ApplicationDocument
   extends Omit<ApplicationPayload, 'shelterID'>,
     Document {
