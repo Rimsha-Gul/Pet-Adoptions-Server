@@ -43,6 +43,7 @@ import {
 } from '../data/emailMessages'
 import { sendEmail } from '../middleware/sendEmail'
 import { validateStatusChange } from '../utils/validateStatusChange'
+import { Visit } from '../models/Visits'
 
 @Route('application')
 @Tags('Application')
@@ -486,6 +487,14 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
 
   application.status = Status.UserVisitScheduled
   await application.save()
+
+  const visit = new Visit({
+    shelterID: application.shelterID,
+    applicantEmail: application.applicantEmail,
+    visitDate: visitDate
+  })
+
+  await visit.save()
 
   return { code: 200, message: 'Shelter Visit has been scheduled' }
 }

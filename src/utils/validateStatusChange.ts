@@ -2,7 +2,7 @@ import { Status } from '../models/Application'
 import { Role } from '../models/User'
 
 const ROLE_PERMISSIONS: Record<Role, Status[]> = {
-  [Role.User]: [Status.UserApprovedShelter, Status.UserRejectedShelter],
+  [Role.User]: [],
   [Role.Shelter]: [
     Status.HomeVisitRequested,
     Status.HomeApproved,

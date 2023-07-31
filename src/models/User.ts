@@ -79,6 +79,15 @@ export interface ShelterResponse {
   name: string
 }
 
+export interface ShelterProfileResponse {
+  profilePhoto: string
+  name: string
+  email: string
+  address: string
+  bio: string
+  canReview: boolean
+}
+
 export interface UserDocument extends UserResponse, Document {
   role: Role
   address: string
