@@ -88,7 +88,8 @@ export const generatePets = async () => {
       bio: 'This is Max, a friendly Labrador.',
       traits: 'Active, Friendly, Playful',
       adoptionFee: '200 USD',
-      images: ['mockFileID1', 'mockFileID2', 'mockFileID3']
+      images: ['mockFileID1', 'mockFileID2', 'mockFileID3'],
+      isAdopted: false
     },
     {
       shelterID: shelters[1]._id.toString(),
@@ -113,7 +114,8 @@ export const generatePets = async () => {
       bio: 'This is Max, a friendly Labrador.',
       traits: 'Active, Friendly, Playful',
       adoptionFee: '200 USD',
-      images: ['mockFileID1', 'mockFileID2', 'mockFileID3']
+      images: ['mockFileID1', 'mockFileID2', 'mockFileID3'],
+      isAdopted: false
     },
     {
       shelterID: shelters[1]._id.toString(),
@@ -138,7 +140,8 @@ export const generatePets = async () => {
       bio: 'This is Max, a friendly Labrador.',
       traits: 'Active, Friendly, Playful',
       adoptionFee: '200 USD',
-      images: ['mockFileID1', 'mockFileID2', 'mockFileID3']
+      images: ['mockFileID1', 'mockFileID2', 'mockFileID3'],
+      isAdopted: false
     },
     {
       shelterID: shelters[1]._id.toString(),
@@ -163,7 +166,8 @@ export const generatePets = async () => {
       bio: 'This is Max, a friendly Labrador.',
       traits: 'Active, Friendly, Playful',
       adoptionFee: '200 USD',
-      images: ['mockFileID1', 'mockFileID2', 'mockFileID3']
+      images: ['mockFileID1', 'mockFileID2', 'mockFileID3'],
+      isAdopted: false
     },
     {
       shelterID: shelters[1]._id.toString(),
@@ -188,7 +192,8 @@ export const generatePets = async () => {
       bio: 'This is Max, a friendly Labrador.',
       traits: 'Active, Friendly, Playful',
       adoptionFee: '200 USD',
-      images: ['mockFileID1', 'mockFileID2', 'mockFileID3']
+      images: ['mockFileID1', 'mockFileID2', 'mockFileID3'],
+      isAdopted: false
     },
     {
       shelterID: shelters[1]._id.toString(),
@@ -213,7 +218,8 @@ export const generatePets = async () => {
       bio: 'This is Max, a friendly Labrador.',
       traits: 'Active, Friendly, Playful',
       adoptionFee: '200 USD',
-      images: ['mockFileID1', 'mockFileID2', 'mockFileID3']
+      images: ['mockFileID1', 'mockFileID2', 'mockFileID3'],
+      isAdopted: false
     },
     {
       shelterID: shelters[1]._id.toString(),
@@ -238,7 +244,8 @@ export const generatePets = async () => {
       bio: 'This is Max, a friendly Labrador.',
       traits: 'Active, Friendly, Playful',
       adoptionFee: '200 USD',
-      images: ['mockFileID1', 'mockFileID2', 'mockFileID3']
+      images: ['mockFileID1', 'mockFileID2', 'mockFileID3'],
+      isAdopted: false
     },
     {
       shelterID: shelters[1]._id.toString(),
@@ -263,7 +270,8 @@ export const generatePets = async () => {
       bio: 'This is Max, a friendly Labrador.',
       traits: 'Active, Friendly, Playful',
       adoptionFee: '200 USD',
-      images: ['mockFileID1', 'mockFileID2', 'mockFileID3']
+      images: ['mockFileID1', 'mockFileID2', 'mockFileID3'],
+      isAdopted: false
     }
   ]
 

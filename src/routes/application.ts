@@ -45,7 +45,20 @@ applicationRouter.get(
   authenticateAccessToken,
   async (req, res) => {
     try {
-      const response = await controller.getApplications(req)
+      const {
+        page = '1',
+        limit = '3',
+        searchQuery,
+        applicationStatusFilter
+      } = req.query
+
+      const response = await controller.getApplications(
+        parseInt(page as string),
+        parseInt(limit as string),
+        req,
+        searchQuery as string,
+        applicationStatusFilter as string
+      )
       return res.send(response)
     } catch (err: any) {
       return res.status(err.code).send(err.message)

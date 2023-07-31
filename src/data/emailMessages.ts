@@ -257,3 +257,19 @@ export const getShelterInvitationEmail = (invitationLink: string) => {
     message
   }
 }
+
+export const getPetAdoptionNotificationEmail = (applicationID: string) => {
+  const subject = 'Purrfect Adoptions - Pet Adoption Update'
+
+  const message = `
+    <p>Dear applicant,</p>
+    <p>We hope this message finds you well. We are reaching out to inform you that the pet you applied for, application ID: <strong>${applicationID}</strong>, has found a new home.</p>
+    <p>We understand that you may be disappointed, and we appreciate your understanding. There are many other pets in need of a loving home, and we encourage you to consider applying for another pet.</p>
+    <p>Thank you for your interest in providing a home for our pets. Your compassion makes a huge difference in their lives.</p>
+  `
+
+  return {
+    subject,
+    message
+  }
+}
