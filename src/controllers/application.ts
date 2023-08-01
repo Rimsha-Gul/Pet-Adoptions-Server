@@ -28,22 +28,23 @@ import {
 import { Role, User } from '../models/User'
 import { getImageURL } from '../utils/getImageURL'
 import {
+  getApplicantAdoptionConfirmationEmail,
   getApplicantHomeVisitScheduledEmail,
   getApplicantShelterVisitScheduledEmail,
+  getApplicantAdoptionRejectionEmail,
   getHomeApprovalEmail,
   getHomeRejectionEmail,
   getHomeVisitRequestEmail,
   getPetAdoptionNotificationEmail,
-  getShelterApprovalEmail,
+  getShelterAdoptionConfirmationEmail,
+  getShelterAdoptionRejectionEmail,
   getShelterHomeVisitScheduledEmail,
-  getShelterRejectionEmail,
-  getShelterShelterVisitScheduledEmail,
-  getUserApprovalToShelterEmail,
-  getUserRejectionToShelterEmail
+  getShelterShelterVisitScheduledEmail
 } from '../data/emailMessages'
 import { sendEmail } from '../middleware/sendEmail'
 import { validateStatusChange } from '../utils/validateStatusChange'
-import { Visit } from '../models/Visits'
+import { Visit } from '../models/Visit'
+import { canReview } from '../utils/canReview'
 
 @Route('application')
 @Tags('Application')
@@ -231,6 +232,9 @@ const getApplicationDetails = async (
   if (!pet) throw { code: 404, message: 'Pet not found' }
   if (!shelter) throw { code: 404, message: 'Shelter not found' }
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const canUserReview = await canReview(shelter.id.toString(), req.user!.email)
+  console.log(canUserReview)
   const applicationResponse: ApplictionResponseForUser = {
     application: {
       ...application.toObject(),
@@ -245,7 +249,8 @@ const getApplicationDetails = async (
       shelterVisitDate: application.shelterVisitDate,
       homeVisitEmailSentDate: application.homeVisitEmailSentDate,
       shelterVisitEmailSentDate: application.shelterVisitEmailSentDate
-    }
+    },
+    canReview: canUserReview
   }
   console.log('applicationResponse', applicationResponse)
   return applicationResponse
@@ -555,7 +560,7 @@ const updateApplicationStatus = async (
 
   if (status === Status.Approved) {
     {
-      const { subject, message } = getShelterApprovalEmail(
+      const { subject, message } = getApplicantAdoptionConfirmationEmail(
         application._id.toString(),
         new Date().toISOString()
       )
@@ -563,7 +568,7 @@ const updateApplicationStatus = async (
     }
 
     {
-      const { subject, message } = getUserApprovalToShelterEmail(
+      const { subject, message } = getShelterAdoptionConfirmationEmail(
         application._id.toString(),
         new Date().toISOString(),
         application.applicantEmail
@@ -596,7 +601,7 @@ const updateApplicationStatus = async (
 
   if (status === Status.Rejected) {
     {
-      const { subject, message } = getShelterRejectionEmail(
+      const { subject, message } = getApplicantAdoptionRejectionEmail(
         application._id.toString(),
         new Date().toISOString()
       )
@@ -604,7 +609,7 @@ const updateApplicationStatus = async (
     }
 
     {
-      const { subject, message } = getUserRejectionToShelterEmail(
+      const { subject, message } = getShelterAdoptionRejectionEmail(
         application._id.toString(),
         new Date().toISOString(),
         application.applicantEmail

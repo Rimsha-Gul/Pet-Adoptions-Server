@@ -12,7 +12,7 @@ import Invitation, { InvitationStatus } from '../models/Invitation'
 import { getShelterInvitationEmail } from '../data/emailMessages'
 import { sendEmail } from '../middleware/sendEmail'
 import { shelterProfileResponseExample } from '../examples/shelter'
-import Visit from '../models/Visits'
+import { canReview } from '../utils/canReview'
 
 @Route('shelter')
 @Tags('Shelter')
@@ -68,19 +68,21 @@ const getShelter = async (
     profilePhotoUrl = getImageURL(shelter.profilePhoto[0])
   }
 
-  const canUserReview = Boolean(
-    Visit.findOne({
-      shelterID: shelter.id.toString(),
-      applicantEmail: req.user?.email
-    })
+  const canUserReview = await canReview(
+    shelter.id.toString(),
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    req.user!.email
   )
 
+  console.log('canUserReview', canUserReview)
   const shelterResponse = {
     profilePhoto: profilePhotoUrl,
     name: shelter.name,
     email: shelter.email,
     address: shelter.address,
     bio: shelter.bio,
+    rating: shelter.rating,
+    numberOfReviews: shelter.numberOfReviews,
     canReview: canUserReview
   }
 

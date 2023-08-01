@@ -142,7 +142,7 @@ export const applyForPetValidation = (data: any): Joi.ValidationResult =>
     petOutlivePlans: Joi.string().required()
   }).validate(data)
 
-export const getApplicationValidation = (data: any): Joi.ValidationResult =>
+export const idValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
     id: objectIDSchema.required()
   }).validate(data)

@@ -78,6 +78,7 @@ export interface ApplicationResponse extends ApplicationPayload {
 
 export interface ApplictionResponseForUser {
   application: ApplicationResponse
+  canReview?: boolean
 }
 
 export interface AllApplicationsResponse {

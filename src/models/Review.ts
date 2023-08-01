@@ -6,17 +6,29 @@ export interface ReviewPayload {
   reviewText: string
 }
 
+export interface ReviewResponse {
+  applicantName: string
+  rating: number
+  reviewText: string
+}
+
+export interface ReviewsResponse {
+  reviews: ReviewResponse[]
+}
+
 export interface ReviewDocument
   extends Omit<ReviewPayload, 'shelterID'>,
     Document {
   shelterID: Schema.Types.ObjectId
   applicantEmail: string
+  applicantName: string
 }
 
 const ReviewSchema = new Schema<ReviewDocument>(
   {
     shelterID: { type: Schema.Types.ObjectId, required: true },
     applicantEmail: { type: String, required: true },
+    applicantName: { type: String, required: true },
     rating: { type: Number, required: true },
     reviewText: { type: String, required: true }
   },

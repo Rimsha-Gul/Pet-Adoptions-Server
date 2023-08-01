@@ -417,6 +417,8 @@ components:
             properties:
                 application:
                     $ref: '#/components/schemas/ApplicationResponse'
+                canReview:
+                    type: boolean
             required:
                 - application
             type: object
@@ -531,6 +533,12 @@ components:
                     type: string
                 bio:
                     type: string
+                rating:
+                    type: number
+                    format: double
+                numberOfReviews:
+                    type: number
+                    format: double
                 canReview:
                     type: boolean
             required:
@@ -539,6 +547,8 @@ components:
                 - email
                 - address
                 - bio
+                - rating
+                - numberOfReviews
                 - canReview
             type: object
             additionalProperties: false
@@ -642,6 +652,31 @@ components:
                 - shelterID
                 - rating
                 - reviewText
+            type: object
+            additionalProperties: false
+        ReviewResponse:
+            properties:
+                applicantName:
+                    type: string
+                rating:
+                    type: number
+                    format: double
+                reviewText:
+                    type: string
+            required:
+                - applicantName
+                - rating
+                - reviewText
+            type: object
+            additionalProperties: false
+        ReviewsResponse:
+            properties:
+                reviews:
+                    items:
+                        $ref: '#/components/schemas/ReviewResponse'
+                    type: array
+            required:
+                - reviews
             type: object
             additionalProperties: false
     securitySchemes:
@@ -1372,7 +1407,7 @@ paths:
                                 $ref: '#/components/schemas/ShelterProfileResponse'
                             examples:
                                 'Example 1':
-                                    value: {profilePhoto: 'https://example.com/shelterProfilePhoto.jpg', name: 'Animal Haven Shelter', email: info@animalhavenshelter.com, address: '251 Centre St, New York, NY 10013, USA', bio: 'Animal Haven is a non-profit organization that finds homes for abandoned cats and dogs throughout the Tri-State area, and provides behavior intervention when needed to improve chances of adoption. Founded in 1967, we operate an animal shelter in Manhattan. We also provide programs that enhance the bond between animals and people.', canReview: true}
+                                    value: {profilePhoto: 'https://example.com/shelterProfilePhoto.jpg', name: 'Animal Haven Shelter', email: info@animalhavenshelter.com, address: '251 Centre St, New York, NY 10013, USA', bio: 'Animal Haven is a non-profit organization that finds homes for abandoned cats and dogs throughout the Tri-State area, and provides behavior intervention when needed to improve chances of adoption. Founded in 1967, we operate an animal shelter in Manhattan. We also provide programs that enhance the bond between animals and people.', rating: 4.8, numberOfReviews: 567, canReview: true}
             summary: 'Returns a shelter''s details given id'
             tags:
                 - Shelter
@@ -1439,11 +1474,13 @@ paths:
                         application/json:
                             schema:
                                 properties:
-                                    status: {type: string}
+                                    message: {type: string}
+                                    code: {type: number, format: double}
                                 required:
-                                    - status
+                                    - message
+                                    - code
                                 type: object
-            summary: 'Returns a shelter''s details given id'
+            summary: 'Accepts rating and review and adds the review in the database'
             tags:
                 - Review
             security:
@@ -1456,6 +1493,22 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/ReviewPayload'
+        get:
+            operationId: GetReviews
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ReviewsResponse'
+            summary: 'Returns all reviews of a specific shelter'
+            tags:
+                - Review
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
 servers:
     -
         url: /

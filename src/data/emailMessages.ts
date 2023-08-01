@@ -156,18 +156,18 @@ export const getShelterShelterVisitScheduledEmail = (
   }
 }
 
-export const getShelterApprovalEmail = (
+export const getApplicantAdoptionConfirmationEmail = (
   applicationID: string,
-  visitDate: string
+  adoptionDate: string
 ) => {
-  const subject = 'Purrfect Adoptions - Shelter Approved'
-  const formattedDate = new Date(visitDate).toLocaleString()
+  const subject = 'Purrfect Adoptions - Adoption Successful'
+  const formattedDate = new Date(adoptionDate).toLocaleString()
 
   const message = `
-    <p>Congratulations! We're delighted to inform you that your visit to the shelter for your application, ID: <strong>${applicationID}</strong>, has been successful.</p>
-    <p>You confirmed the approval on: <strong>${formattedDate}</strong></p>
-    <p>This concludes the adoption process and we're excited to welcome you to our community of pet parents. You can now proceed to take your new pet home!</p>
-    <p>Thank you for choosing to adopt and providing a loving home for our pets. We trust your new pet will bring much joy and happiness to your home.</p>
+    <p>Congratulations! We are pleased to inform you that your application, ID: <strong>${applicationID}</strong>, has resulted in a successful adoption.</p>
+    <p>The adoption was confirmed on: <strong>${formattedDate}</strong></p>
+    <p>We are thrilled to see another pet find a loving home and wish you all the best on this new journey. Don't hesitate to reach out if you have any queries or need support.</p>
+    <p>Thank you for your commitment to animal adoption and for being a part of the Purrfect Adoptions community.</p>
   `
 
   return {
@@ -176,19 +176,19 @@ export const getShelterApprovalEmail = (
   }
 }
 
-export const getUserApprovalToShelterEmail = (
+export const getShelterAdoptionConfirmationEmail = (
   applicationID: string,
-  visitDate: string,
+  adoptionDate: string,
   applicantEmail: string
 ) => {
-  const subject = 'Purrfect Adoptions - User Approved Shelter'
-  const formattedDate = new Date(visitDate).toLocaleString()
+  const subject = 'Purrfect Adoptions - Adoption Finalized'
+  const formattedDate = new Date(adoptionDate).toLocaleString()
 
   const message = `
-    <p>We are delighted to inform you that the applicant with email: <strong>${applicantEmail}</strong> and application ID: <strong>${applicationID}</strong>, has approved the shelter after the visit.</p>
-    <p>The approval was confirmed on: <strong>${formattedDate}</strong></p>
-    <p>This marks the successful conclusion of the adoption process. The applicant can now proceed to take the pet home. Please prepare for the pet's transition.</p>
-    <p>Thank you for your commitment to ensuring our pets find loving homes. Your efforts have resulted in another successful adoption.</p>
+    <p>We're delighted to inform you that the adoption for the application, ID: <strong>${applicationID}</strong>, by applicant: <strong>${applicantEmail}</strong> has been successfully completed.</p>
+    <p>The adoption was confirmed on: <strong>${formattedDate}</strong></p>
+    <p>This marks another successful pet adoption from your shelter, contributing towards our mission of finding homes for all animals in need.</p>
+    <p>Thank you for your continuous dedication and care towards the animals. Your efforts make a significant difference.</p>
   `
 
   return {
@@ -197,19 +197,18 @@ export const getUserApprovalToShelterEmail = (
   }
 }
 
-export const getShelterRejectionEmail = (
+export const getApplicantAdoptionRejectionEmail = (
   applicationID: string,
-  visitDate: string
+  rejectionDate: string
 ) => {
-  const subject = 'Purrfect Adoptions - Shelter Visit Unsuccessful'
-  const formattedDate = new Date(visitDate).toLocaleString()
+  const subject = 'Purrfect Adoptions - Adoption Not Successful'
+  const formattedDate = new Date(rejectionDate).toLocaleString()
 
   const message = `
-    <p>We regret to learn that your visit to our shelter for your application, ID: <strong>${applicationID}</strong>, did not meet your expectations.</p>
-    <p>You confirmed the decision on: <strong>${formattedDate}</strong></p>
-    <p>While we understand that this decision may be disappointing for us, we respect your judgement. Our primary concern is the well-being of our pets, and it's important that they find a home that is a good fit.</p>
-    <p>If circumstances change in the future or you wish to consider other pets, we welcome you to apply again.</p>
-    <p>Thank you for your interest in adopting and considering providing a loving home for our pets.</p>
+    <p>We regret to inform you that your application, ID: <strong>${applicationID}</strong>, did not result in an adoption.</p>
+    <p>The decision was made on: <strong>${formattedDate}</strong></p>
+    <p>We understand that not every visit or interaction leads to an adoption, and we encourage you to continue searching for the right pet. Our team is available to assist you in this journey.</p>
+    <p>Thank you for considering adoption and for being a part of the Purrfect Adoptions community.</p>
   `
 
   return {
@@ -218,19 +217,19 @@ export const getShelterRejectionEmail = (
   }
 }
 
-export const getUserRejectionToShelterEmail = (
+export const getShelterAdoptionRejectionEmail = (
   applicationID: string,
-  visitDate: string,
+  rejectionDate: string,
   applicantEmail: string
 ) => {
-  const subject = 'Purrfect Adoptions - User Rejected Shelter'
-  const formattedDate = new Date(visitDate).toLocaleString()
+  const subject = 'Purrfect Adoptions - Adoption Not Finalized'
+  const formattedDate = new Date(rejectionDate).toLocaleString()
 
   const message = `
-    <p>We regret to inform you that the applicant with email: <strong>${applicantEmail}</strong> and application ID: <strong>${applicationID}</strong>, did not approve the shelter after the visit.</p>
-    <p>The decision was confirmed on: <strong>${formattedDate}</strong></p>
-    <p>While this is an unfortunate outcome, we respect the applicant's decision. We believe it's vital that our pets find the most suitable homes where they will thrive.</p>
-    <p>We appreciate your understanding and your commitment to our cause. We trust that the right home will soon be found for our pet.</p>
+    <p>We regret to inform you that the potential adoption for the application, ID: <strong>${applicationID}</strong>, by applicant: <strong>${applicantEmail}</strong> did not proceed.</p>
+    <p>The decision was made on: <strong>${formattedDate}</strong></p>
+    <p>We understand that not every visit or interaction leads to an adoption, and we are committed to ensuring the best fit for each pet. Your pet will be available again for other potential adopters.</p>
+    <p>Thank you for your continuous dedication and care towards the animals. Your efforts make a significant difference.</p>
   `
 
   return {

@@ -2,7 +2,7 @@ import express from 'express'
 import { ApplicationController } from '../controllers/application'
 import {
   applyForPetValidation,
-  getApplicationValidation,
+  idValidation,
   scheduleVisitValidation,
   updateApplicationStatusValidation
 } from '../utils/validation'
@@ -29,7 +29,7 @@ applicationRouter.get(
   authenticateAccessToken,
   isUser,
   async (req, res) => {
-    const { error } = getApplicationValidation(req.query)
+    const { error } = idValidation(req.query)
     if (error) return res.status(400).send(error.details[0].message)
     try {
       const response = await controller.getApplicationDetails(req)
