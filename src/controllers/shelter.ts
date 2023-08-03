@@ -4,17 +4,32 @@ import Application, {
 import { UserRequest } from '../types/Request'
 import { Body, Example, Get, Post, Request, Route, Security, Tags } from 'tsoa'
 import { Pet } from '../models/Pet'
-import { EmailPayload, User } from '../models/User'
+import { EmailPayload, ShelterProfileResponse, User } from '../models/User'
 import { getImageURL } from '../utils/getImageURL'
 import { emailPayloadExample } from '../examples/auth'
 import { generateInvitationToken } from '../utils/generateInvitationToken'
 import Invitation, { InvitationStatus } from '../models/Invitation'
 import { getShelterInvitationEmail } from '../data/emailMessages'
 import { sendEmail } from '../middleware/sendEmail'
+import { shelterProfileResponseExample } from '../examples/shelter'
+import { canReview } from '../utils/canReview'
 
 @Route('shelter')
 @Tags('Shelter')
 export class ShelterController {
+  /**
+   * @summary Returns a shelter's details given id
+   *
+   */
+  @Security('bearerAuth')
+  @Get('/')
+  @Example<ShelterProfileResponse>(shelterProfileResponseExample)
+  public async getShelter(
+    @Request() req: UserRequest
+  ): Promise<ShelterProfileResponse> {
+    return getShelter(req)
+  }
+
   /**
    * @summary Returns an application's details given id
    *
@@ -28,7 +43,7 @@ export class ShelterController {
   }
 
   /**
-   * @summary Returns an application's details given id
+   * @summary Sends invite to shelter to sign up
    *
    */
   @Security('bearerAuth')
@@ -40,6 +55,38 @@ export class ShelterController {
   ) {
     return inviteShelter(body, req)
   }
+}
+
+const getShelter = async (
+  req: UserRequest
+): Promise<ShelterProfileResponse> => {
+  const shelter = await User.findById(req.query.id)
+  if (!shelter) throw { code: 404, message: 'Shelter not found' }
+
+  let profilePhotoUrl
+  if (shelter.profilePhoto.length > 0) {
+    profilePhotoUrl = getImageURL(shelter.profilePhoto[0])
+  }
+
+  const canUserReview = await canReview(
+    shelter.id.toString(),
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    req.user!.email
+  )
+
+  console.log('canUserReview', canUserReview)
+  const shelterResponse = {
+    profilePhoto: profilePhotoUrl,
+    name: shelter.name,
+    email: shelter.email,
+    address: shelter.address,
+    bio: shelter.bio,
+    rating: shelter.rating,
+    numberOfReviews: shelter.numberOfReviews,
+    canReview: canUserReview
+  }
+
+  return shelterResponse
 }
 
 const getApplicationDetails = async (

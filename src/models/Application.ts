@@ -12,8 +12,6 @@ export enum Status {
   HomeApproved = 'Home Approved',
   HomeRejected = 'Home Rejected',
   UserVisitScheduled = 'User Visit Scheduled',
-  UserApprovedShelter = 'User Approved Shelter',
-  UserRejectedShelter = 'User Rejected Shelter',
   Approved = 'Approved',
   Rejected = 'Rejected',
   Closed = 'Closed'
@@ -49,8 +47,7 @@ export interface ScheduleHomeVisitPayload {
   visitDate: string
 }
 
-export interface ApplictionResponseShelter
-  extends Omit<ApplicationPayload, 'shelterID'> {
+export interface ApplictionResponseShelter extends ApplicationPayload {
   id: string
   status: Status
   applicantEmail: string
@@ -64,8 +61,7 @@ export interface ApplictionResponseForShelter {
   application: ApplictionResponseShelter
 }
 
-export interface ApplicationResponse
-  extends Omit<ApplicationPayload, 'shelterID'> {
+export interface ApplicationResponse extends ApplicationPayload {
   id: string
   status: Status
   submissionDate: string
@@ -82,6 +78,7 @@ export interface ApplicationResponse
 
 export interface ApplictionResponseForUser {
   application: ApplicationResponse
+  canReview?: boolean
 }
 
 export interface AllApplicationsResponse {
@@ -105,7 +102,7 @@ export interface ApplicationDocument
 
 const ApplicationSchema = new Schema<ApplicationDocument>(
   {
-    shelterID: { type: Schema.Types.ObjectId },
+    shelterID: { type: Schema.Types.ObjectId, required: true },
     microchipID: { type: String, required: true },
     applicantEmail: { type: String, required: true },
     residenceType: { type: String, enum: ResidenceType, required: true },

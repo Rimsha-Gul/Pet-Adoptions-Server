@@ -79,11 +79,24 @@ export interface ShelterResponse {
   name: string
 }
 
+export interface ShelterProfileResponse {
+  profilePhoto: string
+  name: string
+  email: string
+  address: string
+  bio: string
+  rating: number
+  numberOfReviews: number
+  canReview: boolean
+}
+
 export interface UserDocument extends UserResponse, Document {
   role: Role
   address: string
   bio: string
   profilePhoto: string[]
+  rating: number
+  numberOfReviews: number
   isVerified: boolean
   verificationCode: {
     code: string
@@ -119,6 +132,8 @@ const UserSchema = new Schema<UserDocument>(
     address: { type: String },
     bio: { type: String },
     profilePhoto: { type: [String] },
+    rating: { type: Number, default: 0 },
+    numberOfReviews: { type: Number, default: 0 },
     password: { type: String, required: true },
     isVerified: { type: Boolean, required: true, default: false },
     verificationCode: {
