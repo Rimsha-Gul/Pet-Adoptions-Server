@@ -46,7 +46,8 @@ describe('auth', () => {
       const signupData = {
         name: user.name,
         email: 'test1@gmail.com',
-        password: '123456'
+        password: '123456',
+        role: 'USER'
       }
       const response = await request(app)
         .post('/auth/signup')
@@ -60,7 +61,8 @@ describe('auth', () => {
       const signupData = {
         name: user.name,
         email: user.email,
-        password: '123456'
+        password: '123456',
+        role: 'USER'
       }
       const response = await request(app)
         .post('/auth/signup')

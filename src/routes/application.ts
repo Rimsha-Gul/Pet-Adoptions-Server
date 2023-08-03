@@ -47,7 +47,7 @@ applicationRouter.get(
     try {
       const {
         page = '1',
-        limit = '3',
+        limit = '5',
         searchQuery,
         applicationStatusFilter
       } = req.query

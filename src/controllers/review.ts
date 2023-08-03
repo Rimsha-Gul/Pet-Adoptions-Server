@@ -5,7 +5,7 @@ import {
   ReviewResponse,
   ReviewsResponse
 } from '../models/Review'
-import { Body, Get, Post, Request, Route, Security, Tags } from 'tsoa'
+import { Body, Get, Post, Query, Request, Route, Security, Tags } from 'tsoa'
 import { User } from '../models/User'
 
 @Route('review')
@@ -31,9 +31,11 @@ export class ReviewController {
   @Security('bearerAuth')
   @Get('/all')
   public async getReviews(
+    @Query('page') page: number,
+    @Query('limit') limit: number,
     @Request() req: UserRequest
   ): Promise<ReviewsResponse> {
-    return getReviews(req)
+    return getReviews(page, limit, req)
   }
 }
 
@@ -82,9 +84,23 @@ const addReview = async (body: ReviewPayload, req: UserRequest) => {
   return { code: 200, message: 'Thank you for your feedback' }
 }
 
-const getReviews = async (req: UserRequest): Promise<ReviewsResponse> => {
+const getReviews = async (
+  page: number,
+  limit: number,
+  req: UserRequest
+): Promise<ReviewsResponse> => {
+  const skip = (page - 1) * limit
   const shelterID = req.query.id
+  console.log(shelterID)
+
+  const totalReviews = await Review.countDocuments({ shelterID: shelterID })
+  const totalPages = Math.ceil(totalReviews / limit)
+  console.log(totalPages)
+
   const reviewDocs = await Review.find({ shelterID: shelterID })
+    .sort({ created_at: -1 })
+    .skip(skip)
+    .limit(limit)
 
   const reviews: ReviewResponse[] = reviewDocs.map((reviewDoc) => {
     return {
@@ -93,6 +109,9 @@ const getReviews = async (req: UserRequest): Promise<ReviewsResponse> => {
       reviewText: reviewDoc.reviewText
     }
   })
-
-  return { reviews: reviews }
+  console.log(reviews)
+  return {
+    reviews: reviews,
+    totalPages: totalPages
+  }
 }

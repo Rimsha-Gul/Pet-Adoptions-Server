@@ -127,7 +127,7 @@ const PetSchema = new Schema<PetDocument>(
     adoptionFee: { type: String, required: true },
     hasAdoptionRequest: { type: Boolean, default: false },
     applicationID: { type: String },
-    isAdopted: { type: Boolean }
+    isAdopted: { type: Boolean, default: false }
   },
   { timestamps: true }
 )

@@ -262,7 +262,7 @@ const getAllPets = async (
   try {
     const skip = (page - 1) * limit
     const queryObj: { [key: string]: any } = {}
-    queryObj.isAdopted = false
+    queryObj.isAdopted != true
 
     let colors: string[] = []
     let breeds: string[] = []

@@ -17,6 +17,7 @@ export interface UserPayload {
   name: string
   email: string
   password: string
+  role: Role
 }
 
 export interface LoginPayload {
@@ -122,6 +123,15 @@ export interface UpdatedUser {
 export interface UpdatedUserResponse {
   success: boolean
   user?: UpdatedUser
+}
+
+export interface VerifyInvitationPayload {
+  invitationToken: string
+}
+
+export interface VerifyInvitationResponse {
+  email: string
+  role: Role
 }
 
 const UserSchema = new Schema<UserDocument>(

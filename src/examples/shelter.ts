@@ -1,3 +1,5 @@
+import { Role } from '../models/User'
+
 export const shelterProfileResponseExample = {
   profilePhoto: 'https://example.com/shelterProfilePhoto.jpg',
   name: 'Animal Haven Shelter',
@@ -7,4 +9,9 @@ export const shelterProfileResponseExample = {
   rating: 4.8,
   numberOfReviews: 567,
   canReview: true
+}
+
+export const verifyInvitationResponseExample = {
+  email: 'info@animalhavenshelter.com',
+  role: Role.Shelter
 }

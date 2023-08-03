@@ -9,7 +9,8 @@ import User, {
   ShelterResponse,
   EmailPayload,
   CheckPasswordPayload,
-  UpdateProfilePayload
+  UpdateProfilePayload,
+  Role
 } from '../models/User'
 import { generateAccessToken } from '../utils/generateAccessToken'
 import { generateRefreshToken } from '../utils/generateRefreshToken'
@@ -42,6 +43,7 @@ import {
   updateProfilePayloadExample,
   verificationResponseExample
 } from '../examples/auth'
+import { Invitation, InvitationStatus } from '../models/Invitation'
 
 @Route('auth')
 @Tags('Auth')
@@ -188,11 +190,17 @@ export class AuthController {
 }
 
 const signup = async (body: UserPayload): Promise<SignupResponse> => {
-  // existing user check
-  // hashed password
-  // user creation
-  // token generation
-  const { name, email, password } = body
+  const { name, email, password, role } = body
+
+  if (role === Role.Shelter) {
+    const invitation = await Invitation.findOne({ shelterEmail: email })
+    if (!invitation) {
+      throw { code: 400, message: 'Invalid invitation' }
+    }
+    invitation.status = InvitationStatus.Accepted
+    await invitation.save()
+  }
+
   const existingUser = await User.findOne({ email })
 
   if (existingUser) {
@@ -201,7 +209,8 @@ const signup = async (body: UserPayload): Promise<SignupResponse> => {
 
   const user = new User({
     name: name,
-    email: email
+    email: email,
+    role: role
   })
   user.password = User.hashPassword(password)
   await user.save()

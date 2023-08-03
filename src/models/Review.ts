@@ -14,6 +14,7 @@ export interface ReviewResponse {
 
 export interface ReviewsResponse {
   reviews: ReviewResponse[]
+  totalPages: number
 }
 
 export interface ReviewDocument
