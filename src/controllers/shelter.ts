@@ -67,7 +67,6 @@ export class ShelterController {
    * @summary Verifies the invitation token for shelter
    *
    */
-  @Security('bearerAuth')
   @Get('/verifyInvitationToken')
   @Example<VerifyInvitationResponse>(verifyInvitationResponseExample)
   public async verifyInvitationToken(

@@ -185,3 +185,14 @@ export const verifyInvitationTokenValidation = (
   Joi.object({
     invitationToken: Joi.string().required()
   }).validate(data)
+
+export const verifyResetTokenValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    resetToken: Joi.string().required()
+  }).validate(data)
+
+export const resetPasswordValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    email: emailSchema.required(),
+    newPassword: passwordSchema.required()
+  }).validate(data)

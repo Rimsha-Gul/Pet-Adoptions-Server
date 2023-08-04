@@ -11,7 +11,9 @@ import {
   checkPasswordValidation,
   updateProfileValidation,
   sendVerificationCodeValidation,
-  verifyEmailValidation
+  verifyEmailValidation,
+  verifyResetTokenValidation,
+  resetPasswordValidation
 } from '../utils/validation'
 import { isAdmin } from '../middleware/isAdmin'
 import { conditionalAuthenticateAccessToken } from '../middleware/conditionalAuthenticateToken'
@@ -192,5 +194,38 @@ authRouter.get(
     }
   }
 )
+
+authRouter.post('/requestPasswordReset', async (req, res) => {
+  const { error } = emailValidation(req.body)
+  if (error) return res.status(400).send(error.details[0].message)
+  try {
+    const response = await controller.requestPasswordReset(req.body)
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
+  }
+})
+
+authRouter.get('/verifyResetToken', async (req, res) => {
+  const { error } = verifyResetTokenValidation(req.query)
+  if (error) return res.status(400).send(error.details[0].message)
+  try {
+    const response = await controller.VerifyResetToken(req)
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
+  }
+})
+
+authRouter.put('/resetPassword', async (req, res) => {
+  const { error } = resetPasswordValidation(req.body)
+  if (error) return res.status(400).send(error.details[0].message)
+  try {
+    const response = await controller.resetPassword(req.body)
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
+  }
+})
 
 export default authRouter

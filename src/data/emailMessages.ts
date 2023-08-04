@@ -8,6 +8,22 @@ export const getVerificationCodeEmail = (verificationCode: string) => {
   }
 }
 
+export const getResetPasswordEmail = (resetToken: string) => {
+  const subject = 'Purrfect Adoptions - Password Reset Request'
+
+  const message = `
+    <p>We received a request to reset your password.</p>
+    <p>Please click on the following link, or paste this into your browser to complete the process:</p>
+     <p><a href="http://127.0.0.1:5173/resetPassword/${resetToken}/">Reset</a></p>
+    <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+  `
+
+  return {
+    subject,
+    message
+  }
+}
+
 export const getHomeVisitRequestEmail = (applicationID: string) => {
   const subject = 'Purrfect Adoptions - Home Visit Request'
   const nextWeekDate = new Date(
