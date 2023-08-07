@@ -2,6 +2,7 @@ import { generateAccessToken } from '../../utils/generateAccessToken'
 import { Role, User as UserModel } from '../../models/User'
 import { generateRefreshToken } from '../../utils/generateRefreshToken'
 import { generateVerificationCode } from '../../utils/generateVerificationCode'
+import { generateResetToken } from '../../utils/generateResetToken'
 
 export interface User {
   role: Role
@@ -18,6 +19,7 @@ export interface User {
   address?: string
   bio?: string
   profilePhoto?: string[]
+  passwordResetToken?: string
 }
 
 export interface Admin {
@@ -76,6 +78,7 @@ export const generateUserandTokens = async (): Promise<User> => {
       { new: true }
     )
   }
+  user.passwordResetToken = generateResetToken(user.email)
   await user.save()
 
   return {
@@ -97,7 +100,8 @@ export const generateUserandTokens = async (): Promise<User> => {
       createdAt: savedUserWithTokensAndCode.verificationCode.createdAt,
       updatedAt: savedUserWithTokensAndCode.verificationCode.updatedAt
     },
-    profilePhoto: user.profilePhoto
+    profilePhoto: user.profilePhoto,
+    passwordResetToken: user.passwordResetToken
   }
 }
 

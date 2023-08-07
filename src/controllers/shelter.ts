@@ -177,9 +177,23 @@ const verifyInvitationToken = async (
 
     // Check if a user with the given email already exists
     const existingUser = await User.findOne({ email })
-    if (existingUser && existingUser?.role === Role.Shelter)
+    if (
+      existingUser &&
+      existingUser.role === Role.Shelter &&
+      existingUser.isVerified === true
+    )
       throw { code: 409, message: 'Shelter already  exists' }
-    if (existingUser && existingUser?.role === Role.User)
+    if (
+      existingUser &&
+      existingUser.role === Role.Shelter &&
+      existingUser.isVerified === false
+    )
+      throw {
+        code: 409,
+        email: email,
+        message: 'Shelter already  exists, but is not verified'
+      }
+    if (existingUser && existingUser.role === Role.User)
       throw {
         code: 409,
         message: 'User already  exists, which is not a shelter'

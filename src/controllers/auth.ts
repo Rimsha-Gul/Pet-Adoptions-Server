@@ -548,18 +548,21 @@ const VerifyResetToken = async (req: UserRequest) => {
       !existingUser.passwordResetToken ||
       existingUser.passwordResetToken !== resetToken
     ) {
-      throw { code: 400, message: 'Invalid or expired reset token.' }
+      throw { code: 400, message: 'Invalid or expired reset token' }
     }
 
     return { email }
   } catch (err) {
+    console.log(err)
+    if (err.name === 'TokenExpiredError') {
+      throw { code: 400, message: 'Expired reset token' }
+    }
     if (err.name === 'JsonWebTokenError') {
-      throw { code: 400, message: 'Invalid or expired reset token.' }
+      throw { code: 400, message: 'Invalid reset token' }
     }
     if (err.code) {
       throw err
     }
-    console.log(err)
     throw { code: 500, message: 'Internal server error' }
   }
 }

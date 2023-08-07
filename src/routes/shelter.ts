@@ -62,7 +62,7 @@ shelterRouter.get('/verifyInvitationToken', async (req, res) => {
     const response = await controller.verifyInvitationToken(req)
     return res.send(response)
   } catch (err: any) {
-    return res.status(err.code).send(err.message)
+    return res.status(err.code).send(err)
   }
 })
 
