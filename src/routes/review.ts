@@ -11,7 +11,6 @@ const reviewRouter = express.Router()
 const controller = new ReviewController()
 
 reviewRouter.post('/', authenticateAccessToken, isUser, async (req, res) => {
-  console.log(req.body)
   const { error } = addReviewValidation(req.body)
   if (error) return res.status(400).send(error.details[0].message)
   try {

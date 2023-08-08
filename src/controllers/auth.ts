@@ -553,7 +553,6 @@ const VerifyResetToken = async (req: UserRequest) => {
 
     return { email }
   } catch (err) {
-    console.log(err)
     if (err.name === 'TokenExpiredError') {
       throw { code: 400, message: 'Expired reset token' }
     }

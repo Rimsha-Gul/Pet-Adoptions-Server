@@ -6,7 +6,9 @@ export const generateShelters = async () => {
       email: 'shelter1@test.com',
       password: 'password',
       name: 'Shelter 1',
-      role: 'SHELTER'
+      role: 'SHELTER',
+      rating: 0,
+      numberOfReviews: 0
     },
     {
       email: 'shelter2@test.com',

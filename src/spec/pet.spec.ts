@@ -1,4 +1,5 @@
 import {
+  generatePetWithApplication,
   Pet,
   generatePet,
   generatePets,
@@ -2136,27 +2137,49 @@ describe('pet', () => {
     })
   })
 
-  // describe('get pet', () => {
-  //   let user: Admin
+  describe('get a pet', () => {
+    let user: Admin
 
-  //   beforeEach(async () => {
-  //     user = await generateAdminandTokens(Role.Shelter)
-  //     await generatePets()
-  //   })
-  //   afterEach(async () => {
-  //     await removeAllUsers()
-  //     jest.restoreAllMocks()
-  //   })
+    beforeEach(async () => {
+      user = await generateAdminandTokens(Role.Shelter)
+      await generatePets()
+    })
+    afterEach(async () => {
+      await removeAllUsers()
+      jest.restoreAllMocks()
+    })
 
-  //   it('should successfully fetch the pet', async () => {
-  //     const response = await request(app)
-  //       .get('/pet?id=A123456789')
-  //       .auth(user.tokens.accessToken, { type: 'bearer' })
-  //       .expect(200)
+    it('should successfully fetch the pet', async () => {
+      const response = await request(app)
+        .get('/pet?id=A123456799')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
 
-  //     expect(response.body.pet).not.toBeNull()
-  //   })
-  // })
+      expect(response.body.pet).toBeDefined()
+      expect(response.body.pet.applicationID).toBeNull()
+    })
+
+    it('should respond with bad request if pet does not exist', async () => {
+      const response = await request(app)
+        .get('/pet?id=A123456789')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(404)
+
+      expect(response.text).toEqual('Pet not found')
+      expect(response.body).toEqual({})
+    })
+
+    it('should successfully fetch the pet with application ID if there is an application for that pet from that user', async () => {
+      await generatePetWithApplication()
+      const response = await request(app)
+        .get('/pet?id=A123456789')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pet).toBeDefined()
+      expect(response.body.pet.applicationID).toBeDefined()
+    })
+  })
 
   describe('get pets', () => {
     let user: Admin

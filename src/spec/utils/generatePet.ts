@@ -1,11 +1,14 @@
 import { User } from '../../models/User'
-import Pet, {
+import {
   ActivityNeeds,
   Category,
   Gender,
-  LevelOfGrooming
+  LevelOfGrooming,
+  Pet
 } from '../../models/Pet'
 import { generateShelters } from './generateShelters'
+import { generateApplication } from './generateApplication'
+import { Application } from '../../models/Application'
 
 export interface Pet {
   shelterID: string
@@ -28,6 +31,7 @@ export interface Pet {
   bio: string
   traits: string
   adoptionFee: string
+  applicationID?: string
 }
 
 export const generatePet = async () => {
@@ -277,8 +281,48 @@ export const generatePets = async () => {
 
   const pets = petsData.map((data) => new Pet(data))
   await Pet.insertMany(pets)
+  //const spets = await Pet.find()
+  //console.log(spets)
 }
 
 export const removeAllPets = async (category?: Category) => {
   await Pet.deleteMany({ category: category })
+}
+
+export const generatePetWithApplication = async () => {
+  const pet: Pet = await generatePet()
+  await generateApplication(pet.shelterID, pet.microchipID)
+  const application = await Application.findOne({
+    microchipID: pet.microchipID
+  })
+
+  await generateShelters()
+  const shelters = await User.find({ role: 'SHELTER' })
+
+  const newPet = new Pet({
+    shelterID: shelters[0]._id.toString(),
+    microchipID: 'A123456789',
+    name: 'Max',
+    gender: Gender.Male,
+    birthDate: '2022-01-01',
+    color: 'Brown',
+    breed: 'Labrador',
+    category: Category.Dog,
+    activityNeeds: ActivityNeeds.High,
+    levelOfGrooming: LevelOfGrooming.Medium,
+    isHouseTrained: true,
+    healthInfo: {
+      healthCheck: true,
+      allergiesTreated: false,
+      wormed: true,
+      heartwormTreated: true,
+      vaccinated: true,
+      deSexed: true
+    },
+    bio: 'This is Max, a friendly Labrador.',
+    traits: 'Active, Friendly, Playful',
+    adoptionFee: '200 USD',
+    applicationID: application?._id.toString()
+  })
+  await newPet.save()
 }

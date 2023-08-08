@@ -91,11 +91,15 @@ const getReviews = async (
 ): Promise<ReviewsResponse> => {
   const skip = (page - 1) * limit
   const shelterID = req.query.id
-  console.log(shelterID)
+
+  const shelter = await User.findOne({ _id: shelterID })
+
+  if (!shelter) {
+    throw { code: 404, message: 'Shelter not found' }
+  }
 
   const totalReviews = await Review.countDocuments({ shelterID: shelterID })
   const totalPages = Math.ceil(totalReviews / limit)
-  console.log(totalPages)
 
   const reviewDocs = await Review.find({ shelterID: shelterID })
     .sort({ created_at: -1 })
@@ -109,7 +113,6 @@ const getReviews = async (
       reviewText: reviewDoc.reviewText
     }
   })
-  console.log(reviews)
   return {
     reviews: reviews,
     totalPages: totalPages

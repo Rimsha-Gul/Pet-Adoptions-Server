@@ -236,7 +236,6 @@ const getPetDetails = async (req: UserRequest): Promise<AddPetResponse> => {
 
   // If an application exists, include the application ID
   const applicationID = petApplication ? petApplication._id : null
-  console.log(pet)
   return {
     pet: {
       ...petWithoutImages,
