@@ -1932,6 +1932,7 @@ describe('auth', () => {
     })
 
     it('should verify the reset token successfully', async () => {
+      console.log('user', user)
       const response = await request(app)
         .get(`/auth/verifyResetToken?resetToken=${user.passwordResetToken}`)
         .expect(200)
@@ -1942,7 +1943,6 @@ describe('auth', () => {
     it('should fail to verify with expired token', async () => {
       // replace this with your function to generate an expired token
       const expiredToken = generateExpiredToken(user.email)
-      console.log(expiredToken)
 
       const response = await request(app)
         .get(`/auth/verifyResetToken?resetToken=${expiredToken}`)
@@ -1963,6 +1963,7 @@ describe('auth', () => {
       const tokenForNonExistentUser = generateResetToken(
         'nonexistent@example.com'
       )
+      console.log('tokenForNonExistentUser', tokenForNonExistentUser)
 
       const response = await request(app)
         .get(`/auth/verifyResetToken?resetToken=${tokenForNonExistentUser}`)
@@ -1991,6 +1992,7 @@ describe('auth', () => {
     })
 
     it('should reset the password successfully', async () => {
+      console.log(payload)
       const response = await request(app)
         .put('/auth/resetPassword')
         .send(payload)
