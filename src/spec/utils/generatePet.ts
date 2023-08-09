@@ -281,8 +281,6 @@ export const generatePets = async () => {
 
   const pets = petsData.map((data) => new Pet(data))
   await Pet.insertMany(pets)
-  //const spets = await Pet.find()
-  //console.log(spets)
 }
 
 export const removeAllPets = async (category?: Category) => {
@@ -291,7 +289,7 @@ export const removeAllPets = async (category?: Category) => {
 
 export const generatePetWithApplication = async () => {
   const pet: Pet = await generatePet()
-  await generateApplication(pet.shelterID, pet.microchipID)
+  await generateApplication(pet.shelterID, pet.microchipID, 'test@gmail.com')
   const application = await Application.findOne({
     microchipID: pet.microchipID
   })
@@ -325,4 +323,5 @@ export const generatePetWithApplication = async () => {
     applicationID: application?._id.toString()
   })
   await newPet.save()
+  return application?._id
 }

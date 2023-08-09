@@ -9,6 +9,7 @@ import { app } from '../app'
 import {
   Admin,
   generateAdminandTokens,
+  generateUserandTokens,
   removeAllUsers
 } from './utils/generateUserAndToken'
 import { dropCollections, dropDatabase, mongooseSetUp } from './utils/setup'
@@ -347,7 +348,7 @@ describe('pet', () => {
     })
 
     it('should throw an error if a user(Role: USER) tries to add a pet', async () => {
-      user = await generateAdminandTokens(Role.User)
+      user = await generateUserandTokens()
       const response = await request(app)
         .post('/pet/')
         .auth(user.tokens.accessToken, { type: 'bearer' })

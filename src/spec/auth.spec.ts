@@ -304,7 +304,7 @@ describe('auth', () => {
     })
 
     it('should respond with user data', async () => {
-      await generateInvitation()
+      await generateInvitation('shelter1@test.com')
       const signupData = {
         name: 'Shelter 1',
         email: 'shelter1@test.com',
@@ -1932,7 +1932,6 @@ describe('auth', () => {
     })
 
     it('should verify the reset token successfully', async () => {
-      console.log('user', user)
       const response = await request(app)
         .get(`/auth/verifyResetToken?resetToken=${user.passwordResetToken}`)
         .expect(200)
@@ -1942,7 +1941,7 @@ describe('auth', () => {
 
     it('should fail to verify with expired token', async () => {
       // replace this with your function to generate an expired token
-      const expiredToken = generateExpiredToken(user.email)
+      const expiredToken = generateExpiredToken(user.email, 'RESET')
 
       const response = await request(app)
         .get(`/auth/verifyResetToken?resetToken=${expiredToken}`)
@@ -1963,7 +1962,6 @@ describe('auth', () => {
       const tokenForNonExistentUser = generateResetToken(
         'nonexistent@example.com'
       )
-      console.log('tokenForNonExistentUser', tokenForNonExistentUser)
 
       const response = await request(app)
         .get(`/auth/verifyResetToken?resetToken=${tokenForNonExistentUser}`)
@@ -1992,7 +1990,6 @@ describe('auth', () => {
     })
 
     it('should reset the password successfully', async () => {
-      console.log(payload)
       const response = await request(app)
         .put('/auth/resetPassword')
         .send(payload)
@@ -2036,7 +2033,7 @@ describe('auth', () => {
       // Set expired token for the user
       await UserModel.updateOne(
         { email: userEmail },
-        { passwordResetToken: generateExpiredToken(userEmail) }
+        { passwordResetToken: generateExpiredToken(userEmail, 'RESET') }
       )
 
       const response = await request(app)

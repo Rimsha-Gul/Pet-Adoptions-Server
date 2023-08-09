@@ -23,29 +23,13 @@ export interface Application {
 
 export const generateApplication = async (
   shelterID: string,
-  microchipID: string
+  microchipID: string,
+  applicantEmail: string
 ) => {
-  //   const applicationData = {
-  //     shelterID: shelterID,
-  //     microchipID: microchipID,
-  //     residenceType: ResidenceType.Own,
-  //     hasChildren: false,
-  //     hasOtherPets: false,
-  //     petAloneTime: 1,
-  //     hasPlayTimeParks: true,
-  //     petActivities: 'walking',
-  //     handlePetIssues: 'buy new furniture',
-  //     moveWithPet: 'move with him',
-  //     canAffordPetsNeeds: true,
-  //     canAffordPetsMediacal: true,
-  //     petTravelPlans: 'travel wiith him',
-  //     petOutlivePlans: 'friend will take care of him'
-  //   }
-
   const application = new Application({
     shelterID: shelterID,
     microchipID: microchipID,
-    applicantEmail: 'test@gmail.com',
+    applicantEmail: applicantEmail,
     residenceType: ResidenceType.Own,
     hasChildren: false,
     hasOtherPets: false,
@@ -60,4 +44,8 @@ export const generateApplication = async (
     petOutlivePlans: 'friend will take care of him'
   })
   await application.save()
+}
+
+export const removeApplication = async () => {
+  await Application.deleteMany({})
 }

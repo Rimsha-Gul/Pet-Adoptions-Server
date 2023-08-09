@@ -8,7 +8,8 @@ export const generateShelters = async () => {
       name: 'Shelter 1',
       role: 'SHELTER',
       rating: 0,
-      numberOfReviews: 0
+      numberOfReviews: 0,
+      profilePhoto: 'shelterProfilePhotoID'
     },
     {
       email: 'shelter2@test.com',

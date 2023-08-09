@@ -111,9 +111,10 @@ const getShelter = async (
 const getApplicationDetails = async (
   req: UserRequest
 ): Promise<ApplictionResponseForShelter> => {
+  console.log(req.query.id)
   const application = await Application.findById(req.query.id)
   if (!application) throw { code: 404, message: 'Application not found' }
-
+  console.log(application.applicantEmail)
   const applicant = await User.findOne({
     email: application.applicantEmail
   })
@@ -204,17 +205,17 @@ const verifyInvitationToken = async (
       invitationToken: invitationToken
     })
     if (!invitation || invitation.status !== InvitationStatus.Pending) {
-      throw { code: 400, message: 'Invalid or expired invitation.' }
+      throw { code: 400, message: 'Invalid or expired invitation' }
     }
 
     return { email, role }
   } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      throw { code: 400, message: 'Expired reset token' }
+    }
     if (err.name === 'JsonWebTokenError') {
-      throw { code: 400, message: 'Invalid or expired token.' }
+      throw { code: 400, message: 'Invalid reset token' }
     }
-    if (err.code) {
-      throw err
-    }
-    throw { code: 500, message: 'Internal server error' }
+    throw err
   }
 }

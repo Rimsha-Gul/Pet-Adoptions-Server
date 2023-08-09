@@ -157,8 +157,8 @@ export const generateAdminandTokens = async (role: Role): Promise<Admin> => {
   const password = UserModel.hashPassword('123456')
   const user = new UserModel({
     role: role,
-    name: 'Admin Test User',
-    email: 'admintest@gmail.com',
+    name: role === Role.Admin ? 'Admin Test User' : 'Shelter Test User',
+    email: role === Role.Admin ? 'admintest@gmail.com' : 'shelter1@test.com',
     password: password
   })
   const savedUser = await user.save()
