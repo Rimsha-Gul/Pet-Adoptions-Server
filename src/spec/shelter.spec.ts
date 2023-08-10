@@ -19,10 +19,13 @@ import {
   generateInvitation
 } from './utils/generateInvitation'
 import { generateInvitationToken } from '../utils/generateInvitationToken'
-import { generatePet, generatePetWithApplication } from './utils/generatePet'
+import {
+  generatePetData,
+  generatePetWithApplication
+} from './utils/generatePet'
 import {
   generateApplication,
-  removeApplication
+  removeAllApplications
 } from './utils/generateApplication'
 import { Application } from '../models/Application'
 
@@ -370,7 +373,7 @@ describe('review', () => {
     afterEach(async () => {
       await removeAllUsers()
       await removeAllShelters()
-      await removeApplication()
+      await removeAllApplications()
       jest.restoreAllMocks()
     })
 
@@ -384,7 +387,7 @@ describe('review', () => {
     })
 
     it('should throw not found if application does not exist', async () => {
-      await removeApplication()
+      await removeAllApplications()
       const response = await request(app)
         .get(`/shelter/application?id=${applicationID}`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
@@ -395,7 +398,7 @@ describe('review', () => {
 
     it('should throw not found if applicant does not exist', async () => {
       const storedShelter = await UserModel.findOne({ email: shelter.email })
-      const pet = await generatePet()
+      const pet = await generatePetData()
 
       await generateApplication(
         storedShelter?._id,

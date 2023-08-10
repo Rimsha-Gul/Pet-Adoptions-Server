@@ -1,7 +1,7 @@
 import {
   generatePetWithApplication,
   Pet,
-  generatePet,
+  generatePetData,
   generatePets,
   removeAllPets
 } from './utils/generatePet'
@@ -79,7 +79,7 @@ describe('pet', () => {
       if (!userCheck.includes(currentTestName || ''))
         user = await generateAdminandTokens(Role.Shelter)
 
-      pet = await generatePet()
+      pet = await generatePetData()
     })
     afterEach(async () => {
       await cleanup() // Delete the temporary files after the test
@@ -2233,7 +2233,7 @@ describe('pet', () => {
         .expect(200)
 
       expect(response.body.pets).toBeInstanceOf(Array)
-      expect(response.body.pets.length).toEqual(2)
+      expect(response.body.pets.length).toEqual(3)
       expect(response.body.totalPages).toEqual(2)
     })
 
@@ -2266,7 +2266,7 @@ describe('pet', () => {
         .expect(200)
 
       expect(response.body.pets).toBeInstanceOf(Array)
-      expect(response.body.pets.length).toEqual(2)
+      expect(response.body.pets.length).toEqual(3)
       expect(response.body.totalPages).toEqual(3)
     })
 
@@ -2473,7 +2473,7 @@ describe('pet', () => {
         .expect(200)
 
       expect(response.status).toBe(200)
-      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.pets.length).toEqual(2)
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
@@ -2613,7 +2613,7 @@ describe('pet', () => {
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
-      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.pets.length).toEqual(2)
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
@@ -2815,7 +2815,7 @@ describe('pet', () => {
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
-      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.pets.length).toEqual(2)
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
@@ -3020,7 +3020,7 @@ describe('pet', () => {
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
-      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.pets.length).toEqual(2)
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
@@ -3237,7 +3237,7 @@ describe('pet', () => {
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
-      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.pets.length).toEqual(2)
       expect(response.body.totalPages).toEqual(1)
 
       expect(

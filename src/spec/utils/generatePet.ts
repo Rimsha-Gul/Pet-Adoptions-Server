@@ -4,7 +4,7 @@ import {
   Category,
   Gender,
   LevelOfGrooming,
-  Pet
+  Pet as PetModel
 } from '../../models/Pet'
 import { generateShelters } from './generateShelters'
 import { generateApplication } from './generateApplication'
@@ -34,7 +34,7 @@ export interface Pet {
   applicationID?: string
 }
 
-export const generatePet = async () => {
+export const generatePetData = async () => {
   await generateShelters()
   const shelters = await User.find({ role: 'SHELTER' })
   return {
@@ -59,6 +59,36 @@ export const generatePet = async () => {
     traits: 'Active, Friendly, Playful',
     adoptionFee: '200 USD'
   }
+}
+
+export const generatePet = async () => {
+  await generateShelters()
+  const shelters = await User.find({ role: 'SHELTER' })
+  const pet = new PetModel({
+    shelterID: shelters[0]._id.toString(),
+    microchipID: 'A123456789',
+    name: 'Max',
+    gender: Gender.Male,
+    birthDate: '2022-01-01',
+    color: 'Brown',
+    breed: 'Labrador',
+    category: Category.Dog,
+    activityNeeds: ActivityNeeds.High,
+    levelOfGrooming: LevelOfGrooming.Medium,
+    isHouseTrained: true,
+    healthInfo: {
+      healthCheck: true,
+      allergiesTreated: false,
+      wormed: true,
+      heartwormTreated: true,
+      vaccinated: true,
+      deSexed: true
+    },
+    bio: 'This is Max, a friendly Labrador.',
+    traits: 'Active, Friendly, Playful',
+    adoptionFee: '200 USD'
+  })
+  await pet.save()
 }
 
 export const generatePets = async () => {
@@ -98,7 +128,7 @@ export const generatePets = async () => {
     {
       shelterID: shelters[1]._id.toString(),
       microchipID: 'A123456788',
-      name: 'Max',
+      name: 'Snowball',
       gender: Gender.Male,
       birthDate: birthdate,
       color: 'Brown',
@@ -124,7 +154,7 @@ export const generatePets = async () => {
     {
       shelterID: shelters[1]._id.toString(),
       microchipID: 'A123456778',
-      name: 'Max',
+      name: 'Snowflake',
       gender: Gender.Male,
       birthDate: '2022-01-01',
       color: 'Brown',
@@ -150,7 +180,7 @@ export const generatePets = async () => {
     {
       shelterID: shelters[1]._id.toString(),
       microchipID: 'A123456678',
-      name: 'Max',
+      name: 'Cotton',
       gender: Gender.Male,
       birthDate: '2022-01-01',
       color: 'Brown',
@@ -176,7 +206,7 @@ export const generatePets = async () => {
     {
       shelterID: shelters[1]._id.toString(),
       microchipID: 'A123455678',
-      name: 'Max',
+      name: 'Marbles',
       gender: Gender.Male,
       birthDate: '2022-01-01',
       color: 'Brown',
@@ -202,7 +232,7 @@ export const generatePets = async () => {
     {
       shelterID: shelters[1]._id.toString(),
       microchipID: 'A123445678',
-      name: 'Max',
+      name: 'Willow',
       gender: Gender.Male,
       birthDate: '2022-01-01',
       color: 'Brown',
@@ -228,7 +258,7 @@ export const generatePets = async () => {
     {
       shelterID: shelters[1]._id.toString(),
       microchipID: 'A123345678',
-      name: 'Max',
+      name: 'Cotton Candy',
       gender: Gender.Male,
       birthDate: '2022-01-01',
       color: 'Brown',
@@ -254,7 +284,33 @@ export const generatePets = async () => {
     {
       shelterID: shelters[1]._id.toString(),
       microchipID: 'A122345678',
-      name: 'Max',
+      name: 'Marbles',
+      gender: Gender.Male,
+      birthDate: '2022-01-01',
+      color: 'Brown',
+      breed: 'Labrador',
+      category: Category.SmallAndFurry,
+      activityNeeds: ActivityNeeds.High,
+      levelOfGrooming: LevelOfGrooming.Medium,
+      isHouseTrained: true,
+      healthInfo: {
+        healthCheck: true,
+        allergiesTreated: false,
+        wormed: true,
+        heartwormTreated: true,
+        vaccinated: true,
+        deSexed: true
+      },
+      bio: 'This is Max, a friendly Labrador.',
+      traits: 'Active, Friendly, Playful',
+      adoptionFee: '200 USD',
+      images: ['mockFileID1', 'mockFileID2', 'mockFileID3'],
+      isAdopted: false
+    },
+    {
+      shelterID: shelters[1]._id.toString(),
+      microchipID: 'A112345678',
+      name: 'Marshmellow',
       gender: Gender.Male,
       birthDate: '2022-01-01',
       color: 'Brown',
@@ -279,16 +335,20 @@ export const generatePets = async () => {
     }
   ]
 
-  const pets = petsData.map((data) => new Pet(data))
-  await Pet.insertMany(pets)
+  const pets = petsData.map((data) => new PetModel(data))
+  await PetModel.insertMany(pets)
 }
 
 export const removeAllPets = async (category?: Category) => {
-  await Pet.deleteMany({ category: category })
+  await PetModel.deleteMany({ category: category })
+}
+
+export const removePets = async () => {
+  await PetModel.deleteMany({})
 }
 
 export const generatePetWithApplication = async () => {
-  const pet: Pet = await generatePet()
+  const pet: Pet = await generatePetData()
   await generateApplication(pet.shelterID, pet.microchipID, 'test@gmail.com')
   const application = await Application.findOne({
     microchipID: pet.microchipID
@@ -297,7 +357,7 @@ export const generatePetWithApplication = async () => {
   await generateShelters()
   const shelters = await User.find({ role: 'SHELTER' })
 
-  const newPet = new Pet({
+  const newPet = new PetModel({
     shelterID: shelters[0]._id.toString(),
     microchipID: 'A123456789',
     name: 'Max',

@@ -135,7 +135,7 @@ export const applyForPetValidation = (data: any): Joi.ValidationResult =>
       then: Joi.required(),
       otherwise: Joi.forbidden()
     }),
-    petAloneTime: Joi.number().integer().min(0).max(24),
+    petAloneTime: Joi.number().integer().min(0).max(24).required(),
     hasPlayTimeParks: Joi.boolean().required(),
     petActivities: Joi.string().required(),
     handlePetIssues: Joi.string().required(),
@@ -144,6 +144,14 @@ export const applyForPetValidation = (data: any): Joi.ValidationResult =>
     canAffordPetsMediacal: Joi.boolean().required(),
     petTravelPlans: Joi.string().required(),
     petOutlivePlans: Joi.string().required()
+  }).validate(data)
+
+export const getAllApplicationsValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).default(3),
+    searchQuery: Joi.string().allow('').optional(),
+    applicationStatusFilter: Joi.string().allow('').optional()
   }).validate(data)
 
 export const idValidation = (data: any): Joi.ValidationResult =>
