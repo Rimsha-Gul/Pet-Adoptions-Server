@@ -93,7 +93,6 @@ const getShelter = async (
     req.user!.email
   )
 
-  console.log('canUserReview', canUserReview)
   const shelterResponse = {
     profilePhoto: profilePhotoUrl,
     name: shelter.name,
@@ -111,10 +110,8 @@ const getShelter = async (
 const getApplicationDetails = async (
   req: UserRequest
 ): Promise<ApplictionResponseForShelter> => {
-  console.log(req.query.id)
   const application = await Application.findById(req.query.id)
   if (!application) throw { code: 404, message: 'Application not found' }
-  console.log(application.applicantEmail)
   const applicant = await User.findOne({
     email: application.applicantEmail
   })

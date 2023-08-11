@@ -347,11 +347,12 @@ export const removePets = async () => {
   await PetModel.deleteMany({})
 }
 
-export const generatePetWithApplication = async () => {
+export const generatePetWithApplication = async (applicantEmail: string) => {
   const pet: Pet = await generatePetData()
-  await generateApplication(pet.shelterID, pet.microchipID, 'test@gmail.com')
+  await generateApplication(pet.shelterID, pet.microchipID, applicantEmail)
   const application = await Application.findOne({
-    microchipID: pet.microchipID
+    microchipID: pet.microchipID,
+    applicantEmail: applicantEmail
   })
 
   await generateShelters()

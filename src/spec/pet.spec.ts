@@ -2171,7 +2171,7 @@ describe('pet', () => {
     })
 
     it('should successfully fetch the pet with application ID if there is an application for that pet from that user', async () => {
-      await generatePetWithApplication()
+      await generatePetWithApplication(user.email)
       const response = await request(app)
         .get('/pet?id=A123456789')
         .auth(user.tokens.accessToken, { type: 'bearer' })

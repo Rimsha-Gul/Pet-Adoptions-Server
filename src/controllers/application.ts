@@ -42,7 +42,6 @@ import {
   getShelterShelterVisitScheduledEmail
 } from '../data/emailMessages'
 import { sendEmail } from '../middleware/sendEmail'
-import { validateStatusChange } from '../utils/validateStatusChange'
 import { Visit } from '../models/Visit'
 import { canReview } from '../utils/canReview'
 
@@ -126,11 +125,8 @@ export class ApplicationController {
   @Example<UpdateApplicationPayload>(updateApplicationExample)
   @Security('bearerAuth')
   @Put('/updateStatus')
-  public async updateApplicationStatus(
-    @Body() body: UpdateApplicationPayload,
-    @Request() req: UserRequest
-  ) {
-    return updateApplicationStatus(body, req)
+  public async updateApplicationStatus(@Body() body: UpdateApplicationPayload) {
+    return updateApplicationStatus(body)
   }
 }
 
@@ -234,7 +230,7 @@ const getApplicationDetails = async (
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const canUserReview = await canReview(shelter.id.toString(), req.user!.email)
-  console.log(canUserReview)
+
   const applicationResponse: ApplictionResponseForUser = {
     application: {
       ...application.toObject(),
@@ -252,7 +248,6 @@ const getApplicationDetails = async (
     },
     canReview: canUserReview
   }
-  console.log('applicationResponse', applicationResponse)
   return applicationResponse
 }
 
@@ -264,8 +259,6 @@ const getApplications = async (
   applicationStatusFilter?: string
 ): Promise<AllApplicationsResponse> => {
   try {
-    //console.log(applicationStatusFilter)
-    console.log('searchQuery', searchQuery)
     const skip = (page - 1) * limit
     // Fetch applications with pagination
     let filter: { [key: string]: any } = {}
@@ -311,11 +304,9 @@ const getApplications = async (
     // First, get the total count of documents after filtering and all shelter names
     // Get all statuses without pagination or status filter
     const allApplications = await Application.aggregate(pipeline)
-    // console.log(allApplications)
     const applicationStatuses = [
       ...new Set(allApplications.map((app) => app.status))
     ].sort()
-    //console.log('statuses', applicationStatuses)
 
     // Add status and shelter name filters to pipeline if defined
     if (applicationStatusFilter) {
@@ -345,13 +336,11 @@ const getApplications = async (
       }
     }
 
-    // console.log('updated pipeline', pipeline)
     // First, get the total count of documents after filtering and all shelter names
     const countPipeline = [...pipeline, { $count: 'total' }]
     const count = await Application.aggregate(countPipeline)
-    // console.log('count', count)
+
     const totalApplications = count[0]?.total || 0
-    console.log('totalApplications', totalApplications)
 
     // Add pagination stages to the pipeline
     ;(pipeline as any).push({ $skip: skip }, { $limit: limit })
@@ -466,6 +455,12 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
 
   application.shelterVisitDate = visitDate
 
+  const applicant = await User.findOne({
+    role: Role.User,
+    email: application.applicantEmail
+  })
+  if (!applicant) throw { code: 404, message: 'Applicant not found' }
+
   const shelter = await User.findOne({
     role: Role.Shelter,
     _id: application.shelterID
@@ -478,7 +473,7 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
       application._id.toString(),
       visitDate
     )
-    await sendEmail(application.applicantEmail, subject, message)
+    await sendEmail(applicant.email, subject, message)
   }
 
   // Sending email to the shelter
@@ -495,7 +490,7 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
 
   const visit = new Visit({
     shelterID: application.shelterID,
-    applicantEmail: application.applicantEmail,
+    applicantEmail: applicant.email,
     visitDate: visitDate
   })
 
@@ -504,17 +499,8 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
   return { code: 200, message: 'Shelter Visit has been scheduled' }
 }
 
-const updateApplicationStatus = async (
-  body: UpdateApplicationPayload,
-  req: UserRequest
-) => {
+const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
   const { id, status } = body
-
-  const role = req.user?.role || Role.User
-  // Check if the role has permission to make this status change.
-  if (!validateStatusChange(role, status)) {
-    throw { code: 403, message: 'Forbidden status change' }
-  }
 
   const application = await Application.findById(id)
   if (!application) throw { code: 404, message: 'Application not found' }

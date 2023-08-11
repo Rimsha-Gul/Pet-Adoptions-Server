@@ -11,7 +11,6 @@ export const generateExpiredToken = (email: string, type: string) => {
 }
 
 export const generateExpiredInvitationToken = (email: string) => {
-  console.log('henerate expired token')
   return jwt.sign(
     { email: email, role: 'SHELTER' },
     process.env.INVITATION_TOKEN_SECRET || 'default-secret',

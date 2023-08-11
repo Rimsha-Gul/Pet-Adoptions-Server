@@ -367,7 +367,7 @@ describe('review', () => {
       user = await generateUserandTokens()
       shelter = await generateAdminandTokens(Role.Shelter)
       await generateShelters()
-      applicationID = await generatePetWithApplication()
+      applicationID = await generatePetWithApplication(user.email)
     })
 
     afterEach(async () => {
