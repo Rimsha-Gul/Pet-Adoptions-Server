@@ -5,7 +5,17 @@ import {
   ReviewResponse,
   ReviewsResponse
 } from '../models/Review'
-import { Body, Get, Post, Query, Request, Route, Security, Tags } from 'tsoa'
+import {
+  Body,
+  Get,
+  Post,
+  Put,
+  Query,
+  Request,
+  Route,
+  Security,
+  Tags
+} from 'tsoa'
 import { User } from '../models/User'
 
 @Route('review')
@@ -36,6 +46,19 @@ export class ReviewController {
     @Request() req: UserRequest
   ): Promise<ReviewsResponse> {
     return getReviews(page, limit, req)
+  }
+
+  /**
+   * @summary Updates review
+   *
+   */
+  @Security('bearerAuth')
+  @Put('/update')
+  public async updateReview(
+    @Body() body: ReviewPayload,
+    @Request() req: UserRequest
+  ) {
+    return updateReview(body, req)
   }
 }
 
@@ -109,6 +132,7 @@ const getReviews = async (
   const reviews: ReviewResponse[] = reviewDocs.map((reviewDoc) => {
     return {
       applicantName: reviewDoc.applicantName,
+      applicantEmail: reviewDoc.applicantEmail,
       rating: reviewDoc.rating,
       reviewText: reviewDoc.reviewText
     }
@@ -117,4 +141,44 @@ const getReviews = async (
     reviews: reviews,
     totalPages: totalPages
   }
+}
+
+const updateReview = async (body: ReviewPayload, req: UserRequest) => {
+  // Check if the review to be updated exists
+  const { shelterID, rating, reviewText } = body
+  const existingReview = await Review.findOne({
+    shelterID: shelterID,
+    applicantEmail: req.user?.email
+  })
+
+  if (!existingReview) {
+    throw { code: 400, message: 'Review not found' }
+  }
+
+  const user = await User.findOne({ email: req.user?.email })
+  if (!user) throw { code: 404, message: 'User not found' }
+
+  const oldRating = existingReview.rating // Store the old rating before updating
+
+  existingReview.rating = rating
+  existingReview.reviewText = reviewText
+
+  await existingReview.save()
+
+  // Fetch the shelter
+  const shelter = await User.findOne({ _id: shelterID })
+
+  if (!shelter) {
+    throw { code: 404, message: 'Shelter not found' }
+  }
+
+  // Calculate the new average rating
+  // Subtract the old rating and add the new rating, then divide by the total number of reviews
+  shelter.rating =
+    (shelter.rating * shelter.numberOfReviews - oldRating + rating) /
+    shelter.numberOfReviews
+
+  await shelter.save()
+
+  return { code: 200, message: 'Review updated successfully' }
 }

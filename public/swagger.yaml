@@ -683,6 +683,8 @@ components:
             properties:
                 applicantName:
                     type: string
+                applicantEmail:
+                    type: string
                 rating:
                     type: number
                     format: double
@@ -690,6 +692,7 @@ components:
                     type: string
             required:
                 - applicantName
+                - applicantEmail
                 - rating
                 - reviewText
             type: object
@@ -1650,6 +1653,35 @@ paths:
                     schema:
                         format: double
                         type: number
+    /review/update:
+        put:
+            operationId: UpdateReview
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
+            summary: 'Updates review'
+            tags:
+                - Review
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ReviewPayload'
 servers:
     -
         url: /

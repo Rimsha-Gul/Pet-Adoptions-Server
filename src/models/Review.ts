@@ -8,6 +8,7 @@ export interface ReviewPayload {
 
 export interface ReviewResponse {
   applicantName: string
+  applicantEmail: string
   rating: number
   reviewText: string
 }

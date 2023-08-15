@@ -37,4 +37,15 @@ reviewRouter.get('/all', authenticateAccessToken, async (req, res) => {
   }
 })
 
+reviewRouter.put('/update', authenticateAccessToken, async (req, res) => {
+  const { error } = addReviewValidation(req.body)
+  if (error) return res.status(400).send(error.details[0].message)
+  try {
+    const response = await controller.updateReview(req.body, req)
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
+  }
+})
+
 export default reviewRouter
