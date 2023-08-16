@@ -3424,7 +3424,7 @@ describe('pet', () => {
 
     it('should return 500 when there is an internal server error', async () => {
       // Mock the find method to throw an error
-      jest.spyOn(PetModel, 'find').mockImplementation(() => {
+      jest.spyOn(PetModel, 'aggregate').mockImplementation(() => {
         throw new Error('Failed to fetch pets')
       })
 
