@@ -79,6 +79,7 @@ export interface PetsResponse {
   hasAdoptionRequest: boolean
   applicationID?: string
   isAdopted: boolean
+  shelterRating?: number
 }
 
 export interface AddPetResponse {
@@ -130,6 +131,11 @@ const PetSchema = new Schema<PetDocument>(
     isAdopted: { type: Boolean, default: false }
   },
   { timestamps: true }
+)
+
+PetSchema.index(
+  { name: 'text', bio: 'text' },
+  { weights: { name: 10, bio: 1 } }
 )
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface

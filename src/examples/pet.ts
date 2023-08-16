@@ -29,7 +29,8 @@ export const petResponseExample = {
       'https://example.com/images/fluffy2.jpg'
     ],
     hasAdoptionRequest: false,
-    isAdopted: false
+    isAdopted: false,
+    shelterRating: 4.8
   }
 }
 

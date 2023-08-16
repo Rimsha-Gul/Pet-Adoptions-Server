@@ -261,6 +261,9 @@ components:
                     type: string
                 isAdopted:
                     type: boolean
+                shelterRating:
+                    type: number
+                    format: double
             required:
                 - shelterName
                 - microchipID
@@ -1157,7 +1160,7 @@ paths:
                                 $ref: '#/components/schemas/AddPetResponse'
                             examples:
                                 'Example 1':
-                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: MALE, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false}}
+                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: MALE, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false, shelterRating: 4.8}}
             summary: 'Accepts pet info, adds pet to db and returns pet info'
             tags:
                 - Pet
@@ -1247,7 +1250,7 @@ paths:
                                 $ref: '#/components/schemas/AddPetResponse'
                             examples:
                                 'Example 1':
-                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: MALE, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false}}
+                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: MALE, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false, shelterRating: 4.8}}
             summary: 'Returns details of a pet given its id'
             tags:
                 - Pet

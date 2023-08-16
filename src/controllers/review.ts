@@ -146,6 +146,7 @@ const getReviews = async (
 const updateReview = async (body: ReviewPayload, req: UserRequest) => {
   // Check if the review to be updated exists
   const { shelterID, rating, reviewText } = body
+
   const existingReview = await Review.findOne({
     shelterID: shelterID,
     applicantEmail: req.user?.email
