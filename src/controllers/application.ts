@@ -10,6 +10,7 @@ import Application, {
   ApplictionResponseForUser,
   ScheduleHomeVisitPayload,
   Status,
+  TimeSlotsResponse,
   UpdateApplicationPayload
 } from '../models/Application'
 import { UserRequest } from '../types/Request'
@@ -42,8 +43,9 @@ import {
   getShelterShelterVisitScheduledEmail
 } from '../data/emailMessages'
 import { sendEmail } from '../middleware/sendEmail'
-import { Visit } from '../models/Visit'
+import { Visit, VisitType } from '../models/Visit'
 import { canReview } from '../utils/canReview'
+import { generateTimeSlots } from '../utils/generateTimeSlots'
 
 @Route('application')
 @Tags('Application')
@@ -97,6 +99,18 @@ export class ApplicationController {
   }
 
   /**
+   * @summary Returns time slots available to shcedule visit on a particular day
+   *
+   */
+  @Security('bearerAuth')
+  @Get('/timeSlots')
+  public async getTimeSlots(
+    @Request() req: UserRequest
+  ): Promise<TimeSlotsResponse> {
+    return getTimeSlots(req)
+  }
+
+  /**
    * @summary Accepts application id and date for home visit and sends email to applicant and shelter
    *
    */
@@ -128,6 +142,32 @@ export class ApplicationController {
   public async updateApplicationStatus(@Body() body: UpdateApplicationPayload) {
     return updateApplicationStatus(body)
   }
+}
+
+const getTimeSlots = async (req: UserRequest): Promise<TimeSlotsResponse> => {
+  const { id, visitDate, visitType } = req.query
+
+  // Generate all possible time slots for the day
+  const allTimeSlots = generateTimeSlots()
+
+  // Find the slots that are already booked
+  const bookedVisits = await Visit.find({
+    visitType: visitType,
+    visitDate: visitDate,
+    shelterID: id
+  })
+
+  const bookedTimeSlots = bookedVisits.map((visit) => {
+    const visitDateObj = new Date(visit.visitDate)
+    return visitDateObj.toTimeString().split(' ')[0]
+  })
+
+  // Filter the time slots that are still available
+  const availableTimeSlots: string[] = allTimeSlots.filter(
+    (slot) => !bookedTimeSlots.includes(slot)
+  )
+
+  return { availableTimeSlots: availableTimeSlots }
 }
 
 const applyForAPet = async (
@@ -445,6 +485,15 @@ const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
   application.status = Status.HomeVisitScheduled
   await application.save()
 
+  const visit = new Visit({
+    shelterID: application.shelterID,
+    applicantEmail: application.applicantEmail,
+    visitDate: visitDate,
+    visitType: VisitType.Home
+  })
+
+  await visit.save()
+
   return { code: 200, message: 'Home Visit has been scheduled' }
 }
 
@@ -491,7 +540,8 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
   const visit = new Visit({
     shelterID: application.shelterID,
     applicantEmail: applicant.email,
-    visitDate: visitDate
+    visitDate: visitDate,
+    visitType: VisitType.Shelter
   })
 
   await visit.save()

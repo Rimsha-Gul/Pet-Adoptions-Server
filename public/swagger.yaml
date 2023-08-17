@@ -516,6 +516,16 @@ components:
                 - applicationStatuses
             type: object
             additionalProperties: false
+        TimeSlotsResponse:
+            properties:
+                availableTimeSlots:
+                    items:
+                        type: string
+                    type: array
+            required:
+                - availableTimeSlots
+            type: object
+            additionalProperties: false
         ScheduleHomeVisitPayload:
             properties:
                 id:
@@ -1413,6 +1423,23 @@ paths:
                     required: false
                     schema:
                         type: string
+    /application/timeSlots:
+        get:
+            operationId: GetTimeSlots
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/TimeSlotsResponse'
+            summary: 'Returns time slots available to shcedule visit on a particular day'
+            tags:
+                - Application
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
     /application/scheduleHomeVisit:
         post:
             operationId: ScheduleHomeVisit

@@ -47,6 +47,10 @@ export interface ScheduleHomeVisitPayload {
   visitDate: string
 }
 
+export interface TimeSlotsResponse {
+  availableTimeSlots: string[]
+}
+
 export interface ApplictionResponseShelter extends ApplicationPayload {
   id: string
   status: Status

@@ -74,6 +74,21 @@ applicationRouter.get(
   }
 )
 
+applicationRouter.get(
+  '/timeSlots',
+  authenticateAccessToken,
+  async (req, res) => {
+    const { error } = scheduleVisitValidation(req.query)
+    if (error) return res.status(400).send(error.details[0].message)
+    try {
+      const response = await controller.getTimeSlots(req)
+      return res.send(response)
+    } catch (err: any) {
+      return res.status(err.code).send(err.message)
+    }
+  }
+)
+
 applicationRouter.post(
   '/scheduleHomeVisit',
   authenticateAccessToken,

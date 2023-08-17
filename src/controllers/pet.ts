@@ -306,21 +306,6 @@ const getAllPets = async (
         )
       }
 
-      // // Fetch all pets of this category to get unique colors, breeds, genders, and ages
-      // const allPetsOfCategory = await Pet.find({
-      //   category: filterOption
-      // }).exec()
-      // colors = Array.from(new Set(allPetsOfCategory.map((pet) => pet.color)))
-      // breeds = Array.from(new Set(allPetsOfCategory.map((pet) => pet.breed)))
-      // genders = Array.from(new Set(allPetsOfCategory.map((pet) => pet.gender)))
-      // ages = Array.from(
-      //   new Set(
-      //     allPetsOfCategory.map((pet) =>
-      //       calculateAgeFromBirthdate(pet.birthDate)
-      //     )
-      //   )
-      // )
-
       // Apply color filter if a colorFilter option is provided
       if (colorFilter) {
         queryObj.color = colorFilter
@@ -388,7 +373,6 @@ const getAllPets = async (
       | { $limit: number }
       | { $count: string }
 
-    // Apply search filter if a search query is provided
     const pipeline: PipelineStage[] = [
       {
         $match: queryObj
@@ -447,31 +431,8 @@ const getAllPets = async (
     pipeline.push({ $skip: skip }, { $limit: limit })
 
     const petsList = await Pet.aggregate(pipeline).exec()
-    console.log('petsList', petsList)
     const totalPetsResult = await totalPetsPromise
-    console.log('totalPetsResult', totalPetsResult)
     const totalPets = totalPetsResult[0] ? totalPetsResult[0].totalPets : 0
-    console.log('totalPets', totalPets)
-
-    // if (searchQuery) {
-    //   //queryObj.$text = { $search: searchQuery }
-    //   queryObj.$or = [
-    //     { name: { $regex: searchQuery, $options: 'i' } },
-    //     { bio: { $regex: searchQuery, $options: 'i' } }
-    //   ]
-    // }
-    // let query = searchQuery
-    //   ? Pet.find(queryObj, { score: { $meta: 'textScore' } })
-    //   : Pet.find(queryObj)
-
-    // // Count total number of pets without applying pagination
-    // const totalPetsPromise = Pet.countDocuments(query)
-    // if (searchQuery) query = query.sort({ score: { $meta: 'textScore' } })
-
-    // // Apply pagination to the query
-    // query = query.skip(skip).limit(limit)
-
-    // const [petsList, totalPets] = await Promise.all([query, totalPetsPromise])
 
     // Map the petsList to include the image URL
     const petsWithImageUrls = await Promise.all(
@@ -501,7 +462,6 @@ const getAllPets = async (
     )
 
     const totalPages = Math.ceil(totalPets / limit)
-    console.log('petsWithImageUrls', petsWithImageUrls)
     return {
       pets: petsWithImageUrls,
       totalPages,

@@ -2,6 +2,7 @@ import Joi from 'joi'
 import { ActivityNeeds, Category, Gender, LevelOfGrooming } from '../models/Pet'
 import { ResidenceType, Status } from '../models/Application'
 import { Role } from '../models/User'
+import { VisitType } from '../models/Visit'
 
 const nameSchema = Joi.string().min(3).max(32)
 const emailSchema = Joi.string().email()
@@ -19,7 +20,7 @@ const petLevelOfGroomingSchema = Joi.string().valid(
 const objectIDSchema = Joi.string().length(24).hex()
 const residenceTypeSchema = Joi.string().valid(...Object.values(ResidenceType))
 const statusSchema = Joi.string().valid(...Object.values(Status))
-
+const visitTypeSchema = Joi.string().valid(...Object.values(VisitType))
 const roleSchema = Joi.string().valid(...Object.values(Role))
 
 const today = new Date()
@@ -170,7 +171,8 @@ export const updateApplicationStatusValidation = (
 export const scheduleVisitValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
     id: objectIDSchema.required(),
-    visitDate: Joi.date().greater(today).less(weekFromNow).required()
+    visitDate: Joi.date().greater(today).less(weekFromNow).required(),
+    visitType: visitTypeSchema.optional()
   }).validate(data)
 
 export const addReviewValidation = (data: any): Joi.ValidationResult =>
