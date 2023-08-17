@@ -17,6 +17,7 @@ export interface UserPayload {
   name: string
   email: string
   password: string
+  role: Role
 }
 
 export interface LoginPayload {
@@ -103,6 +104,7 @@ export interface UserDocument extends UserResponse, Document {
     createdAt: Date
     updatedAt: Date
   }
+  passwordResetToken?: string
   hashPassword(password: string): string
   comparePassword(password: string): boolean
 }
@@ -124,6 +126,20 @@ export interface UpdatedUserResponse {
   user?: UpdatedUser
 }
 
+export interface VerifyInvitationPayload {
+  invitationToken: string
+}
+
+export interface VerifyInvitationResponse {
+  email: string
+  role: Role
+}
+
+export interface ResetPasswordPayload {
+  email: string
+  newPassword: string
+}
+
 const UserSchema = new Schema<UserDocument>(
   {
     role: { type: String, enum: Role },
@@ -132,8 +148,8 @@ const UserSchema = new Schema<UserDocument>(
     address: { type: String },
     bio: { type: String },
     profilePhoto: { type: [String] },
-    rating: { type: Number, default: 0 },
-    numberOfReviews: { type: Number, default: 0 },
+    rating: { type: Number },
+    numberOfReviews: { type: Number },
     password: { type: String, required: true },
     isVerified: { type: Boolean, required: true, default: false },
     verificationCode: {
@@ -144,7 +160,8 @@ const UserSchema = new Schema<UserDocument>(
     tokens: {
       accessToken: { type: String },
       refreshToken: { type: String }
-    }
+    },
+    passwordResetToken: { type: String }
   },
   { timestamps: true }
 )

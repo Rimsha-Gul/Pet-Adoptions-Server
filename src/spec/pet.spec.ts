@@ -1,6 +1,7 @@
 import {
+  generatePetWithApplication,
   Pet,
-  generatePet,
+  generatePetData,
   generatePets,
   removeAllPets
 } from './utils/generatePet'
@@ -8,6 +9,7 @@ import { app } from '../app'
 import {
   Admin,
   generateAdminandTokens,
+  generateUserandTokens,
   removeAllUsers
 } from './utils/generateUserAndToken'
 import { dropCollections, dropDatabase, mongooseSetUp } from './utils/setup'
@@ -77,7 +79,7 @@ describe('pet', () => {
       if (!userCheck.includes(currentTestName || ''))
         user = await generateAdminandTokens(Role.Shelter)
 
-      pet = await generatePet()
+      pet = await generatePetData()
     })
     afterEach(async () => {
       await cleanup() // Delete the temporary files after the test
@@ -346,7 +348,7 @@ describe('pet', () => {
     })
 
     it('should throw an error if a user(Role: USER) tries to add a pet', async () => {
-      user = await generateAdminandTokens(Role.User)
+      user = await generateUserandTokens()
       const response = await request(app)
         .post('/pet/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
@@ -2136,27 +2138,49 @@ describe('pet', () => {
     })
   })
 
-  // describe('get pet', () => {
-  //   let user: Admin
+  describe('get a pet', () => {
+    let user: Admin
 
-  //   beforeEach(async () => {
-  //     user = await generateAdminandTokens(Role.Shelter)
-  //     await generatePets()
-  //   })
-  //   afterEach(async () => {
-  //     await removeAllUsers()
-  //     jest.restoreAllMocks()
-  //   })
+    beforeEach(async () => {
+      user = await generateAdminandTokens(Role.Shelter)
+      await generatePets()
+    })
+    afterEach(async () => {
+      await removeAllUsers()
+      jest.restoreAllMocks()
+    })
 
-  //   it('should successfully fetch the pet', async () => {
-  //     const response = await request(app)
-  //       .get('/pet?id=A123456789')
-  //       .auth(user.tokens.accessToken, { type: 'bearer' })
-  //       .expect(200)
+    it('should successfully fetch the pet', async () => {
+      const response = await request(app)
+        .get('/pet?id=A123456799')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
 
-  //     expect(response.body.pet).not.toBeNull()
-  //   })
-  // })
+      expect(response.body.pet).toBeDefined()
+      expect(response.body.pet.applicationID).toBeNull()
+    })
+
+    it('should respond with bad request if pet does not exist', async () => {
+      const response = await request(app)
+        .get('/pet?id=A123456789')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(404)
+
+      expect(response.text).toEqual('Pet not found')
+      expect(response.body).toEqual({})
+    })
+
+    it('should successfully fetch the pet with application ID if there is an application for that pet from that user', async () => {
+      await generatePetWithApplication(user.email)
+      const response = await request(app)
+        .get('/pet?id=A123456789')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.pet).toBeDefined()
+      expect(response.body.pet.applicationID).toBeDefined()
+    })
+  })
 
   describe('get pets', () => {
     let user: Admin
@@ -2209,7 +2233,7 @@ describe('pet', () => {
         .expect(200)
 
       expect(response.body.pets).toBeInstanceOf(Array)
-      expect(response.body.pets.length).toEqual(2)
+      expect(response.body.pets.length).toEqual(3)
       expect(response.body.totalPages).toEqual(2)
     })
 
@@ -2242,7 +2266,7 @@ describe('pet', () => {
         .expect(200)
 
       expect(response.body.pets).toBeInstanceOf(Array)
-      expect(response.body.pets.length).toEqual(2)
+      expect(response.body.pets.length).toEqual(3)
       expect(response.body.totalPages).toEqual(3)
     })
 
@@ -2449,7 +2473,7 @@ describe('pet', () => {
         .expect(200)
 
       expect(response.status).toBe(200)
-      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.pets.length).toEqual(2)
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
@@ -2589,7 +2613,7 @@ describe('pet', () => {
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
-      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.pets.length).toEqual(2)
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
@@ -2791,7 +2815,7 @@ describe('pet', () => {
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
-      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.pets.length).toEqual(2)
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
@@ -2996,7 +3020,7 @@ describe('pet', () => {
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
-      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.pets.length).toEqual(2)
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
@@ -3213,7 +3237,7 @@ describe('pet', () => {
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
-      expect(response.body.pets.length).toEqual(1)
+      expect(response.body.pets.length).toEqual(2)
       expect(response.body.totalPages).toEqual(1)
 
       expect(
@@ -3400,7 +3424,7 @@ describe('pet', () => {
 
     it('should return 500 when there is an internal server error', async () => {
       // Mock the find method to throw an error
-      jest.spyOn(PetModel, 'find').mockImplementation(() => {
+      jest.spyOn(PetModel, 'aggregate').mockImplementation(() => {
         throw new Error('Failed to fetch pets')
       })
 

@@ -9,7 +9,9 @@ import User, {
   ShelterResponse,
   EmailPayload,
   CheckPasswordPayload,
-  UpdateProfilePayload
+  UpdateProfilePayload,
+  Role,
+  ResetPasswordPayload
 } from '../models/User'
 import { generateAccessToken } from '../utils/generateAccessToken'
 import { generateRefreshToken } from '../utils/generateRefreshToken'
@@ -32,7 +34,10 @@ import {
 import { RequestUser } from '../types/RequestUser'
 import { sendEmail } from '../middleware/sendEmail'
 import { generateVerificationCode } from '../utils/generateVerificationCode'
-import { getVerificationCodeEmail } from '../data/emailMessages'
+import {
+  getResetPasswordEmail,
+  getVerificationCodeEmail
+} from '../data/emailMessages'
 import {
   emailPayloadExample,
   checkPasswordPayloadExample,
@@ -40,8 +45,12 @@ import {
   signupResponseExample,
   tokenResponseExample,
   updateProfilePayloadExample,
-  verificationResponseExample
+  verificationResponseExample,
+  resetPasswordPayloadExample
 } from '../examples/auth'
+import { Invitation, InvitationStatus } from '../models/Invitation'
+import { generateResetToken } from '../utils/generateResetToken'
+import jwt from 'jsonwebtoken'
 
 @Route('auth')
 @Tags('Auth')
@@ -185,24 +194,67 @@ export class AuthController {
   ): Promise<ShelterResponse[]> {
     return getShelters(req)
   }
+
+  /**
+   * @summary Checks if user's entered email has an associated account and create reset tokens
+   */
+  @Example<EmailPayload>(emailPayloadExample)
+  @Post('/requestPasswordReset')
+  public async requestPasswordReset(@Body() body: EmailPayload) {
+    return requestPasswordReset(body)
+  }
+
+  /**
+   * @summary Verifies the reset password token for user
+   *
+   */
+  @Get('/verifyResetToken')
+  public async VerifyResetToken(@Request() req: UserRequest) {
+    return VerifyResetToken(req)
+  }
+
+  /**
+   * @summary Changes user's password
+   */
+  @Example<ResetPasswordPayload>(resetPasswordPayloadExample)
+  @Put('/resetPassword')
+  public async resetPassword(@Body() body: ResetPasswordPayload) {
+    return resetPassword(body)
+  }
 }
 
 const signup = async (body: UserPayload): Promise<SignupResponse> => {
-  // existing user check
-  // hashed password
-  // user creation
-  // token generation
-  const { name, email, password } = body
+  const { name, email, password, role } = body
+
+  if (role === Role.Shelter) {
+    const invitation = await Invitation.findOne({ shelterEmail: email })
+    if (!invitation) {
+      throw { code: 400, message: 'Invalid invitation' }
+    }
+    invitation.status = InvitationStatus.Accepted
+    await invitation.save()
+  }
+
   const existingUser = await User.findOne({ email })
 
   if (existingUser) {
     throw { code: 409, message: 'User already exists' }
   }
 
-  const user = new User({
+  const userPayload = {
     name: name,
-    email: email
-  })
+    email: email,
+    role: role
+  }
+
+  // If role is 'Shelter', include rating and numberOfReviews
+  if (role === Role.Shelter) {
+    userPayload['rating'] = 0
+    userPayload['numberOfReviews'] = 0
+  }
+
+  const user = new User(userPayload)
+
   user.password = User.hashPassword(password)
   await user.save()
 
@@ -447,4 +499,105 @@ const getShelters = async (_req: UserRequest): Promise<ShelterResponse[]> => {
     name: shelter.name
   }))
   return shelterResponses
+}
+
+const requestPasswordReset = async (body: EmailPayload) => {
+  const { email } = body
+
+  // Check if there's a user with this email
+  const user = await User.findOne({ email })
+  if (!user) throw { code: 404, message: 'User not found' }
+
+  // Generate a unique token and associate it with the user
+  const resetToken = generateResetToken(email)
+  user.passwordResetToken = resetToken
+
+  await user.save()
+
+  // Create the reset password email content.
+  const resetEmail = getResetPasswordEmail(resetToken)
+
+  // Send the email
+  try {
+    await sendEmail(user.email, resetEmail.subject, resetEmail.message)
+  } catch (error) {
+    throw { code: 500, message: 'Error sending reset password email' }
+  }
+
+  return { code: 200, message: 'Reset password email sent successfully' }
+}
+
+const VerifyResetToken = async (req: UserRequest) => {
+  const { resetToken } = req.query
+
+  try {
+    // decode and verify the token synchronously
+    const decoded: any = jwt.verify(
+      resetToken as string,
+      process.env.RESET_TOKEN_SECRET || ''
+    )
+
+    const { email } = decoded
+
+    // Check if a user with the given email exists
+    const existingUser = await User.findOne({ email })
+    if (!existingUser) throw { code: 404, message: 'User not found' }
+
+    // Verify the reset token
+    if (
+      !existingUser.passwordResetToken ||
+      existingUser.passwordResetToken !== resetToken
+    ) {
+      throw { code: 400, message: 'Invalid or expired reset token' }
+    }
+
+    return { email }
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      throw { code: 400, message: 'Expired reset token' }
+    }
+    if (err.name === 'JsonWebTokenError') {
+      throw { code: 400, message: 'Invalid reset token' }
+    }
+    if (err.code) {
+      throw err
+    }
+    throw { code: 500, message: 'Internal server error' }
+  }
+}
+
+const resetPassword = async (body: ResetPasswordPayload) => {
+  const { email, newPassword } = body
+
+  try {
+    // Find the user with the given email
+    const user = await User.findOne({ email })
+    if (!user) throw { code: 404, message: 'User not found' }
+
+    if (!user.passwordResetToken) {
+      throw { code: 404, message: 'No password reset token found' }
+    }
+
+    // Check if the password reset token is still valid
+    try {
+      jwt.verify(user.passwordResetToken, process.env.RESET_TOKEN_SECRET || '')
+    } catch (err) {
+      throw { code: 400, message: 'Invalid or expired reset token.' }
+    }
+
+    // Reset the user's password
+    user.password = User.hashPassword(newPassword)
+    // Reset the password reset token
+    user.passwordResetToken = undefined
+
+    // Save the user
+    await user.save()
+
+    return { code: 200, message: 'Password reset successfully' }
+  } catch (err) {
+    if (err.code) {
+      throw err
+    }
+    throw { code: 500, message: 'Internal server error' }
+  }
 }

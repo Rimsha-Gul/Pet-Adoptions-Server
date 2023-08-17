@@ -226,6 +226,11 @@ const getPetDetails = async (req: UserRequest): Promise<AddPetResponse> => {
   if (!pet) throw { code: 404, message: 'Pet not found' }
 
   const { birthDate, images, ...petWithoutImages } = pet.toObject()
+
+  // Fetch the shelter document using the shelterID from pet document
+  const shelter = await User.findById(pet.shelterID)
+  if (!shelter) throw { code: 404, message: 'Shelter not found' }
+
   const imageUrls = await Promise.all(images.map((image) => getImageURL(image)))
 
   const petApplication = await Application.findOne({
@@ -236,14 +241,14 @@ const getPetDetails = async (req: UserRequest): Promise<AddPetResponse> => {
 
   // If an application exists, include the application ID
   const applicationID = petApplication ? petApplication._id : null
-  console.log(pet)
   return {
     pet: {
       ...petWithoutImages,
       birthDate: birthDate.toISOString().split('T')[0],
       images: imageUrls,
       hasAdoptionRequest: petHasAdoptionRequest,
-      applicationID: applicationID
+      applicationID: applicationID,
+      shelterRating: shelter.rating
     }
   }
 }
@@ -262,7 +267,7 @@ const getAllPets = async (
   try {
     const skip = (page - 1) * limit
     const queryObj: { [key: string]: any } = {}
-    queryObj.isAdopted = false
+    queryObj.isAdopted = { $ne: true }
 
     let colors: string[] = []
     let breeds: string[] = []
@@ -273,20 +278,48 @@ const getAllPets = async (
     if (filterOption) {
       queryObj.category = filterOption
 
-      // Fetch all pets of this category to get unique colors, breeds, genders, and ages
-      const allPetsOfCategory = await Pet.find({
-        category: filterOption
-      }).exec()
-      colors = Array.from(new Set(allPetsOfCategory.map((pet) => pet.color)))
-      breeds = Array.from(new Set(allPetsOfCategory.map((pet) => pet.breed)))
-      genders = Array.from(new Set(allPetsOfCategory.map((pet) => pet.gender)))
-      ages = Array.from(
-        new Set(
-          allPetsOfCategory.map((pet) =>
-            calculateAgeFromBirthdate(pet.birthDate)
+      const uniqueAttributes = await Pet.aggregate([
+        { $match: { category: filterOption } },
+        {
+          $group: {
+            _id: null,
+            colors: { $addToSet: '$color' },
+            breeds: { $addToSet: '$breed' },
+            genders: { $addToSet: '$gender' },
+            birthDates: { $addToSet: '$birthDate' }
+          }
+        }
+      ]).exec()
+
+      // Extract the unique values from the result
+      if (uniqueAttributes[0]) {
+        colors = uniqueAttributes[0].colors
+        breeds = uniqueAttributes[0].breeds
+        genders = uniqueAttributes[0].genders
+        // Calculate unique ages from the unique birthDates fetched from MongoDB
+        ages = Array.from(
+          new Set(
+            uniqueAttributes[0].birthDates.map((birthDate: Date) =>
+              calculateAgeFromBirthdate(birthDate)
+            )
           )
         )
-      )
+      }
+
+      // // Fetch all pets of this category to get unique colors, breeds, genders, and ages
+      // const allPetsOfCategory = await Pet.find({
+      //   category: filterOption
+      // }).exec()
+      // colors = Array.from(new Set(allPetsOfCategory.map((pet) => pet.color)))
+      // breeds = Array.from(new Set(allPetsOfCategory.map((pet) => pet.breed)))
+      // genders = Array.from(new Set(allPetsOfCategory.map((pet) => pet.gender)))
+      // ages = Array.from(
+      //   new Set(
+      //     allPetsOfCategory.map((pet) =>
+      //       calculateAgeFromBirthdate(pet.birthDate)
+      //     )
+      //   )
+      // )
 
       // Apply color filter if a colorFilter option is provided
       if (colorFilter) {
@@ -347,26 +380,103 @@ const getAllPets = async (
       }
     }
 
+    type PipelineStage =
+      | { $match: { [key: string]: any } }
+      | { $addFields: { [key: string]: any } }
+      | { $sort: { [key: string]: any } }
+      | { $skip: number }
+      | { $limit: number }
+      | { $count: string }
+
+    // Apply search filter if a search query is provided
+    const pipeline: PipelineStage[] = [
+      {
+        $match: queryObj
+      }
+    ]
+
     // Apply search filter if a search query is provided
     if (searchQuery) {
-      queryObj.$or = [
-        { name: { $regex: searchQuery, $options: 'i' } },
-        { bio: { $regex: searchQuery, $options: 'i' } }
-      ]
+      pipeline.push(
+        {
+          $addFields: {
+            searchRank: {
+              $cond: [
+                {
+                  $regexMatch: {
+                    input: '$name',
+                    regex: searchQuery,
+                    options: 'i'
+                  }
+                },
+                1,
+                {
+                  $cond: [
+                    {
+                      $regexMatch: {
+                        input: '$bio',
+                        regex: searchQuery,
+                        options: 'i'
+                      }
+                    },
+                    0.5,
+                    0
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          $match: { searchRank: { $gt: 0 } }
+        }
+      )
     }
-    let query = Pet.find(queryObj)
+
     // Count total number of pets without applying pagination
-    const totalPetsPromise = Pet.countDocuments(query)
+    const totalPetsPromise = Pet.aggregate([
+      ...pipeline,
+      { $count: 'totalPets' }
+    ])
 
     // Apply pagination to the query
-    query = query.skip(skip).limit(limit)
+    if (searchQuery) {
+      pipeline.push({ $sort: { searchRank: -1, name: 1 } })
+    }
 
-    const [petsList, totalPets] = await Promise.all([query, totalPetsPromise])
+    pipeline.push({ $skip: skip }, { $limit: limit })
+
+    const petsList = await Pet.aggregate(pipeline).exec()
+    console.log('petsList', petsList)
+    const totalPetsResult = await totalPetsPromise
+    console.log('totalPetsResult', totalPetsResult)
+    const totalPets = totalPetsResult[0] ? totalPetsResult[0].totalPets : 0
+    console.log('totalPets', totalPets)
+
+    // if (searchQuery) {
+    //   //queryObj.$text = { $search: searchQuery }
+    //   queryObj.$or = [
+    //     { name: { $regex: searchQuery, $options: 'i' } },
+    //     { bio: { $regex: searchQuery, $options: 'i' } }
+    //   ]
+    // }
+    // let query = searchQuery
+    //   ? Pet.find(queryObj, { score: { $meta: 'textScore' } })
+    //   : Pet.find(queryObj)
+
+    // // Count total number of pets without applying pagination
+    // const totalPetsPromise = Pet.countDocuments(query)
+    // if (searchQuery) query = query.sort({ score: { $meta: 'textScore' } })
+
+    // // Apply pagination to the query
+    // query = query.skip(skip).limit(limit)
+
+    // const [petsList, totalPets] = await Promise.all([query, totalPetsPromise])
 
     // Map the petsList to include the image URL
     const petsWithImageUrls = await Promise.all(
       petsList.map(async (pet) => {
-        const { birthDate, images, ...petWithoutImages } = pet.toObject()
+        const { birthDate, images, ...petWithoutImages } = pet
         const imageUrls = await Promise.all(
           images.map((image) => getImageURL(image))
         )
@@ -391,7 +501,7 @@ const getAllPets = async (
     )
 
     const totalPages = Math.ceil(totalPets / limit)
-
+    console.log('petsWithImageUrls', petsWithImageUrls)
     return {
       pets: petsWithImageUrls,
       totalPages,

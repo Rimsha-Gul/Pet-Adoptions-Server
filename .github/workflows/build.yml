@@ -35,6 +35,9 @@ jobs:
           REFRESH_TOKEN_SECRET: 'test_refresh_token_secret'
           SESSION_SECRET: 'test_session_secret'
           VERIFICATION_SECRET: 'test_verification_secret'
+          INVITATION_TOKEN_SECRET: 'test_invitation_token_secret'
+          RESET_TOKEN_SECRET: 'test_reset_token_secret'
+          
 
     - name: Build app
       run: npm run build

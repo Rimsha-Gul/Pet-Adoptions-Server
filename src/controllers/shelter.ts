@@ -4,15 +4,25 @@ import Application, {
 import { UserRequest } from '../types/Request'
 import { Body, Example, Get, Post, Request, Route, Security, Tags } from 'tsoa'
 import { Pet } from '../models/Pet'
-import { EmailPayload, ShelterProfileResponse, User } from '../models/User'
+import {
+  EmailPayload,
+  Role,
+  ShelterProfileResponse,
+  User,
+  VerifyInvitationResponse
+} from '../models/User'
 import { getImageURL } from '../utils/getImageURL'
 import { emailPayloadExample } from '../examples/auth'
 import { generateInvitationToken } from '../utils/generateInvitationToken'
 import Invitation, { InvitationStatus } from '../models/Invitation'
 import { getShelterInvitationEmail } from '../data/emailMessages'
 import { sendEmail } from '../middleware/sendEmail'
-import { shelterProfileResponseExample } from '../examples/shelter'
+import {
+  shelterProfileResponseExample,
+  verifyInvitationResponseExample
+} from '../examples/shelter'
 import { canReview } from '../utils/canReview'
+import jwt from 'jsonwebtoken'
 
 @Route('shelter')
 @Tags('Shelter')
@@ -49,11 +59,20 @@ export class ShelterController {
   @Security('bearerAuth')
   @Post('/invite')
   @Example<EmailPayload>(emailPayloadExample)
-  public async inviteShelter(
-    @Body() body: EmailPayload,
+  public async inviteShelter(@Body() body: EmailPayload) {
+    return inviteShelter(body)
+  }
+
+  /**
+   * @summary Verifies the invitation token for shelter
+   *
+   */
+  @Get('/verifyInvitationToken')
+  @Example<VerifyInvitationResponse>(verifyInvitationResponseExample)
+  public async verifyInvitationToken(
     @Request() req: UserRequest
-  ) {
-    return inviteShelter(body, req)
+  ): Promise<VerifyInvitationResponse> {
+    return verifyInvitationToken(req)
   }
 }
 
@@ -74,7 +93,6 @@ const getShelter = async (
     req.user!.email
   )
 
-  console.log('canUserReview', canUserReview)
   const shelterResponse = {
     profilePhoto: profilePhotoUrl,
     name: shelter.name,
@@ -94,7 +112,6 @@ const getApplicationDetails = async (
 ): Promise<ApplictionResponseForShelter> => {
   const application = await Application.findById(req.query.id)
   if (!application) throw { code: 404, message: 'Application not found' }
-
   const applicant = await User.findOne({
     email: application.applicantEmail
   })
@@ -116,13 +133,17 @@ const getApplicationDetails = async (
   return applicationResponse
 }
 
-const inviteShelter = async (body: EmailPayload, req: UserRequest) => {
+const inviteShelter = async (body: EmailPayload) => {
   const { email } = body
-  const existingShelter = await User.findOne({ email })
-  if (existingShelter) throw { code: 409, message: 'Shelter already  exists' }
+  const existingUser = await User.findOne({ email })
+  if (existingUser && existingUser?.role === Role.Shelter)
+    throw { code: 409, message: 'Shelter already  exists' }
+  if (existingUser && existingUser?.role === Role.User)
+    throw { code: 409, message: 'User already  exists, which is not a shelter' }
+  const existingInvitation = await Invitation.findOne({ shelterEmail: email })
+  if (existingInvitation) throw { code: 409, message: 'Invite already sent' }
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const invitationToken = generateInvitationToken(email, req.user!.role)
+  const invitationToken = generateInvitationToken(email, Role.Shelter)
 
   const { subject, message } = getShelterInvitationEmail(invitationToken)
 
@@ -136,4 +157,62 @@ const inviteShelter = async (body: EmailPayload, req: UserRequest) => {
   await invitation.save()
 
   return { code: 200, message: 'Invitation sent successfully' }
+}
+
+const verifyInvitationToken = async (
+  req: UserRequest
+): Promise<VerifyInvitationResponse> => {
+  const { invitationToken } = req.query
+
+  try {
+    // decode and verify the token synchronously
+    const decoded: any = jwt.verify(
+      invitationToken as string,
+      process.env.INVITATION_TOKEN_SECRET || ''
+    )
+
+    const { email, role } = decoded
+
+    // Check if a user with the given email already exists
+    const existingUser = await User.findOne({ email })
+    if (
+      existingUser &&
+      existingUser.role === Role.Shelter &&
+      existingUser.isVerified === true
+    )
+      throw { code: 409, message: 'Shelter already  exists' }
+    if (
+      existingUser &&
+      existingUser.role === Role.Shelter &&
+      existingUser.isVerified === false
+    )
+      throw {
+        code: 409,
+        email: email,
+        message: 'Shelter already  exists, but is not verified'
+      }
+    if (existingUser && existingUser.role === Role.User)
+      throw {
+        code: 409,
+        message: 'User already  exists, which is not a shelter'
+      }
+
+    // Verify the invitation status
+    const invitation = await Invitation.findOne({
+      invitationToken: invitationToken
+    })
+    if (!invitation || invitation.status !== InvitationStatus.Pending) {
+      throw { code: 400, message: 'Invalid or expired invitation' }
+    }
+
+    return { email, role }
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      throw { code: 400, message: 'Expired reset token' }
+    }
+    if (err.name === 'JsonWebTokenError') {
+      throw { code: 400, message: 'Invalid reset token' }
+    }
+    throw err
+  }
 }

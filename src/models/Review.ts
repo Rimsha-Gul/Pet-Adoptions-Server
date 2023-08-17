@@ -8,12 +8,14 @@ export interface ReviewPayload {
 
 export interface ReviewResponse {
   applicantName: string
+  applicantEmail: string
   rating: number
   reviewText: string
 }
 
 export interface ReviewsResponse {
   reviews: ReviewResponse[]
+  totalPages: number
 }
 
 export interface ReviewDocument

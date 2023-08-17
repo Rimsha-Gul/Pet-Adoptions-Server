@@ -2,6 +2,7 @@ import { generateAccessToken } from '../../utils/generateAccessToken'
 import { Role, User as UserModel } from '../../models/User'
 import { generateRefreshToken } from '../../utils/generateRefreshToken'
 import { generateVerificationCode } from '../../utils/generateVerificationCode'
+import { generateResetToken } from '../../utils/generateResetToken'
 
 export interface User {
   role: Role
@@ -18,6 +19,7 @@ export interface User {
   address?: string
   bio?: string
   profilePhoto?: string[]
+  passwordResetToken?: string
 }
 
 export interface Admin {
@@ -76,6 +78,7 @@ export const generateUserandTokens = async (): Promise<User> => {
       { new: true }
     )
   }
+  user.passwordResetToken = generateResetToken(user.email)
   await user.save()
 
   return {
@@ -97,7 +100,8 @@ export const generateUserandTokens = async (): Promise<User> => {
       createdAt: savedUserWithTokensAndCode.verificationCode.createdAt,
       updatedAt: savedUserWithTokensAndCode.verificationCode.updatedAt
     },
-    profilePhoto: user.profilePhoto
+    profilePhoto: user.profilePhoto,
+    passwordResetToken: user.passwordResetToken
   }
 }
 
@@ -153,8 +157,8 @@ export const generateAdminandTokens = async (role: Role): Promise<Admin> => {
   const password = UserModel.hashPassword('123456')
   const user = new UserModel({
     role: role,
-    name: 'Admin Test User',
-    email: 'admintest@gmail.com',
+    name: role === Role.Admin ? 'Admin Test User' : 'Shelter Test User',
+    email: role === Role.Admin ? 'admintest@gmail.com' : 'shelter1@test.com',
     password: password
   })
   const savedUser = await user.save()
@@ -195,6 +199,6 @@ export const generateAdminandTokens = async (role: Role): Promise<Admin> => {
   }
 }
 
-export const removeAllUsers = async () => {
-  await UserModel.deleteMany({})
+export const removeAllUsers = async (role?: Role) => {
+  await UserModel.deleteMany({ role: role })
 }

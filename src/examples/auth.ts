@@ -38,3 +38,8 @@ export const shelterResponseExample = {
   id: '60df5df17f4c6a01ac63491c',
   name: 'Furry Friends Sanctuary'
 }
+
+export const resetPasswordPayloadExample = {
+  email: 'johndoe@example.com',
+  newPassword: '123456'
+}

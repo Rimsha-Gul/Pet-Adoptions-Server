@@ -1,4 +1,10 @@
-import { Role, SendCodePayload, User as UserModel } from '../models/User'
+import {
+  EmailPayload,
+  ResetPasswordPayload,
+  Role,
+  SendCodePayload,
+  User as UserModel
+} from '../models/User'
 import { generateAccessToken } from '../utils/generateAccessToken'
 import { generateRefreshToken } from '../utils/generateRefreshToken'
 import { app } from '../app'
@@ -14,6 +20,7 @@ import { mongooseSetUp, dropDatabase, dropCollections } from './utils/setup'
 import request from 'supertest'
 import * as generateEmailModule from '../utils/generateVerificationCode'
 import * as sendEmailModule from '../middleware/sendEmail'
+import * as generateResetTokenModule from '../utils/generateResetToken'
 import sinon from 'sinon'
 import { generateShelters, removeAllShelters } from './utils/generateShelters'
 import tmp from 'tmp-promise'
@@ -21,6 +28,9 @@ import multer from 'multer'
 import express from 'express'
 import { AuthController } from '../controllers/auth'
 import { authenticateAccessToken } from '../middleware/authenticateToken'
+import { generateInvitation } from './utils/generateInvitation'
+import { generateResetToken } from '../utils/generateResetToken'
+import { generateExpiredToken } from './utils/generateExpiredToken'
 
 describe('auth', () => {
   beforeAll(async () => {
@@ -46,7 +56,8 @@ describe('auth', () => {
       const signupData = {
         name: user.name,
         email: 'test1@gmail.com',
-        password: '123456'
+        password: '123456',
+        role: 'USER'
       }
       const response = await request(app)
         .post('/auth/signup')
@@ -54,13 +65,18 @@ describe('auth', () => {
         .expect(200)
 
       expect(response.body.email).toEqual(signupData.email)
+      const createdUser = await UserModel.findOne({ email: signupData.email })
+      expect(createdUser).toBeDefined()
+      expect(createdUser?.rating).toBeUndefined()
+      expect(createdUser?.numberOfReviews).toBeUndefined()
     })
 
     it('should respond with error if user already exists', async () => {
       const signupData = {
         name: user.name,
         email: user.email,
-        password: '123456'
+        password: '123456',
+        role: 'USER'
       }
       const response = await request(app)
         .post('/auth/signup')
@@ -284,6 +300,129 @@ describe('auth', () => {
       expect(response.text).toEqual(
         `"password" length must be less than or equal to 1024 characters long`
       )
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with user data', async () => {
+      await generateInvitation('shelter1@test.com')
+      const signupData = {
+        name: 'Shelter 1',
+        email: 'shelter1@test.com',
+        password: '123456',
+        role: 'SHELTER'
+      }
+      const response = await request(app)
+        .post('/auth/signup')
+        .send(signupData)
+        .expect(200)
+
+      expect(response.body.email).toEqual(signupData.email)
+      const user = await UserModel.findOne({ email: signupData.email })
+      expect(user).toBeDefined()
+      expect(user?.rating).toEqual(0)
+      expect(user?.numberOfReviews).toEqual(0)
+    })
+
+    it('should respond with Bad Request if shelter does not have an invitation', async () => {
+      const signupData = {
+        name: user.name,
+        email: user.email,
+        password: '123456',
+        role: 'SHELTER'
+      }
+      const response = await request(app)
+        .post('/auth/signup')
+        .send(signupData)
+        .expect(400)
+
+      expect(response.text).toEqual('Invalid invitation')
+      expect(response.body).toEqual({})
+    })
+  })
+
+  describe('requestPasswordReset', () => {
+    let user: User
+    let payload: EmailPayload
+    let generateResetTokenSpy: jest.SpyInstance
+    let sendEmailSpy: jest.SpyInstance
+
+    let expectedRecipient
+    const expectedSubject = `Purrfect Adoptions - Password Reset Request`
+    const expectedMessage = `
+    <p>We received a request to reset your password. The password reset window is limited to one hour.</p>
+    <p>If you do not reset your password within one hour, you will need to submit a new request.</p>
+    <p>Please click on the following link to complete the process:</p>
+     <p><a href="http://127.0.0.1:5173/resetPassword/abc123/">Reset</a></p>
+    <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+  `
+
+    beforeEach(async () => {
+      user = await generateUserandTokens()
+      payload = {
+        email: user.email
+      }
+      // Spy on the generateResetToken function and mock its implementation
+      generateResetTokenSpy = jest.spyOn(
+        generateResetTokenModule,
+        'generateResetToken'
+      )
+      generateResetTokenSpy.mockImplementation(() => 'abc123')
+
+      // Spy on the sendEmail function
+      sendEmailSpy = jest.spyOn(sendEmailModule, 'sendEmail')
+      sendEmailSpy.mockImplementation(() => Promise.resolve())
+    })
+
+    afterEach(() => {
+      // Clear all mocks after each test
+      jest.clearAllMocks()
+    })
+
+    it('should send reset password email successfully', async () => {
+      const response = await request(app)
+        .post('/auth/requestPasswordReset')
+        .send(payload)
+        .expect(200)
+
+      expect(response.body.message).toEqual(
+        'Reset password email sent successfully'
+      )
+      expect(sendEmailSpy).toBeCalledTimes(1)
+      expectedRecipient = payload.email
+      expect(sendEmailSpy).toBeCalledWith(
+        expectedRecipient,
+        expectedSubject,
+        expectedMessage
+      )
+    })
+
+    it('should fail when user does not exist', async () => {
+      const invalidEmailPayload = {
+        email: 'nonexistent@test.com'
+      }
+
+      const response = await request(app)
+        .post('/auth/requestPasswordReset')
+        .send(invalidEmailPayload)
+        .expect(404)
+
+      expect(response.text).toEqual('User not found')
+      expect(sendEmailSpy).toBeCalledTimes(0)
+      expect(response.body).toEqual({})
+    })
+
+    it('should fail when there is an error sending email', async () => {
+      sendEmailSpy.mockImplementation(() =>
+        Promise.reject(new Error('Email send failed'))
+      )
+
+      const response = await request(app)
+        .post('/auth/requestPasswordReset')
+        .send(payload)
+        .expect(500)
+
+      expect(response.text).toEqual('Error sending reset password email')
+      expect(sendEmailSpy).toBeCalledTimes(1)
       expect(response.body).toEqual({})
     })
   })
@@ -1782,6 +1921,127 @@ describe('auth', () => {
 
       expect(response.text).toEqual(`"bio" must be a string`)
       expect(response.body).toEqual({})
+    })
+  })
+
+  describe('VerifyResetToken', () => {
+    let user: User
+
+    beforeEach(async () => {
+      user = await generateUserandTokens()
+    })
+
+    it('should verify the reset token successfully', async () => {
+      const response = await request(app)
+        .get(`/auth/verifyResetToken?resetToken=${user.passwordResetToken}`)
+        .expect(200)
+
+      expect(response.body.email).toEqual(user.email)
+    })
+
+    it('should fail to verify with expired token', async () => {
+      // replace this with your function to generate an expired token
+      const expiredToken = generateExpiredToken(user.email, 'RESET')
+
+      const response = await request(app)
+        .get(`/auth/verifyResetToken?resetToken=${expiredToken}`)
+        .expect(400)
+
+      expect(response.text).toEqual('Expired reset token')
+    })
+
+    it('should fail to verify with invalid token', async () => {
+      const response = await request(app)
+        .get(`/auth/verifyResetToken?resetToken=invalidToken`)
+        .expect(400)
+
+      expect(response.text).toEqual('Invalid reset token')
+    })
+
+    it('should fail if user does not exist', async () => {
+      const tokenForNonExistentUser = generateResetToken(
+        'nonexistent@example.com'
+      )
+
+      const response = await request(app)
+        .get(`/auth/verifyResetToken?resetToken=${tokenForNonExistentUser}`)
+        .expect(404)
+
+      expect(response.text).toEqual('User not found')
+    })
+  })
+
+  describe('resetPassword', () => {
+    let payload: ResetPasswordPayload
+    let userEmail: string
+
+    beforeEach(async () => {
+      const user = await generateUserandTokens()
+      userEmail = user.email
+
+      payload = {
+        email: userEmail,
+        newPassword: 'NewPassword123!'
+      }
+    })
+
+    afterEach(() => {
+      jest.clearAllMocks()
+    })
+
+    it('should reset the password successfully', async () => {
+      const response = await request(app)
+        .put('/auth/resetPassword')
+        .send(payload)
+        .expect(200)
+
+      expect(response.body.message).toEqual('Password reset successfully')
+    })
+
+    it('should fail to reset password for non-existing user', async () => {
+      payload.email = 'non-existing@example.com'
+
+      const response = await request(app)
+        .put('/auth/resetPassword')
+        .send(payload)
+        .expect(404)
+
+      expect(response.text).toEqual('User not found')
+    })
+
+    it('should fail to reset password for user without reset token', async () => {
+      // Remove password reset token from the user
+      const updatedUser = await UserModel.findOneAndUpdate(
+        { email: userEmail },
+        { $unset: { passwordResetToken: '' } },
+        { new: true }
+      )
+
+      // Verify that the token was removed
+      expect(updatedUser).toBeDefined()
+      expect(updatedUser?.passwordResetToken).toBeUndefined()
+
+      const response = await request(app)
+        .put('/auth/resetPassword')
+        .send(payload)
+        .expect(404)
+
+      expect(response.text).toEqual('No password reset token found')
+    })
+
+    it('should fail to reset password with invalid/expired token', async () => {
+      // Set expired token for the user
+      await UserModel.updateOne(
+        { email: userEmail },
+        { passwordResetToken: generateExpiredToken(userEmail, 'RESET') }
+      )
+
+      const response = await request(app)
+        .put('/auth/resetPassword')
+        .send(payload)
+        .expect(400)
+
+      expect(response.text).toEqual('Invalid or expired reset token.')
     })
   })
 })

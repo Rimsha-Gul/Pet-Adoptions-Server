@@ -1,6 +1,7 @@
 import Joi from 'joi'
 import { ActivityNeeds, Category, Gender, LevelOfGrooming } from '../models/Pet'
 import { ResidenceType, Status } from '../models/Application'
+import { Role } from '../models/User'
 
 const nameSchema = Joi.string().min(3).max(32)
 const emailSchema = Joi.string().email()
@@ -19,6 +20,8 @@ const objectIDSchema = Joi.string().length(24).hex()
 const residenceTypeSchema = Joi.string().valid(...Object.values(ResidenceType))
 const statusSchema = Joi.string().valid(...Object.values(Status))
 
+const roleSchema = Joi.string().valid(...Object.values(Role))
+
 const today = new Date()
 const weekFromNow = new Date()
 weekFromNow.setDate(weekFromNow.getDate() + 7)
@@ -27,7 +30,8 @@ export const signUpValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
     name: nameSchema.required(),
     email: emailSchema.required(),
-    password: passwordSchema.required()
+    password: passwordSchema.required(),
+    role: roleSchema.required()
   }).validate(data)
 
 export const loginValidation = (data: any): Joi.ValidationResult =>
@@ -131,7 +135,7 @@ export const applyForPetValidation = (data: any): Joi.ValidationResult =>
       then: Joi.required(),
       otherwise: Joi.forbidden()
     }),
-    petAloneTime: Joi.number().integer().min(0).max(24),
+    petAloneTime: Joi.number().integer().min(0).max(24).required(),
     hasPlayTimeParks: Joi.boolean().required(),
     petActivities: Joi.string().required(),
     handlePetIssues: Joi.string().required(),
@@ -140,6 +144,14 @@ export const applyForPetValidation = (data: any): Joi.ValidationResult =>
     canAffordPetsMediacal: Joi.boolean().required(),
     petTravelPlans: Joi.string().required(),
     petOutlivePlans: Joi.string().required()
+  }).validate(data)
+
+export const getAllApplicationsValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).default(3),
+    searchQuery: Joi.string().allow('').optional(),
+    applicationStatusFilter: Joi.string().allow('').optional()
   }).validate(data)
 
 export const idValidation = (data: any): Joi.ValidationResult =>
@@ -166,4 +178,29 @@ export const addReviewValidation = (data: any): Joi.ValidationResult =>
     shelterID: objectIDSchema.required(),
     rating: Joi.number().integer().min(1).max(5),
     reviewText: Joi.string().required()
+  }).validate(data)
+
+export const getAllReviewsValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    id: objectIDSchema.required(),
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).default(6)
+  }).validate(data)
+
+export const verifyInvitationTokenValidation = (
+  data: any
+): Joi.ValidationResult =>
+  Joi.object({
+    invitationToken: Joi.string().required()
+  }).validate(data)
+
+export const verifyResetTokenValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    resetToken: Joi.string().required()
+  }).validate(data)
+
+export const resetPasswordValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    email: emailSchema.required(),
+    newPassword: passwordSchema.required()
   }).validate(data)

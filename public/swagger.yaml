@@ -16,6 +16,12 @@ components:
                 - email
             type: object
             additionalProperties: false
+        Role:
+            enum:
+                - ADMIN
+                - SHELTER
+                - USER
+            type: string
         UserPayload:
             properties:
                 name:
@@ -24,10 +30,13 @@ components:
                     type: string
                 password:
                     type: string
+                role:
+                    $ref: '#/components/schemas/Role'
             required:
                 - name
                 - email
                 - password
+                - role
             type: object
             additionalProperties: false
         SendCodePayload:
@@ -124,12 +133,17 @@ components:
                 - name
             type: object
             additionalProperties: false
-        Role:
-            enum:
-                - ADMIN
-                - SHELTER
-                - USER
-            type: string
+        ResetPasswordPayload:
+            properties:
+                email:
+                    type: string
+                newPassword:
+                    type: string
+            required:
+                - email
+                - newPassword
+            type: object
+            additionalProperties: false
         SessionResponse:
             properties:
                 name:
@@ -247,6 +261,9 @@ components:
                     type: string
                 isAdopted:
                     type: boolean
+                shelterRating:
+                    type: number
+                    format: double
             required:
                 - shelterName
                 - microchipID
@@ -639,6 +656,17 @@ components:
                 - application
             type: object
             additionalProperties: false
+        VerifyInvitationResponse:
+            properties:
+                email:
+                    type: string
+                role:
+                    $ref: '#/components/schemas/Role'
+            required:
+                - email
+                - role
+            type: object
+            additionalProperties: false
         ReviewPayload:
             properties:
                 shelterID:
@@ -658,6 +686,8 @@ components:
             properties:
                 applicantName:
                     type: string
+                applicantEmail:
+                    type: string
                 rating:
                     type: number
                     format: double
@@ -665,6 +695,7 @@ components:
                     type: string
             required:
                 - applicantName
+                - applicantEmail
                 - rating
                 - reviewText
             type: object
@@ -675,8 +706,12 @@ components:
                     items:
                         $ref: '#/components/schemas/ReviewResponse'
                     type: array
+                totalPages:
+                    type: number
+                    format: double
             required:
                 - reviews
+                - totalPages
             type: object
             additionalProperties: false
     securitySchemes:
@@ -1014,6 +1049,85 @@ paths:
                 -
                     bearerAuth: []
             parameters: []
+    /auth/requestPasswordReset:
+        post:
+            operationId: RequestPasswordReset
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
+                            examples:
+                                'Example 1':
+                                    value: {email: johndoe@example.com}
+            summary: 'Checks if user''s entered email has an associated account and create reset tokens'
+            tags:
+                - Auth
+            security: []
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/EmailPayload'
+    /auth/verifyResetToken:
+        get:
+            operationId: VerifyResetToken
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    email: {}
+                                required:
+                                    - email
+                                type: object
+            summary: 'Verifies the reset password token for user'
+            tags:
+                - Auth
+            security: []
+            parameters: []
+    /auth/resetPassword:
+        put:
+            operationId: ResetPassword
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
+                            examples:
+                                'Example 1':
+                                    value: {email: johndoe@example.com, newPassword: '123456'}
+            summary: 'Changes user''s password'
+            tags:
+                - Auth
+            security: []
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ResetPasswordPayload'
     /session:
         get:
             operationId: Session
@@ -1046,7 +1160,7 @@ paths:
                                 $ref: '#/components/schemas/AddPetResponse'
                             examples:
                                 'Example 1':
-                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: MALE, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false}}
+                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: MALE, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false, shelterRating: 4.8}}
             summary: 'Accepts pet info, adds pet to db and returns pet info'
             tags:
                 - Pet
@@ -1136,7 +1250,7 @@ paths:
                                 $ref: '#/components/schemas/AddPetResponse'
                             examples:
                                 'Example 1':
-                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: MALE, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false}}
+                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: MALE, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false, shelterRating: 4.8}}
             summary: 'Returns details of a pet given its id'
             tags:
                 - Pet
@@ -1464,6 +1578,24 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/EmailPayload'
+    /shelter/verifyInvitationToken:
+        get:
+            operationId: VerifyInvitationToken
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/VerifyInvitationResponse'
+                            examples:
+                                'Example 1':
+                                    value: {email: info@animalhavenshelter.com, role: SHELTER}
+            summary: 'Verifies the invitation token for shelter'
+            tags:
+                - Shelter
+            security: []
+            parameters: []
     /review:
         post:
             operationId: AddReview
@@ -1493,6 +1625,7 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/ReviewPayload'
+    /review/all:
         get:
             operationId: GetReviews
             responses:
@@ -1508,7 +1641,50 @@ paths:
             security:
                 -
                     bearerAuth: []
+            parameters:
+                -
+                    in: query
+                    name: page
+                    required: true
+                    schema:
+                        format: double
+                        type: number
+                -
+                    in: query
+                    name: limit
+                    required: true
+                    schema:
+                        format: double
+                        type: number
+    /review/update:
+        put:
+            operationId: UpdateReview
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
+            summary: 'Updates review'
+            tags:
+                - Review
+            security:
+                -
+                    bearerAuth: []
             parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ReviewPayload'
 servers:
     -
         url: /

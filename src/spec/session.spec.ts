@@ -19,7 +19,7 @@ describe('session', () => {
     await dropDatabase()
   })
 
-  describe('signup', () => {
+  describe('get session info', () => {
     let user: User
 
     beforeEach(async () => {

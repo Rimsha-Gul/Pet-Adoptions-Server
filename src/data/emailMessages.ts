@@ -8,6 +8,23 @@ export const getVerificationCodeEmail = (verificationCode: string) => {
   }
 }
 
+export const getResetPasswordEmail = (resetToken: string) => {
+  const subject = 'Purrfect Adoptions - Password Reset Request'
+
+  const message = `
+    <p>We received a request to reset your password. The password reset window is limited to one hour.</p>
+    <p>If you do not reset your password within one hour, you will need to submit a new request.</p>
+    <p>Please click on the following link to complete the process:</p>
+     <p><a href="http://127.0.0.1:5173/resetPassword/${resetToken}/">Reset</a></p>
+    <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+  `
+
+  return {
+    subject,
+    message
+  }
+}
+
 export const getHomeVisitRequestEmail = (applicationID: string) => {
   const subject = 'Purrfect Adoptions - Home Visit Request'
   const nextWeekDate = new Date(
@@ -245,7 +262,8 @@ export const getShelterInvitationEmail = (invitationLink: string) => {
     <p>Greetings,</p>
     <p>We are thrilled to extend an invitation to join our growing network of dedicated shelters on Purrfect Adoptions.</p>
     <p>We have built a platform that brings together shelters and potential pet adopters, with a mission to find loving and suitable homes for as many pets as possible.</p>
-    <p>To accept this invitation and begin the registration process, please click on the following link: <a href="http://127.0.0.1:5173/shelter/invitation/${invitationLink}/">here</a>
+    <p>To accept this invitation and begin the registration process, please click <a href="http://127.0.0.1:5173/shelter/invitation/${invitationLink}/">here</a></p>
+    <p>Please note that this invitation is valid for one week. If the invitation has expired, please contact us to receive a new one.</p>
     <p>If you have any questions or need further assistance, please do not hesitate to reply to this email. We look forward to partnering with you in our endeavor to make a positive impact on the lives of pets and adopters alike.</p>
     <p>Thank you,</p>
     <p>The Purrfect Adoptions Team</p>
@@ -256,7 +274,6 @@ export const getShelterInvitationEmail = (invitationLink: string) => {
     message
   }
 }
-
 export const getPetAdoptionNotificationEmail = (applicationID: string) => {
   const subject = 'Purrfect Adoptions - Pet Adoption Update'
 
