@@ -144,32 +144,6 @@ export class ApplicationController {
   }
 }
 
-const getTimeSlots = async (req: UserRequest): Promise<TimeSlotsResponse> => {
-  const { id, visitDate, visitType } = req.query
-
-  // Generate all possible time slots for the day
-  const allTimeSlots = generateTimeSlots()
-
-  // Find the slots that are already booked
-  const bookedVisits = await Visit.find({
-    visitType: visitType,
-    visitDate: visitDate,
-    shelterID: id
-  })
-
-  const bookedTimeSlots = bookedVisits.map((visit) => {
-    const visitDateObj = new Date(visit.visitDate)
-    return visitDateObj.toTimeString().split(' ')[0]
-  })
-
-  // Filter the time slots that are still available
-  const availableTimeSlots: string[] = allTimeSlots.filter(
-    (slot) => !bookedTimeSlots.includes(slot)
-  )
-
-  return { availableTimeSlots: availableTimeSlots }
-}
-
 const applyForAPet = async (
   body: ApplicationPayload,
   req: UserRequest
@@ -451,6 +425,57 @@ const getApplications = async (
   }
 }
 
+const getTimeSlots = async (req: UserRequest): Promise<TimeSlotsResponse> => {
+  const { id, petID, visitDate, visitType } = req.query
+
+  // Generate all possible time slots for the day
+  const allTimeSlots = generateTimeSlots()
+
+  // Convert the visitDate from the request into a Date object for comparison
+  const startOfVisitDate = new Date(visitDate + 'T00:00:00Z')
+  const startOfNextDate = new Date(
+    startOfVisitDate.getTime() + 24 * 60 * 60 * 1000
+  )
+
+  // Define a query object
+  const query: any = {
+    visitType: visitType,
+    visitDate: {
+      $gte: startOfVisitDate.toISOString(),
+      $lt: startOfNextDate.toISOString()
+    },
+    shelterID: id
+  }
+
+  // Conditionally add petID to the query if the visitType is 'Shelter'
+  if (visitType === VisitType.Shelter) {
+    query.petID = petID
+  }
+
+  const bookedVisits = await Visit.find(query)
+  console.log(bookedVisits)
+
+  const timezoneOffsetHours = 5 // Offset between local time and UTC in hours
+
+  const bookedTimeSlots = bookedVisits.map((visit) => {
+    const visitDateObj = new Date(visit.visitDate)
+    // Convert UTC time from database to local time
+    visitDateObj.setHours(visitDateObj.getUTCHours() + timezoneOffsetHours)
+    return (
+      visitDateObj.getHours() +
+      ':' +
+      String(visitDateObj.getMinutes()).padStart(2, '0')
+    )
+  })
+
+  // Filter the time slots that are still available
+  const availableTimeSlots: string[] = allTimeSlots.filter(
+    (slot) => !bookedTimeSlots.includes(slot)
+  )
+  console.log(availableTimeSlots)
+  return { availableTimeSlots: availableTimeSlots }
+}
+
 const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
   const { id, visitDate } = body
   const application = await Application.findById(id)
@@ -463,6 +488,14 @@ const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
     _id: application.shelterID
   })
   if (!shelter) throw { code: 404, message: 'Shelter not found' }
+
+  const existingVisit = await Visit.findOne({
+    applicationID: id,
+    shelterID: application.shelterID,
+    applicantEmail: application.applicantEmail,
+    visitType: VisitType.Home
+  })
+  if (existingVisit) throw { code: 400, message: 'Visit already scheduled' }
 
   // Sending email to the applicant
   {
@@ -486,7 +519,9 @@ const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
   await application.save()
 
   const visit = new Visit({
+    applicationID: id,
     shelterID: application.shelterID,
+    petID: application.microchipID,
     applicantEmail: application.applicantEmail,
     visitDate: visitDate,
     visitType: VisitType.Home
@@ -516,6 +551,14 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
   })
   if (!shelter) throw { code: 404, message: 'Shelter not found' }
 
+  const existingVisit = await Visit.findOne({
+    applicationID: id,
+    shelterID: application.shelterID,
+    applicantEmail: application.applicantEmail,
+    visitType: VisitType.Shelter
+  })
+  if (existingVisit) throw { code: 400, message: 'Visit already scheduled' }
+
   // Sending email to the applicant
   {
     const { subject, message } = getApplicantShelterVisitScheduledEmail(
@@ -538,7 +581,9 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
   await application.save()
 
   const visit = new Visit({
+    applicationID: id,
     shelterID: application.shelterID,
+    petID: application.microchipID,
     applicantEmail: applicant.email,
     visitDate: visitDate,
     visitType: VisitType.Shelter

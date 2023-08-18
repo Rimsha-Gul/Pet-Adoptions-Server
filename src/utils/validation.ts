@@ -168,11 +168,18 @@ export const updateApplicationStatusValidation = (
     status: statusSchema.required()
   }).validate(data)
 
-export const scheduleVisitValidation = (data: any): Joi.ValidationResult =>
+export const getTimeSlotsValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
     id: objectIDSchema.required(),
     visitDate: Joi.date().greater(today).less(weekFromNow).required(),
-    visitType: visitTypeSchema.optional()
+    visitType: visitTypeSchema.required(),
+    petID: Joi.string().length(10).required()
+  }).validate(data)
+
+export const scheduleVisitValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    id: objectIDSchema.required(),
+    visitDate: Joi.date().greater(today).less(weekFromNow).required()
   }).validate(data)
 
 export const addReviewValidation = (data: any): Joi.ValidationResult =>

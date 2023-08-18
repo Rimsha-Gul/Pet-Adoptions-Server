@@ -3,6 +3,7 @@ import { ApplicationController } from '../controllers/application'
 import {
   applyForPetValidation,
   getAllApplicationsValidation,
+  getTimeSlotsValidation,
   idValidation,
   scheduleVisitValidation,
   updateApplicationStatusValidation
@@ -78,7 +79,7 @@ applicationRouter.get(
   '/timeSlots',
   authenticateAccessToken,
   async (req, res) => {
-    const { error } = scheduleVisitValidation(req.query)
+    const { error } = getTimeSlotsValidation(req.query)
     if (error) return res.status(400).send(error.details[0].message)
     try {
       const response = await controller.getTimeSlots(req)

@@ -6,18 +6,22 @@ export enum VisitType {
 }
 
 export interface VisitDocument extends Document {
-  visitDate: string
+  applicationID: Schema.Types.ObjectId
   shelterID: Schema.Types.ObjectId
+  petID: string
   applicantEmail: string
   visitType: VisitType
+  visitDate: string
 }
 
 const VisitSchema = new Schema<VisitDocument>(
   {
+    applicationID: { type: Schema.Types.ObjectId, required: true },
     shelterID: { type: Schema.Types.ObjectId, required: true },
+    petID: { type: String, required: true },
     applicantEmail: { type: String, required: true },
-    visitDate: { type: String, required: true },
-    visitType: { type: String, enum: VisitType, required: true }
+    visitType: { type: String, enum: VisitType, required: true },
+    visitDate: { type: String, required: true }
   },
   { timestamps: true }
 )
