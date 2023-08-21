@@ -22,6 +22,11 @@ import {
   generateApplicationData,
   removeAllApplications
 } from './utils/generateApplication'
+import { VisitType } from '../models/Visit'
+import {
+  generateAllVisitsForDate,
+  removeAllVisits
+} from './utils/generateVisit'
 import { removeAllShelters } from './utils/generateShelters'
 import {
   Application,
@@ -1134,6 +1139,150 @@ describe('application', () => {
 
       expect(response.body.applications.length).toEqual(1)
       expect(response.body.totalPages).toEqual(1)
+    })
+  })
+
+  describe('get time slots', () => {
+    let user: User, shelter, applicationID, pet
+
+    beforeEach(async () => {
+      user = await generateUserandTokens()
+      await generateAdminandTokens(Role.Shelter)
+      shelter = await UserModel.findOne({ email: 'shelter1@test.com' })
+      await generatePet()
+      applicationID = await generatePetWithApplication(user.email)
+      pet = await PetModel.findOne({ microchipID: 'A123456789' })
+    })
+
+    afterEach(async () => {
+      await removeAllUsers()
+      await removeAllApplications()
+      await removeAllPets()
+      await removeAllVisits()
+    })
+
+    it('should fetch the available time slots on a specific date for home visit and return 200', async () => {
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&petID=A123456789&visitDate=2023-08-22&visitType=Home`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.availableTimeSlots).toBeInstanceOf(Array)
+      expect(response.body.availableTimeSlots).toHaveLength(9)
+    })
+
+    it('should fetch the available time slots on a specific date for shelter visit and return 200', async () => {
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&petID=A123456789&visitDate=2023-08-22&visitType=Shelter`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.availableTimeSlots).toBeInstanceOf(Array)
+      expect(response.body.availableTimeSlots).toHaveLength(9)
+    })
+
+    it('should fetch the available time slots on a specific date for home visit and return 200', async () => {
+      // Generate a date string for one day ahead of the current date
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
+      await generateApplication(
+        shelter._id,
+        pet.microchipID,
+        user.email,
+        visitDate + 'T04:00:00Z',
+        VisitType.Home
+      )
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Home`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.availableTimeSlots).toBeInstanceOf(Array)
+      expect(response.body.availableTimeSlots).toHaveLength(8)
+    })
+
+    it('should fetch the available time slots on a specific date for shelter visit and return 200', async () => {
+      // Generate a date string for one day ahead of the current date
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
+      await generateApplication(
+        shelter._id,
+        pet.microchipID,
+        user.email,
+        visitDate + 'T04:00:00Z',
+        VisitType.Shelter
+      )
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Shelter`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.availableTimeSlots).toBeInstanceOf(Array)
+      expect(response.body.availableTimeSlots).toHaveLength(8)
+    })
+
+    it('should fetch zero available time slots on a specific date for home visit and return 200', async () => {
+      // Generate a date string for one day ahead of the current date
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
+      await generateAllVisitsForDate(
+        applicationID,
+        shelter._id,
+        pet.microchipID,
+        user.email,
+        visitDate,
+        VisitType.Home
+      )
+
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Home`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.availableTimeSlots).toBeInstanceOf(Array)
+      expect(response.body.availableTimeSlots).toHaveLength(0)
+    })
+
+    it('should fetch zero available time slots on a specific date for shelter visit and return 200', async () => {
+      // Generate a date string for one day ahead of the current date
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
+      await generateAllVisitsForDate(
+        applicationID,
+        shelter._id,
+        pet.microchipID,
+        user.email,
+        visitDate,
+        VisitType.Shelter
+      )
+
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Shelter`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body.availableTimeSlots).toBeInstanceOf(Array)
+      expect(response.body.availableTimeSlots).toHaveLength(0)
     })
   })
 

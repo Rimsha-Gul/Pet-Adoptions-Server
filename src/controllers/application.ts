@@ -453,7 +453,6 @@ const getTimeSlots = async (req: UserRequest): Promise<TimeSlotsResponse> => {
   }
 
   const bookedVisits = await Visit.find(query)
-  console.log(bookedVisits)
 
   const timezoneOffsetHours = 5 // Offset between local time and UTC in hours
 
@@ -472,7 +471,6 @@ const getTimeSlots = async (req: UserRequest): Promise<TimeSlotsResponse> => {
   const availableTimeSlots: string[] = allTimeSlots.filter(
     (slot) => !bookedTimeSlots.includes(slot)
   )
-  console.log(availableTimeSlots)
   return { availableTimeSlots: availableTimeSlots }
 }
 
