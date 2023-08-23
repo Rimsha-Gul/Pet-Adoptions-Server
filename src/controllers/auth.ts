@@ -36,7 +36,8 @@ import { sendEmail } from '../middleware/sendEmail'
 import { generateVerificationCode } from '../utils/generateVerificationCode'
 import {
   getResetPasswordEmail,
-  getVerificationCodeEmail
+  getVerificationCodeEmail,
+  requestAlternateEmailForShelter
 } from '../data/emailMessages'
 import {
   emailPayloadExample,
@@ -221,6 +222,35 @@ export class AuthController {
   public async resetPassword(@Body() body: ResetPasswordPayload) {
     return resetPassword(body)
   }
+
+  /**
+   * @summary Changes user's role
+   */
+  @Example<EmailPayload>(emailPayloadExample)
+  @Security('bearerAuth')
+  @Post('/getAlternateEmail')
+  public async getAlternateEmail(@Body() body: EmailPayload) {
+    return getAlternateEmail(body)
+  }
+}
+
+const getAlternateEmail = async (body: EmailPayload) => {
+  const { email } = body
+
+  const existingUser = await User.findOne({ email })
+
+  if (!existingUser) throw { code: 404, message: 'User not found' }
+
+  if (existingUser.role === Role.Shelter)
+    throw { code: 409, message: 'User is already a shelter' }
+
+  const { subject, message } = requestAlternateEmailForShelter(
+    existingUser.name
+  )
+
+  await sendEmail(email, subject, message)
+
+  return { code: 200, message: 'User notified successfully' }
 }
 
 const signup = async (body: UserPayload): Promise<SignupResponse> => {
@@ -228,18 +258,15 @@ const signup = async (body: UserPayload): Promise<SignupResponse> => {
 
   if (role === Role.Shelter) {
     const invitation = await Invitation.findOne({ shelterEmail: email })
-    if (!invitation) {
-      throw { code: 400, message: 'Invalid invitation' }
-    }
+    if (!invitation) throw { code: 400, message: 'Invalid invitation' }
+
     invitation.status = InvitationStatus.Accepted
     await invitation.save()
   }
 
   const existingUser = await User.findOne({ email })
 
-  if (existingUser) {
-    throw { code: 409, message: 'User already exists' }
-  }
+  if (existingUser) throw { code: 409, message: 'User already exists' }
 
   const userPayload = {
     name: name,

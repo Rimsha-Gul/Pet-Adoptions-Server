@@ -1138,6 +1138,38 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/ResetPasswordPayload'
+    /auth/getAlternateEmail:
+        post:
+            operationId: GetAlternateEmail
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
+                            examples:
+                                'Example 1':
+                                    value: {email: johndoe@example.com}
+            summary: 'Changes user''s role'
+            tags:
+                - Auth
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/EmailPayload'
     /session:
         get:
             operationId: Session

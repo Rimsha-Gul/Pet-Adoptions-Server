@@ -283,7 +283,24 @@ const getApplications = async (
       filter = { ...filter, shelterID: req.user?._id }
     }
 
-    const pipeline = [
+    type AggregateStage =
+      | { $match: { [key: string]: any } }
+      | {
+          $lookup: {
+            from: string
+            localField: string
+            foreignField: string
+            as: string
+          }
+        }
+      | {
+          $unwind:
+            | string
+            | { path: string; preserveNullAndEmptyArrays?: boolean }
+        }
+      | { $sort: { [key: string]: any } }
+
+    const pipeline: AggregateStage[] = [
       { $match: filter },
       {
         $lookup: {
@@ -328,33 +345,119 @@ const getApplications = async (
     }
 
     // Add searchQuery filter to pipeline if defined
+
     if (searchQuery) {
+      let scoreStage
       if (req.user?.role === Role.User) {
-        pipeline.push({
-          $match: {
-            $or: [
-              { 'pet.name': { $regex: searchQuery, $options: 'i' } },
-              { 'shelter.name': { $regex: searchQuery, $options: 'i' } }
-            ]
+        scoreStage = {
+          $addFields: {
+            score: {
+              $add: [
+                {
+                  $cond: [
+                    {
+                      $regexMatch: {
+                        input: '$pet.name',
+                        regex: searchQuery,
+                        options: 'i'
+                      }
+                    },
+                    2,
+                    0
+                  ]
+                }, // 2 points for pet name match
+                {
+                  $cond: [
+                    {
+                      $regexMatch: {
+                        input: '$shelter.name',
+                        regex: searchQuery,
+                        options: 'i'
+                      }
+                    },
+                    1,
+                    0
+                  ]
+                } // 1 point for shelter name match
+              ]
+            }
           }
-        })
+        }
       } else if (req.user?.role === Role.Shelter) {
-        pipeline.push({
-          $match: {
-            $or: [
-              { 'pet.name': { $regex: searchQuery, $options: 'i' } },
-              { 'applicant.name': { $regex: searchQuery, $options: 'i' } }
-            ]
+        scoreStage = {
+          $addFields: {
+            score: {
+              $add: [
+                {
+                  $cond: [
+                    {
+                      $regexMatch: {
+                        input: '$pet.name',
+                        regex: searchQuery,
+                        options: 'i'
+                      }
+                    },
+                    2,
+                    0
+                  ]
+                }, // 2 points for pet name match
+                {
+                  $cond: [
+                    {
+                      $regexMatch: {
+                        input: '$applicant.name',
+                        regex: searchQuery,
+                        options: 'i'
+                      }
+                    },
+                    1,
+                    0
+                  ]
+                } // 1 point for applicant name match
+              ]
+            }
           }
-        })
+        }
+      }
+
+      if (scoreStage) {
+        pipeline.push(scoreStage)
+        pipeline.push({ $match: { score: { $gt: 0 } } }) // Only consider documents with a score greater than 0
       }
     }
+
+    // if (searchQuery) {
+    //   if (req.user?.role === Role.User) {
+    //     pipeline.push({
+    //       $match: {
+    //         $or: [
+    //           { 'pet.name': { $regex: searchQuery, $options: 'i' } },
+    //           { 'shelter.name': { $regex: searchQuery, $options: 'i' } }
+    //         ]
+    //       }
+    //     })
+    //   } else if (req.user?.role === Role.Shelter) {
+    //     pipeline.push({
+    //       $match: {
+    //         $or: [
+    //           { 'pet.name': { $regex: searchQuery, $options: 'i' } },
+    //           { 'applicant.name': { $regex: searchQuery, $options: 'i' } }
+    //         ]
+    //       }
+    //     })
+    //   }
+    // }
 
     // First, get the total count of documents after filtering and all shelter names
     const countPipeline = [...pipeline, { $count: 'total' }]
     const count = await Application.aggregate(countPipeline)
 
     const totalApplications = count[0]?.total || 0
+
+    // Sort the search results
+    if (searchQuery) {
+      pipeline.push({ $sort: { score: -1, name: 1 } })
+    }
 
     // Add pagination stages to the pipeline
     ;(pipeline as any).push({ $skip: skip }, { $limit: limit })

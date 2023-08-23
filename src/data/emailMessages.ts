@@ -274,6 +274,7 @@ export const getShelterInvitationEmail = (invitationLink: string) => {
     message
   }
 }
+
 export const getPetAdoptionNotificationEmail = (applicationID: string) => {
   const subject = 'Purrfect Adoptions - Pet Adoption Update'
 
@@ -282,6 +283,25 @@ export const getPetAdoptionNotificationEmail = (applicationID: string) => {
     <p>We hope this message finds you well. We are reaching out to inform you that the pet you applied for, application ID: <strong>${applicationID}</strong>, has found a new home.</p>
     <p>We understand that you may be disappointed, and we appreciate your understanding. There are many other pets in need of a loving home, and we encourage you to consider applying for another pet.</p>
     <p>Thank you for your interest in providing a home for our pets. Your compassion makes a huge difference in their lives.</p>
+  `
+
+  return {
+    subject,
+    message
+  }
+}
+
+export const requestAlternateEmailForShelter = (userName: string) => {
+  const subject = 'Purrfect Adoptions - Email Address Action Required'
+
+  const message = `
+    <p>Dear <strong>${userName}</strong>,</p>
+    <p>We recently received a request to use your email address for a 'Shelter' registration on Purrfect Adoptions. However, this email is already associated with a 'User' account on our platform.</p>
+    <p>If you intended to register as a 'Shelter' or were expecting this change, we kindly ask that you provide a different email address for this registration or transition.</p>
+    <p>If you did not initiate this request or have questions about this process, please do not hesitate to respond to this email. Our team is ready to assist you and provide clarity.</p>
+    <p>Your active participation and trust in our platform are truly appreciated. We look forward to continuing our shared mission of finding deserving pets their forever homes.</p>
+    <p>Warm regards,</p>
+    <p>The Purrfect Adoptions Team</p>
   `
 
   return {
