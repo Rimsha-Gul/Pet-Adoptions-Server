@@ -1162,9 +1162,13 @@ describe('application', () => {
     })
 
     it('should fetch the available time slots on a specific date for home visit and return 200', async () => {
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
       const response = await request(app)
         .get(
-          `/application/timeSlots?id=${shelter._id}&petID=A123456789&visitDate=2023-08-22&visitType=Home`
+          `/application/timeSlots?id=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Home`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
@@ -1174,9 +1178,13 @@ describe('application', () => {
     })
 
     it('should fetch the available time slots on a specific date for shelter visit and return 200', async () => {
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
       const response = await request(app)
         .get(
-          `/application/timeSlots?id=${shelter._id}&petID=A123456789&visitDate=2023-08-22&visitType=Shelter`
+          `/application/timeSlots?id=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Shelter`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
