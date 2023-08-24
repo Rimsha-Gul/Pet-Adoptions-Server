@@ -157,7 +157,10 @@ export class ApplicationController {
   }
 }
 
-const requestReactivation = async (body: ReactivationRequestPayload) => {}
+const requestReactivation = async (body: ReactivationRequestPayload) => {
+  console.log(body)
+  // to implement
+}
 
 const applyForAPet = async (
   body: ApplicationPayload,
