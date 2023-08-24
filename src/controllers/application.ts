@@ -46,6 +46,8 @@ import { sendEmail } from '../middleware/sendEmail'
 import { Visit, VisitType } from '../models/Visit'
 import { canReview } from '../utils/canReview'
 import { generateTimeSlots } from '../utils/generateTimeSlots'
+import { ReactivationRequestPayload } from '../models/ReactivationRequest'
+import { reactivationRequestExample } from '../examples/reactivationRequest'
 
 @Route('application')
 @Tags('Application')
@@ -142,7 +144,20 @@ export class ApplicationController {
   public async updateApplicationStatus(@Body() body: UpdateApplicationPayload) {
     return updateApplicationStatus(body)
   }
+
+  /**
+   * @summary Accepts reactivation request and sends email to shelter
+   *
+   */
+  @Example<ReactivationRequestPayload>(reactivationRequestExample)
+  @Security('bearerAuth')
+  @Put('/requestReactivation')
+  public async requestReactivation(@Body() body: ReactivationRequestPayload) {
+    return requestReactivation(body)
+  }
 }
+
+const requestReactivation = async (body: ReactivationRequestPayload) => {}
 
 const applyForAPet = async (
   body: ApplicationPayload,
@@ -721,10 +736,9 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
     application.homeVisitEmailSentDate = new Date().toISOString()
 
     // Set homeVisitScheduleExpiryDate to be one week from current date.
-    const oneWeekFromNow = new Date(
-      Date.now() + 7 * 24 * 60 * 60 * 1000
-    ).toISOString()
-    application.homeVisitScheduleExpiryDate = oneWeekFromNow
+    const oneWeekFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    oneWeekFromNow.setHours(0, 0, 0, 0)
+    application.homeVisitScheduleExpiryDate = oneWeekFromNow.toISOString()
 
     await application.save()
     return { code: 200, message: 'Request sent successfully' }

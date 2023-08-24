@@ -5,6 +5,7 @@ import mongoose, { ConnectOptions } from 'mongoose'
 import router from './routes'
 import path from 'path'
 import cors from 'cors'
+import Cron from './cron'
 
 const app: Express = express()
 
@@ -30,6 +31,7 @@ if (process.env.NODE_ENV !== 'test') {
       useUnifiedTopology: true
     } as ConnectOptions)
     .then(() => {
+      Cron()
       console.log('MongoDB Connected')
     })
     .catch((err) => {

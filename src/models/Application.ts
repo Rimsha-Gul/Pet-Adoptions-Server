@@ -14,7 +14,9 @@ export enum Status {
   UserVisitScheduled = 'User Visit Scheduled',
   Approved = 'Approved',
   Rejected = 'Rejected',
-  Closed = 'Closed'
+  Closed = 'Closed',
+  Expired = 'Expired',
+  ReactivationRequested = 'Reactivation Requested'
 }
 
 export interface UpdateApplicationPayload {
