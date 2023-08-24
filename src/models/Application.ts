@@ -102,6 +102,7 @@ export interface ApplicationDocument
   shelterVisitDate: string
   homeVisitEmailSentDate: string
   shelterVisitEmailSentDate: string
+  homeVisitScheduleExpiryDate: string
 }
 
 const ApplicationSchema = new Schema<ApplicationDocument>(
@@ -128,7 +129,8 @@ const ApplicationSchema = new Schema<ApplicationDocument>(
     homeVisitDate: { type: String },
     shelterVisitDate: { type: String },
     homeVisitEmailSentDate: { type: String },
-    shelterVisitEmailSentDate: { type: String }
+    shelterVisitEmailSentDate: { type: String },
+    homeVisitScheduleExpiryDate: { type: String }
   },
   { timestamps: true }
 )

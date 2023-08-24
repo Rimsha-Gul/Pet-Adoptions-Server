@@ -719,6 +719,13 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
     )
     await sendEmail(application.applicantEmail, subject, message)
     application.homeVisitEmailSentDate = new Date().toISOString()
+
+    // Set homeVisitScheduleExpiryDate to be one week from current date.
+    const oneWeekFromNow = new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000
+    ).toISOString()
+    application.homeVisitScheduleExpiryDate = oneWeekFromNow
+
     await application.save()
     return { code: 200, message: 'Request sent successfully' }
   }

@@ -35,6 +35,7 @@ export const getHomeVisitRequestEmail = (applicationID: string) => {
     <p>Dear Applicant,</p>
     <p>Your application for adoption, ID: <strong>${applicationID}</strong>, has reached the stage where a home visit is required.</p>
     <p>As part of our process, we ask that you schedule this visit within the next week, by <strong>${nextWeekDate}</strong>. This visit is an important step in ensuring that the pet will be comfortable and secure in their potential new home.</p>
+    <p><strong>Important:</strong> If you do not schedule your visit by the aforementioned date, your application will be marked as "expired." Should this happen, you'll need to request to reactivate your application to proceed further.</p>
     <p>Please click <a href="http://127.0.0.1:5173/${applicationID}/scheduleHomeVisit">here</a> to schedule your home visit.</p>
     <p>If you have any questions or require any assistance, please feel free to respond to this email.</p>
     <p>Thank you for your cooperation and your interest in adopting.</p>
