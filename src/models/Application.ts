@@ -16,7 +16,9 @@ export enum Status {
   Rejected = 'Rejected',
   Closed = 'Closed',
   Expired = 'Expired',
-  ReactivationRequested = 'Reactivation Requested'
+  ReactivationRequested = 'Reactivation Requested',
+  ReactivationRequestApproved = 'Reactivation Request Approved',
+  ReactivationRequestDeclined = 'Reactivation Request Declined'
 }
 
 export interface UpdateApplicationPayload {

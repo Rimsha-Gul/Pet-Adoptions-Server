@@ -339,6 +339,10 @@ components:
                 - Approved
                 - Rejected
                 - Closed
+                - Expired
+                - 'Reactivation Requested'
+                - 'Reactivation Request Approved'
+                - 'Reactivation Request Declined'
             type: string
         ResidenceType:
             enum:
@@ -722,6 +726,31 @@ components:
             required:
                 - reviews
                 - totalPages
+            type: object
+            additionalProperties: false
+        ReactivationRequestPayload:
+            properties:
+                reasonNotScheduled:
+                    type: string
+                reasonToReactivate:
+                    type: string
+                applicationID:
+                    type: string
+            required:
+                - reasonNotScheduled
+                - reasonToReactivate
+                - applicationID
+            type: object
+            additionalProperties: false
+        ReactivationRequestResponse:
+            properties:
+                reasonNotScheduled:
+                    type: string
+                reasonToReactivate:
+                    type: string
+            required:
+                - reasonNotScheduled
+                - reasonToReactivate
             type: object
             additionalProperties: false
     securitySchemes:
@@ -1744,6 +1773,54 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/ReviewPayload'
+    /reactivationRequest:
+        post:
+            operationId: RequestReactivation
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
+                            examples:
+                                'Example 1':
+                                    value: {applicationID: 6475e9630044288a2b4880b5, reasonNotScheduled: 'I had an unexpected personal commitment that consumed my attention during that time, and I missed the scheduling window.', reasonToReactivate: 'The commitment has been addressed, and I am now fully available to proceed with the visit scheduling.'}
+            summary: 'Accepts reactivation request and sends email to shelter'
+            tags:
+                - ReactivationRequest
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ReactivationRequestPayload'
+        get:
+            operationId: GetReactivationRequest
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ReactivationRequestResponse'
+            summary: 'Returns the reactivation request associated with given application ID'
+            tags:
+                - ReactivationRequest
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
 servers:
     -
         url: /

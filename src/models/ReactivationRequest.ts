@@ -1,9 +1,13 @@
 import { Model, Schema, model } from 'mongoose'
 
-export interface ReactivationRequestPayload {
-  applicationID: string
+export interface ReactivationRequestResponse {
   reasonNotScheduled: string
   reasonToReactivate: string
+}
+
+export interface ReactivationRequestPayload
+  extends ReactivationRequestResponse {
+  applicationID: string
 }
 
 export interface ReactivationRequestDocument

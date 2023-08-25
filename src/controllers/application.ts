@@ -40,14 +40,14 @@ import {
   getShelterAdoptionConfirmationEmail,
   getShelterAdoptionRejectionEmail,
   getShelterHomeVisitScheduledEmail,
-  getShelterShelterVisitScheduledEmail
+  getShelterShelterVisitScheduledEmail,
+  getApplicantReactivationApprovalEmail,
+  getApplicantReactivationDeclineEmail
 } from '../data/emailMessages'
 import { sendEmail } from '../middleware/sendEmail'
 import { Visit, VisitType } from '../models/Visit'
 import { canReview } from '../utils/canReview'
 import { generateTimeSlots } from '../utils/generateTimeSlots'
-import { ReactivationRequestPayload } from '../models/ReactivationRequest'
-import { reactivationRequestExample } from '../examples/reactivationRequest'
 
 @Route('application')
 @Tags('Application')
@@ -144,22 +144,6 @@ export class ApplicationController {
   public async updateApplicationStatus(@Body() body: UpdateApplicationPayload) {
     return updateApplicationStatus(body)
   }
-
-  /**
-   * @summary Accepts reactivation request and sends email to shelter
-   *
-   */
-  @Example<ReactivationRequestPayload>(reactivationRequestExample)
-  @Security('bearerAuth')
-  @Put('/requestReactivation')
-  public async requestReactivation(@Body() body: ReactivationRequestPayload) {
-    return requestReactivation(body)
-  }
-}
-
-const requestReactivation = async (body: ReactivationRequestPayload) => {
-  console.log(body)
-  // to implement
 }
 
 const applyForAPet = async (
@@ -728,7 +712,11 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
   const pet = await Pet.findOne({ microchipID: application.microchipID })
   if (!pet) throw { code: 404, message: 'Pet not found' }
 
-  application.status = status
+  if (
+    status !== Status.ReactivationRequestApproved &&
+    status !== Status.ReactivationRequestDeclined
+  )
+    application.status = status
 
   // check the new status and trigger the appropriate email
   if (status === Status.HomeVisitRequested) {
@@ -740,7 +728,7 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
 
     // Set homeVisitScheduleExpiryDate to be one week from current date.
     const oneWeekFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-    oneWeekFromNow.setHours(0, 0, 0, 0)
+    oneWeekFromNow.setHours(23, 59, 59, 999)
     application.homeVisitScheduleExpiryDate = oneWeekFromNow.toISOString()
 
     await application.save()
@@ -823,6 +811,33 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
       await sendEmail(shelter.email, subject, message)
     }
   }
+
+  if (status === Status.ReactivationRequestApproved) {
+    const { subject, message } = getApplicantReactivationApprovalEmail(
+      application._id.toString()
+    )
+
+    application.status = Status.HomeVisitRequested
+
+    // Set the expiry date to 48 hours from now until midnight
+    const twoDaysFromNow = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) // 48 hours from now
+    twoDaysFromNow.setHours(23, 59, 59, 999) // Set the time to that day's midnight
+
+    application.homeVisitScheduleExpiryDate = twoDaysFromNow.toISOString()
+
+    await sendEmail(application.applicantEmail, subject, message)
+  }
+
+  if (status === Status.ReactivationRequestDeclined) {
+    const { subject, message } = getApplicantReactivationDeclineEmail(
+      application._id.toString()
+    )
+
+    application.status = Status.Closed
+
+    await sendEmail(application.applicantEmail, subject, message)
+  }
+
   await application.save()
 
   return { code: 200, message: 'Application status updated successfully' }

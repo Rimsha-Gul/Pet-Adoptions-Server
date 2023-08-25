@@ -213,3 +213,12 @@ export const resetPasswordValidation = (data: any): Joi.ValidationResult =>
     email: emailSchema.required(),
     newPassword: passwordSchema.required()
   }).validate(data)
+
+export const requestReactivationValidation = (
+  data: any
+): Joi.ValidationResult =>
+  Joi.object({
+    applicationID: objectIDSchema.required(),
+    reasonNotScheduled: Joi.string().required(),
+    reasonToReactivate: Joi.string().required()
+  }).validate(data)
