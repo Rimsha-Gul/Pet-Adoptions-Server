@@ -1913,7 +1913,7 @@ describe('application', () => {
         .expect(400)
 
       expect(response.text).toEqual(
-        '"status" must be one of [Under Review, Home Visit Requested, Home Visit Scheduled, Home Approved, Home Rejected, User Visit Scheduled, Approved, Rejected, Closed, Expired, Reactivation Requested]'
+        '"status" must be one of [Under Review, Home Visit Requested, Home Visit Scheduled, Home Approved, Home Rejected, User Visit Scheduled, Approved, Rejected, Closed, Expired, Reactivation Requested, Reactivation Request Approved, Reactivation Request Declined]'
       )
       expect(response.body).toEqual({})
     })
