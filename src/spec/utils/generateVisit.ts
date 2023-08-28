@@ -17,7 +17,6 @@ export const generateVisit = async (
     visitType: visitType
   })
   await visit.save()
-  console.log('visit', visit)
 }
 
 export const generateAllVisitsForDate = async (

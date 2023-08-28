@@ -57,7 +57,7 @@ const requestReactivation = async (body: ReactivationRequestPayload) => {
   })
 
   if (existingRequest)
-    throw { code: 409, message: 'Reacttivation Request already exists' }
+    throw { code: 409, message: 'Reactivation Request already exists' }
 
   // Create a new reactivation request record
   const reactivationRequest = new ReactivationRequest({
@@ -85,11 +85,14 @@ const requestReactivation = async (body: ReactivationRequestPayload) => {
 const getReactivationRequest = async (
   req: UserRequest
 ): Promise<ReactivationRequestResponse> => {
+  console.log(req.query.id)
+  const application = await Application.findById(req.query.id)
+  if (!application) throw { code: 404, message: 'Application not found' }
   const request = await ReactivationRequest.findOne({
     applicationID: req.query.id
   })
 
-  if (!request) throw { code: 404, message: 'Reacttivation Request not found' }
+  if (!request) throw { code: 404, message: 'Reactivation Request not found' }
 
   return {
     reasonNotScheduled: request.reasonNotScheduled,

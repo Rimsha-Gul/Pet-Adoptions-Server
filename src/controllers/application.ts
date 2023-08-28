@@ -742,6 +742,11 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
     )
     await sendEmail(application.applicantEmail, subject, message)
     application.shelterVisitEmailSentDate = new Date().toISOString()
+
+    // Set homeVisitScheduleExpiryDate to be one week from current date.
+    const oneWeekFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    oneWeekFromNow.setHours(23, 59, 59, 999)
+    application.shelterVisitScheduleExpiryDate = oneWeekFromNow.toISOString()
   }
 
   if (status === Status.HomeRejected) {

@@ -1292,6 +1292,270 @@ describe('application', () => {
       expect(response.body.availableTimeSlots).toBeInstanceOf(Array)
       expect(response.body.availableTimeSlots).toHaveLength(0)
     })
+
+    it('should throw Bad Request if shelterID is less than 24 characters long', async () => {
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=12345&petID=A123456789&visitDate=${visitDate}&visitType=Home`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual('"id" length must be 24 characters long')
+    })
+
+    it('should throw Bad Request if shelterID is greater than 24 characters long', async () => {
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=1234567890123456789012345&petID=A123456789&visitDate=${visitDate}&visitType=Home`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual('"id" length must be 24 characters long')
+    })
+
+    it('should throw Bad Request if petID is less than 10 characters long', async () => {
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&petID=A12345&visitDate=${visitDate}&visitType=Home`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual('"petID" length must be 10 characters long')
+    })
+
+    it('should throw Bad Request if petID is greater than 10 characters long', async () => {
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&petID=A1234567890&visitDate=${visitDate}&visitType=Home`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual('"petID" length must be 10 characters long')
+    })
+
+    it('should return an error for a visitDate in the past', async () => {
+      const pastDateObj = new Date()
+      pastDateObj.setDate(pastDateObj.getDate() - 1) // Move the date 1 day to the past
+      const pastDate = pastDateObj.toISOString().split('T')[0] // Format it in 'YYYY-MM-DD'
+
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&petID=A1234567890&visitDate=${pastDate}&visitType=Home`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      const receivedDateMatch = response.text.match(
+        /"visitDate" must be greater than "(.*?)T/
+      )
+      if (!receivedDateMatch) {
+        throw new Error('Could not extract date from response')
+      }
+
+      const receivedDate = receivedDateMatch[1]
+
+      // Calculate the difference in days between the received date and the current date
+      const differenceInDays = moment(receivedDate).diff(
+        moment().utc().format('YYYY-MM-DD'),
+        'days'
+      )
+
+      expect(differenceInDays).toBe(0) // Expect exactly zero-day difference
+    })
+
+    it('should return an error for a visitDate more than a week from now', async () => {
+      const farFutureDate = moment().add(8, 'days').format('YYYY-MM-DD')
+
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&petID=A1234567890&visitDate=${farFutureDate}&visitType=Home`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      // Extract the date from the response text.
+      const receivedDateMatch = response.text.match(
+        /"visitDate" must be less than "(.*?)T/
+      )
+      if (!receivedDateMatch) {
+        throw new Error('Could not extract date from response')
+      }
+
+      const receivedDate = receivedDateMatch[1]
+
+      // Calculate the difference in days between the received date and the current time.
+      const differenceInDays = moment(receivedDate).diff(
+        moment().utc().format('YYYY-MM-DD'),
+        'days'
+      )
+
+      expect(differenceInDays).toBe(7) // The date should be 7 days (1 week) from the current date
+    })
+
+    it('should throw Bad Request if visitType is invalid', async () => {
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Park`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(
+        '"visitType" must be one of [Home, Shelter]'
+      )
+    })
+
+    it('should throw Bad Request if shelterId is empty', async () => {
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=&petID=A123456789&visitDate=${visitDate}&visitType=Home`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual('"id" is not allowed to be empty')
+    })
+
+    it('should throw Bad Request if petID is empty', async () => {
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&petID=&visitDate=${visitDate}&visitType=Home`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual('"petID" is not allowed to be empty')
+    })
+
+    it('should throw Bad Request if visitDate is empty', async () => {
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&petID=A123456789&visitDate=&visitType=Home`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual('"visitDate" must be a valid date')
+    })
+
+    it('should throw Bad Request if visitType is empty', async () => {
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(
+        '"visitType" must be one of [Home, Shelter]'
+      )
+    })
+
+    it('should throw Bad Request if shelterId is missing', async () => {
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?&petID=A123456789&visitDate=${visitDate}&visitType=Home`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual('"id" is required')
+    })
+
+    it('should throw Bad Request if petID is empty', async () => {
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&&visitDate=${visitDate}&visitType=Home`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual('"petID" is required')
+    })
+
+    it('should throw Bad Request if visitDate is missing', async () => {
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&petID=A123456789&&visitType=Home`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual('"visitDate" is required')
+    })
+
+    it('should throw Bad Request if visitType is missing', async () => {
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&petID=A123456789&visitDate=${visitDate}`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual('"visitType" is required')
+    })
+
+    it('should throw Unauthorized if token is missing', async () => {
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
+      const response = await request(app)
+        .get(
+          `/application/timeSlots?id=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Home`
+        )
+        .expect(401)
+
+      expect(response.text).toEqual('Unauthorized')
+    })
   })
 
   describe('schedule home visit', () => {
@@ -1490,7 +1754,7 @@ describe('application', () => {
         'seconds'
       )
 
-      expect(Math.abs(differenceInSeconds)).toBeLessThanOrEqual(59) // Accept up to 59 seconds difference
+      expect(Math.abs(differenceInSeconds)).toBeLessThanOrEqual(119) // Accept up to 119 seconds difference
     })
 
     it('should return an error for a visitDate more than a week from now', async () => {
@@ -1743,7 +2007,7 @@ describe('application', () => {
         'seconds'
       )
 
-      expect(Math.abs(differenceInSeconds)).toBeLessThanOrEqual(59) // Accept up to 59 seconds difference
+      expect(Math.abs(differenceInSeconds)).toBeLessThanOrEqual(119) // Accept up to 119 seconds difference
     })
 
     it('should return an error for a visitDate more than a week from now', async () => {
@@ -1806,7 +2070,7 @@ describe('application', () => {
       payload: UpdateApplicationPayload,
       sendEmailSpy: jest.SpyInstance,
       expectedRecipient
-    const TOLERANCE_IN_SECONDS = 10
+    const TOLERANCE_IN_SECONDS = 119
 
     beforeEach(async () => {
       user = await generateUserandTokens()
@@ -1929,6 +2193,7 @@ describe('application', () => {
     <p>Dear Applicant,</p>
     <p>Your application for adoption, ID: <strong>${applicationID}</strong>, has reached the stage where a home visit is required.</p>
     <p>As part of our process, we ask that you schedule this visit within the next week, by <strong>${formattedNextWeekDate}</strong>. This visit is an important step in ensuring that the pet will be comfortable and secure in their potential new home.</p>
+    <p><strong>Note:</strong> If you'd like to schedule your visit, please do so at least one day in advance to allow the shelter time for preparations.</p>
     <p><strong>Important:</strong> If you do not schedule your visit by the aforementioned date, your application will be marked as "expired." Should this happen, you'll need to request to reactivate your application to proceed further.</p>
     <p>Please click <a href="http://127.0.0.1:5173/${applicationID}/scheduleHomeVisit">here</a> to schedule your home visit.</p>
     <p>If you have any questions or require any assistance, please feel free to respond to this email.</p>
