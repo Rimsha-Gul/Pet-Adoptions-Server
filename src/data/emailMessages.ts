@@ -12,8 +12,8 @@ export const getResetPasswordEmail = (resetToken: string) => {
   const subject = 'Purrfect Adoptions - Password Reset Request'
 
   const message = `
-    <p>We received a request to reset your password. The password reset window is limited to one hour.</p>
-    <p>If you do not reset your password within one hour, you will need to submit a new request.</p>
+    <p>We received a request to reset your password. The password reset window is limited to five minutes.</p>
+    <p>If you do not reset your password within five minutes, you will need to submit a new request.</p>
     <p>Please click on the following link to complete the process:</p>
      <p><a href="http://127.0.0.1:5173/resetPassword/${resetToken}/">Reset</a></p>
     <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
