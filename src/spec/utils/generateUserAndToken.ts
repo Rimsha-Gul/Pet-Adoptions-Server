@@ -200,5 +200,9 @@ export const generateAdminandTokens = async (role: Role): Promise<Admin> => {
 }
 
 export const removeAllUsers = async (role?: Role) => {
-  await UserModel.deleteMany({ role: role })
+  if (role !== undefined) {
+    await UserModel.deleteMany({ role: role })
+  } else {
+    await UserModel.deleteMany({})
+  }
 }
