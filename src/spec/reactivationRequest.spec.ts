@@ -51,6 +51,7 @@ describe('reactivationRequest', () => {
       await removeAllUsers()
       await removePets()
       await removeAllApplications()
+      await removeAllReactivationRequests()
     })
 
     it('should successfully add a review and update the shelter rating', async () => {
@@ -299,6 +300,7 @@ describe('reactivationRequest', () => {
       await removeAllUsers()
       await removePets()
       await removeAllApplications()
+      await removeAllReactivationRequests()
     })
 
     it('should successfully return details of the reactivation request', async () => {
