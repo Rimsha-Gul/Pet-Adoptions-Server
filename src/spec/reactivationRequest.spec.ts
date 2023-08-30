@@ -60,6 +60,7 @@ describe('reactivationRequest', () => {
       await removePets()
       await removeAllApplications()
       await removeAllReactivationRequests()
+      jest.restoreAllMocks()
     })
 
     it('should successfully create reactivation request and return 200', async () => {

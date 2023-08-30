@@ -52,6 +52,10 @@ describe('auth', () => {
       user = await generateUserandTokens()
     })
 
+    afterEach(async () => {
+      await removeAllUsers()
+    })
+
     it('should respond with user data', async () => {
       const signupData = {
         name: user.name,
@@ -373,8 +377,9 @@ describe('auth', () => {
       sendEmailSpy.mockImplementation(() => Promise.resolve())
     })
 
-    afterEach(() => {
+    afterEach(async () => {
       // Clear all mocks after each test
+      await removeAllUsers()
       jest.clearAllMocks()
     })
 
