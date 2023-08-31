@@ -48,6 +48,8 @@ import { sendEmail } from '../middleware/sendEmail'
 import { Visit, VisitType } from '../models/Visit'
 import { canReview } from '../utils/canReview'
 import { generateTimeSlots } from '../utils/generateTimeSlots'
+import { Notification } from '../models/Notification'
+import { emitUserNotification } from '../socket'
 
 @Route('application')
 @Tags('Application')
@@ -428,28 +430,6 @@ const getApplications = async (
       }
     }
 
-    // if (searchQuery) {
-    //   if (req.user?.role === Role.User) {
-    //     pipeline.push({
-    //       $match: {
-    //         $or: [
-    //           { 'pet.name': { $regex: searchQuery, $options: 'i' } },
-    //           { 'shelter.name': { $regex: searchQuery, $options: 'i' } }
-    //         ]
-    //       }
-    //     })
-    //   } else if (req.user?.role === Role.Shelter) {
-    //     pipeline.push({
-    //       $match: {
-    //         $or: [
-    //           { 'pet.name': { $regex: searchQuery, $options: 'i' } },
-    //           { 'applicant.name': { $regex: searchQuery, $options: 'i' } }
-    //         ]
-    //       }
-    //     })
-    //   }
-    // }
-
     // First, get the total count of documents after filtering and all shelter names
     const countPipeline = [...pipeline, { $count: 'total' }]
     const count = await Application.aggregate(countPipeline)
@@ -698,152 +678,167 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
 }
 
 const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
-  const { id, status } = body
+  try {
+    const { id, status } = body
+    let responseMessage = 'Application status updated successfully'
 
-  const application = await Application.findById(id)
-  if (!application) throw { code: 404, message: 'Application not found' }
+    const application = await Application.findById(id)
+    if (!application) throw { code: 404, message: 'Application not found' }
 
-  const shelter = await User.findOne({
-    role: Role.Shelter,
-    _id: application.shelterID
-  })
-  if (!shelter) throw { code: 404, message: 'Shelter not found' }
+    const shelter = await User.findOne({
+      role: Role.Shelter,
+      _id: application.shelterID
+    })
+    if (!shelter) throw { code: 404, message: 'Shelter not found' }
 
-  const pet = await Pet.findOne({ microchipID: application.microchipID })
-  if (!pet) throw { code: 404, message: 'Pet not found' }
+    const pet = await Pet.findOne({ microchipID: application.microchipID })
+    if (!pet) throw { code: 404, message: 'Pet not found' }
 
-  if (
-    status !== Status.ReactivationRequestApproved &&
-    status !== Status.ReactivationRequestDeclined
-  )
-    application.status = status
-
-  // check the new status and trigger the appropriate email
-  if (status === Status.HomeVisitRequested) {
-    const { subject, message } = getHomeVisitRequestEmail(
-      application._id.toString()
+    if (
+      status !== Status.ReactivationRequestApproved &&
+      status !== Status.ReactivationRequestDeclined
     )
-    await sendEmail(application.applicantEmail, subject, message)
-    application.homeVisitEmailSentDate = new Date().toISOString()
+      application.status = status
 
-    // Set homeVisitScheduleExpiryDate to be one week from current date.
-    const oneWeekFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-    oneWeekFromNow.setHours(23, 59, 59, 999)
-    application.homeVisitScheduleExpiryDate = oneWeekFromNow.toISOString()
+    // check the new status and trigger the appropriate email
+    if (status === Status.HomeVisitRequested) {
+      const { subject, message } = getHomeVisitRequestEmail(
+        application._id.toString()
+      )
+      await sendEmail(application.applicantEmail, subject, message)
+      application.homeVisitEmailSentDate = new Date().toISOString()
+
+      // Set homeVisitScheduleExpiryDate to be one week from current date.
+      const oneWeekFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      oneWeekFromNow.setHours(23, 59, 59, 999)
+      application.homeVisitScheduleExpiryDate = oneWeekFromNow.toISOString()
+
+      responseMessage = 'Request sent successfully'
+    }
+
+    if (status === Status.HomeApproved) {
+      const { subject, message } = getHomeApprovalEmail(
+        application._id.toString(),
+        new Date().toISOString()
+      )
+      await sendEmail(application.applicantEmail, subject, message)
+      application.shelterVisitEmailSentDate = new Date().toISOString()
+
+      // Set homeVisitScheduleExpiryDate to be one week from current date.
+      const oneWeekFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      oneWeekFromNow.setHours(23, 59, 59, 999)
+      application.shelterVisitScheduleExpiryDate = oneWeekFromNow.toISOString()
+    }
+
+    if (status === Status.HomeRejected) {
+      const { subject, message } = getHomeRejectionEmail(
+        application._id.toString(),
+        new Date().toISOString()
+      )
+      await sendEmail(application.applicantEmail, subject, message)
+    }
+
+    if (status === Status.Approved) {
+      {
+        const { subject, message } = getApplicantAdoptionConfirmationEmail(
+          application._id.toString(),
+          new Date().toISOString()
+        )
+        await sendEmail(application.applicantEmail, subject, message)
+      }
+
+      {
+        const { subject, message } = getShelterAdoptionConfirmationEmail(
+          application._id.toString(),
+          new Date().toISOString(),
+          application.applicantEmail
+        )
+        await sendEmail(shelter.email, subject, message)
+      }
+      pet.isAdopted = true
+      await pet.save()
+
+      // Find all other applications for this pet
+      const otherApplications = await Application.find({
+        microchipID: pet.microchipID,
+        _id: { $ne: application._id }
+      })
+
+      // Closing all other applications for this pet
+      await Application.updateMany(
+        { microchipID: pet.microchipID, _id: { $ne: application._id } },
+        { $set: { status: Status.Closed } }
+      )
+
+      // Send email to all other applicants
+      otherApplications.forEach(async (otherApp) => {
+        const { subject, message } = getPetAdoptionNotificationEmail(
+          otherApp._id.toString()
+        )
+        await sendEmail(otherApp.applicantEmail, subject, message)
+      })
+    }
+
+    if (status === Status.Rejected) {
+      {
+        const { subject, message } = getApplicantAdoptionRejectionEmail(
+          application._id.toString(),
+          new Date().toISOString()
+        )
+        await sendEmail(application.applicantEmail, subject, message)
+      }
+
+      {
+        const { subject, message } = getShelterAdoptionRejectionEmail(
+          application._id.toString(),
+          new Date().toISOString(),
+          application.applicantEmail
+        )
+        await sendEmail(shelter.email, subject, message)
+      }
+    }
+
+    if (status === Status.ReactivationRequestApproved) {
+      const { subject, message } = getApplicantReactivationApprovalEmail(
+        application._id.toString()
+      )
+
+      application.status = Status.HomeVisitRequested
+
+      // Set the expiry date to 48 hours from now until midnight
+      const twoDaysFromNow = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) // 48 hours from now
+      twoDaysFromNow.setHours(23, 59, 59, 999) // Set the time to that day's midnight
+
+      application.homeVisitScheduleExpiryDate = twoDaysFromNow.toISOString()
+
+      await sendEmail(application.applicantEmail, subject, message)
+    }
+
+    if (status === Status.ReactivationRequestDeclined) {
+      const { subject, message } = getApplicantReactivationDeclineEmail(
+        application._id.toString()
+      )
+
+      application.status = Status.Closed
+
+      await sendEmail(application.applicantEmail, subject, message)
+    }
 
     await application.save()
-    return { code: 200, message: 'Request sent successfully' }
-  }
 
-  if (status === Status.HomeApproved) {
-    const { subject, message } = getHomeApprovalEmail(
-      application._id.toString(),
-      new Date().toISOString()
-    )
-    await sendEmail(application.applicantEmail, subject, message)
-    application.shelterVisitEmailSentDate = new Date().toISOString()
-
-    // Set homeVisitScheduleExpiryDate to be one week from current date.
-    const oneWeekFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-    oneWeekFromNow.setHours(23, 59, 59, 999)
-    application.shelterVisitScheduleExpiryDate = oneWeekFromNow.toISOString()
-  }
-
-  if (status === Status.HomeRejected) {
-    const { subject, message } = getHomeRejectionEmail(
-      application._id.toString(),
-      new Date().toISOString()
-    )
-    await sendEmail(application.applicantEmail, subject, message)
-  }
-
-  if (status === Status.Approved) {
-    {
-      const { subject, message } = getApplicantAdoptionConfirmationEmail(
-        application._id.toString(),
-        new Date().toISOString()
-      )
-      await sendEmail(application.applicantEmail, subject, message)
-    }
-
-    {
-      const { subject, message } = getShelterAdoptionConfirmationEmail(
-        application._id.toString(),
-        new Date().toISOString(),
-        application.applicantEmail
-      )
-      await sendEmail(shelter.email, subject, message)
-    }
-    pet.isAdopted = true
-    await pet.save()
-
-    // Find all other applications for this pet
-    const otherApplications = await Application.find({
-      microchipID: pet.microchipID,
-      _id: { $ne: application._id }
+    const notification = new Notification({
+      userEmail: application.applicantEmail,
+      applicationID: id,
+      message: `Your application status has been updated to ${status}`,
+      actionUrl: `/applications/${id}`
     })
 
-    // Closing all other applications for this pet
-    await Application.updateMany(
-      { microchipID: pet.microchipID, _id: { $ne: application._id } },
-      { $set: { status: Status.Closed } }
-    )
+    const savedNotification = await notification.save()
+    emitUserNotification(application.applicantEmail, savedNotification)
 
-    // Send email to all other applicants
-    otherApplications.forEach(async (otherApp) => {
-      const { subject, message } = getPetAdoptionNotificationEmail(
-        otherApp._id.toString()
-      )
-      await sendEmail(otherApp.applicantEmail, subject, message)
-    })
+    return { code: 200, message: responseMessage }
+  } catch (error) {
+    console.log(error)
+    return { code: 500, message: 'Error updating application status: ' }
   }
-
-  if (status === Status.Rejected) {
-    {
-      const { subject, message } = getApplicantAdoptionRejectionEmail(
-        application._id.toString(),
-        new Date().toISOString()
-      )
-      await sendEmail(application.applicantEmail, subject, message)
-    }
-
-    {
-      const { subject, message } = getShelterAdoptionRejectionEmail(
-        application._id.toString(),
-        new Date().toISOString(),
-        application.applicantEmail
-      )
-      await sendEmail(shelter.email, subject, message)
-    }
-  }
-
-  if (status === Status.ReactivationRequestApproved) {
-    const { subject, message } = getApplicantReactivationApprovalEmail(
-      application._id.toString()
-    )
-
-    application.status = Status.HomeVisitRequested
-
-    // Set the expiry date to 48 hours from now until midnight
-    const twoDaysFromNow = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) // 48 hours from now
-    twoDaysFromNow.setHours(23, 59, 59, 999) // Set the time to that day's midnight
-
-    application.homeVisitScheduleExpiryDate = twoDaysFromNow.toISOString()
-
-    await sendEmail(application.applicantEmail, subject, message)
-  }
-
-  if (status === Status.ReactivationRequestDeclined) {
-    const { subject, message } = getApplicantReactivationDeclineEmail(
-      application._id.toString()
-    )
-
-    application.status = Status.Closed
-
-    await sendEmail(application.applicantEmail, subject, message)
-  }
-
-  await application.save()
-
-  return { code: 200, message: 'Application status updated successfully' }
 }
