@@ -7,6 +7,8 @@ import {
 import { generatePets } from './generatePet'
 import { generateShelters } from './generateShelters'
 import { Pet } from '../../models/Pet'
+import { generateVisit } from './generateVisit'
+import { VisitType } from '../../models/Visit'
 
 export interface Application {
   shelterID: string
@@ -54,7 +56,9 @@ export const generateApplicationData = (
 export const generateApplication = async (
   shelterID: string,
   microchipID: string,
-  applicantEmail: string
+  applicantEmail: string,
+  visitDate?: string,
+  visitType?: VisitType
 ) => {
   const application = new ApplicationModel({
     shelterID: shelterID,
@@ -71,9 +75,29 @@ export const generateApplication = async (
     canAffordPetsNeeds: true,
     canAffordPetsMediacal: true,
     petTravelPlans: 'travel wiith him',
-    petOutlivePlans: 'friend will take care of him'
+    petOutlivePlans: 'friend will take care of him',
+    status: Status.HomeVisitRequested,
+    homeVisitEmailSentDate: '2023-08-15T08:10:04.876Z',
+    homeVisitDate: VisitType.Home && visitDate,
+    shelterVisitEmailSentDate: '2023-08-23T08:10:04.876Z',
+    shelterVisitDate: visitType == VisitType.Shelter && visitDate
   })
   await application.save()
+
+  const savedApplication = await ApplicationModel.findOne({
+    microchipID: microchipID,
+    applicantEmail: applicantEmail
+  })
+
+  if (visitType && visitDate)
+    await generateVisit(
+      savedApplication?._id,
+      shelterID,
+      microchipID,
+      applicantEmail,
+      visitDate,
+      visitType
+    )
 }
 
 export const generateApplications = async () => {

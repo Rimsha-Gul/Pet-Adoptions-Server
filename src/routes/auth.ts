@@ -228,4 +228,20 @@ authRouter.put('/resetPassword', async (req, res) => {
   }
 })
 
+authRouter.post(
+  '/getAlternateEmail',
+  authenticateAccessToken,
+  isAdmin,
+  async (req, res) => {
+    const { error } = emailValidation(req.body)
+    if (error) return res.status(400).send(error.details[0].message)
+    try {
+      const response = await controller.getAlternateEmail(req.body)
+      return res.send(response)
+    } catch (err: any) {
+      return res.status(err.code).send(err.message)
+    }
+  }
+)
+
 export default authRouter

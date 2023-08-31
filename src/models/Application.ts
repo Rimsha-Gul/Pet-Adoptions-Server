@@ -14,7 +14,11 @@ export enum Status {
   UserVisitScheduled = 'User Visit Scheduled',
   Approved = 'Approved',
   Rejected = 'Rejected',
-  Closed = 'Closed'
+  Closed = 'Closed',
+  Expired = 'Expired',
+  ReactivationRequested = 'Reactivation Requested',
+  ReactivationRequestApproved = 'Reactivation Request Approved',
+  ReactivationRequestDeclined = 'Reactivation Request Declined'
 }
 
 export interface UpdateApplicationPayload {
@@ -45,6 +49,10 @@ export interface ApplicationPayload {
 export interface ScheduleHomeVisitPayload {
   id: string
   visitDate: string
+}
+
+export interface TimeSlotsResponse {
+  availableTimeSlots: string[]
 }
 
 export interface ApplictionResponseShelter extends ApplicationPayload {
@@ -98,6 +106,8 @@ export interface ApplicationDocument
   shelterVisitDate: string
   homeVisitEmailSentDate: string
   shelterVisitEmailSentDate: string
+  homeVisitScheduleExpiryDate: string
+  shelterVisitScheduleExpiryDate: string
 }
 
 const ApplicationSchema = new Schema<ApplicationDocument>(
@@ -124,7 +134,9 @@ const ApplicationSchema = new Schema<ApplicationDocument>(
     homeVisitDate: { type: String },
     shelterVisitDate: { type: String },
     homeVisitEmailSentDate: { type: String },
-    shelterVisitEmailSentDate: { type: String }
+    shelterVisitEmailSentDate: { type: String },
+    homeVisitScheduleExpiryDate: { type: String },
+    shelterVisitScheduleExpiryDate: { type: String }
   },
   { timestamps: true }
 )

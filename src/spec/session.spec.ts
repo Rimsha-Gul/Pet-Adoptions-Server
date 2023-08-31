@@ -1,6 +1,10 @@
 import { getImageURL } from '../utils/getImageURL'
 import { app } from '../app'
-import { User, generateUserandTokens } from './utils/generateUserAndToken'
+import {
+  User,
+  generateUserandTokens,
+  removeAllUsers
+} from './utils/generateUserAndToken'
 import { dropCollections, dropDatabase, mongooseSetUp } from './utils/setup'
 import request from 'supertest'
 import { generateAccessToken } from '../utils/generateAccessToken'
@@ -24,6 +28,10 @@ describe('session', () => {
 
     beforeEach(async () => {
       user = await generateUserandTokens()
+    })
+
+    afterEach(async () => {
+      await removeAllUsers()
     })
 
     it('should return the user session data', async () => {

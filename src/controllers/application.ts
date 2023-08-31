@@ -10,6 +10,7 @@ import Application, {
   ApplictionResponseForUser,
   ScheduleHomeVisitPayload,
   Status,
+  TimeSlotsResponse,
   UpdateApplicationPayload
 } from '../models/Application'
 import { UserRequest } from '../types/Request'
@@ -39,11 +40,14 @@ import {
   getShelterAdoptionConfirmationEmail,
   getShelterAdoptionRejectionEmail,
   getShelterHomeVisitScheduledEmail,
-  getShelterShelterVisitScheduledEmail
+  getShelterShelterVisitScheduledEmail,
+  getApplicantReactivationApprovalEmail,
+  getApplicantReactivationDeclineEmail
 } from '../data/emailMessages'
 import { sendEmail } from '../middleware/sendEmail'
-import { Visit } from '../models/Visit'
+import { Visit, VisitType } from '../models/Visit'
 import { canReview } from '../utils/canReview'
+import { generateTimeSlots } from '../utils/generateTimeSlots'
 
 @Route('application')
 @Tags('Application')
@@ -94,6 +98,18 @@ export class ApplicationController {
       searchQuery,
       applicationStatusFilter
     )
+  }
+
+  /**
+   * @summary Returns time slots available to shcedule visit on a particular day
+   *
+   */
+  @Security('bearerAuth')
+  @Get('/timeSlots')
+  public async getTimeSlots(
+    @Request() req: UserRequest
+  ): Promise<TimeSlotsResponse> {
+    return getTimeSlots(req)
   }
 
   /**
@@ -269,7 +285,24 @@ const getApplications = async (
       filter = { ...filter, shelterID: req.user?._id }
     }
 
-    const pipeline = [
+    type AggregateStage =
+      | { $match: { [key: string]: any } }
+      | {
+          $lookup: {
+            from: string
+            localField: string
+            foreignField: string
+            as: string
+          }
+        }
+      | {
+          $unwind:
+            | string
+            | { path: string; preserveNullAndEmptyArrays?: boolean }
+        }
+      | { $sort: { [key: string]: any } }
+
+    const pipeline: AggregateStage[] = [
       { $match: filter },
       {
         $lookup: {
@@ -314,33 +347,119 @@ const getApplications = async (
     }
 
     // Add searchQuery filter to pipeline if defined
+
     if (searchQuery) {
+      let scoreStage
       if (req.user?.role === Role.User) {
-        pipeline.push({
-          $match: {
-            $or: [
-              { 'pet.name': { $regex: searchQuery, $options: 'i' } },
-              { 'shelter.name': { $regex: searchQuery, $options: 'i' } }
-            ]
+        scoreStage = {
+          $addFields: {
+            score: {
+              $add: [
+                {
+                  $cond: [
+                    {
+                      $regexMatch: {
+                        input: '$pet.name',
+                        regex: searchQuery,
+                        options: 'i'
+                      }
+                    },
+                    2,
+                    0
+                  ]
+                }, // 2 points for pet name match
+                {
+                  $cond: [
+                    {
+                      $regexMatch: {
+                        input: '$shelter.name',
+                        regex: searchQuery,
+                        options: 'i'
+                      }
+                    },
+                    1,
+                    0
+                  ]
+                } // 1 point for shelter name match
+              ]
+            }
           }
-        })
+        }
       } else if (req.user?.role === Role.Shelter) {
-        pipeline.push({
-          $match: {
-            $or: [
-              { 'pet.name': { $regex: searchQuery, $options: 'i' } },
-              { 'applicant.name': { $regex: searchQuery, $options: 'i' } }
-            ]
+        scoreStage = {
+          $addFields: {
+            score: {
+              $add: [
+                {
+                  $cond: [
+                    {
+                      $regexMatch: {
+                        input: '$pet.name',
+                        regex: searchQuery,
+                        options: 'i'
+                      }
+                    },
+                    2,
+                    0
+                  ]
+                }, // 2 points for pet name match
+                {
+                  $cond: [
+                    {
+                      $regexMatch: {
+                        input: '$applicant.name',
+                        regex: searchQuery,
+                        options: 'i'
+                      }
+                    },
+                    1,
+                    0
+                  ]
+                } // 1 point for applicant name match
+              ]
+            }
           }
-        })
+        }
+      }
+
+      if (scoreStage) {
+        pipeline.push(scoreStage)
+        pipeline.push({ $match: { score: { $gt: 0 } } }) // Only consider documents with a score greater than 0
       }
     }
+
+    // if (searchQuery) {
+    //   if (req.user?.role === Role.User) {
+    //     pipeline.push({
+    //       $match: {
+    //         $or: [
+    //           { 'pet.name': { $regex: searchQuery, $options: 'i' } },
+    //           { 'shelter.name': { $regex: searchQuery, $options: 'i' } }
+    //         ]
+    //       }
+    //     })
+    //   } else if (req.user?.role === Role.Shelter) {
+    //     pipeline.push({
+    //       $match: {
+    //         $or: [
+    //           { 'pet.name': { $regex: searchQuery, $options: 'i' } },
+    //           { 'applicant.name': { $regex: searchQuery, $options: 'i' } }
+    //         ]
+    //       }
+    //     })
+    //   }
+    // }
 
     // First, get the total count of documents after filtering and all shelter names
     const countPipeline = [...pipeline, { $count: 'total' }]
     const count = await Application.aggregate(countPipeline)
 
     const totalApplications = count[0]?.total || 0
+
+    // Sort the search results
+    if (searchQuery) {
+      pipeline.push({ $sort: { score: -1, name: 1 } })
+    }
 
     // Add pagination stages to the pipeline
     ;(pipeline as any).push({ $skip: skip }, { $limit: limit })
@@ -411,6 +530,55 @@ const getApplications = async (
   }
 }
 
+const getTimeSlots = async (req: UserRequest): Promise<TimeSlotsResponse> => {
+  const { id, petID, visitDate, visitType } = req.query
+
+  // Generate all possible time slots for the day
+  const allTimeSlots = generateTimeSlots()
+
+  // Convert the visitDate from the request into a Date object for comparison
+  const startOfVisitDate = new Date(visitDate + 'T00:00:00Z')
+  const startOfNextDate = new Date(
+    startOfVisitDate.getTime() + 24 * 60 * 60 * 1000
+  )
+
+  // Define a query object
+  const query: any = {
+    visitType: visitType,
+    visitDate: {
+      $gte: startOfVisitDate.toISOString(),
+      $lt: startOfNextDate.toISOString()
+    },
+    shelterID: id
+  }
+
+  // Conditionally add petID to the query if the visitType is 'Shelter'
+  if (visitType === VisitType.Shelter) {
+    query.petID = petID
+  }
+
+  const bookedVisits = await Visit.find(query)
+
+  const timezoneOffsetHours = 5 // Offset between local time and UTC in hours
+
+  const bookedTimeSlots = bookedVisits.map((visit) => {
+    const visitDateObj = new Date(visit.visitDate)
+    // Convert UTC time from database to local time
+    visitDateObj.setHours(visitDateObj.getUTCHours() + timezoneOffsetHours)
+    return (
+      visitDateObj.getHours() +
+      ':' +
+      String(visitDateObj.getMinutes()).padStart(2, '0')
+    )
+  })
+
+  // Filter the time slots that are still available
+  const availableTimeSlots: string[] = allTimeSlots.filter(
+    (slot) => !bookedTimeSlots.includes(slot)
+  )
+  return { availableTimeSlots: availableTimeSlots }
+}
+
 const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
   const { id, visitDate } = body
   const application = await Application.findById(id)
@@ -423,6 +591,14 @@ const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
     _id: application.shelterID
   })
   if (!shelter) throw { code: 404, message: 'Shelter not found' }
+
+  const existingVisit = await Visit.findOne({
+    applicationID: id,
+    shelterID: application.shelterID,
+    applicantEmail: application.applicantEmail,
+    visitType: VisitType.Home
+  })
+  if (existingVisit) throw { code: 400, message: 'Visit already scheduled' }
 
   // Sending email to the applicant
   {
@@ -444,6 +620,17 @@ const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
 
   application.status = Status.HomeVisitScheduled
   await application.save()
+
+  const visit = new Visit({
+    applicationID: id,
+    shelterID: application.shelterID,
+    petID: application.microchipID,
+    applicantEmail: application.applicantEmail,
+    visitDate: visitDate,
+    visitType: VisitType.Home
+  })
+
+  await visit.save()
 
   return { code: 200, message: 'Home Visit has been scheduled' }
 }
@@ -467,6 +654,14 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
   })
   if (!shelter) throw { code: 404, message: 'Shelter not found' }
 
+  const existingVisit = await Visit.findOne({
+    applicationID: id,
+    shelterID: application.shelterID,
+    applicantEmail: application.applicantEmail,
+    visitType: VisitType.Shelter
+  })
+  if (existingVisit) throw { code: 400, message: 'Visit already scheduled' }
+
   // Sending email to the applicant
   {
     const { subject, message } = getApplicantShelterVisitScheduledEmail(
@@ -489,9 +684,12 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
   await application.save()
 
   const visit = new Visit({
+    applicationID: id,
     shelterID: application.shelterID,
+    petID: application.microchipID,
     applicantEmail: applicant.email,
-    visitDate: visitDate
+    visitDate: visitDate,
+    visitType: VisitType.Shelter
   })
 
   await visit.save()
@@ -514,7 +712,11 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
   const pet = await Pet.findOne({ microchipID: application.microchipID })
   if (!pet) throw { code: 404, message: 'Pet not found' }
 
-  application.status = status
+  if (
+    status !== Status.ReactivationRequestApproved &&
+    status !== Status.ReactivationRequestDeclined
+  )
+    application.status = status
 
   // check the new status and trigger the appropriate email
   if (status === Status.HomeVisitRequested) {
@@ -523,6 +725,12 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
     )
     await sendEmail(application.applicantEmail, subject, message)
     application.homeVisitEmailSentDate = new Date().toISOString()
+
+    // Set homeVisitScheduleExpiryDate to be one week from current date.
+    const oneWeekFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    oneWeekFromNow.setHours(23, 59, 59, 999)
+    application.homeVisitScheduleExpiryDate = oneWeekFromNow.toISOString()
+
     await application.save()
     return { code: 200, message: 'Request sent successfully' }
   }
@@ -534,6 +742,11 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
     )
     await sendEmail(application.applicantEmail, subject, message)
     application.shelterVisitEmailSentDate = new Date().toISOString()
+
+    // Set homeVisitScheduleExpiryDate to be one week from current date.
+    const oneWeekFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    oneWeekFromNow.setHours(23, 59, 59, 999)
+    application.shelterVisitScheduleExpiryDate = oneWeekFromNow.toISOString()
   }
 
   if (status === Status.HomeRejected) {
@@ -603,6 +816,33 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
       await sendEmail(shelter.email, subject, message)
     }
   }
+
+  if (status === Status.ReactivationRequestApproved) {
+    const { subject, message } = getApplicantReactivationApprovalEmail(
+      application._id.toString()
+    )
+
+    application.status = Status.HomeVisitRequested
+
+    // Set the expiry date to 48 hours from now until midnight
+    const twoDaysFromNow = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) // 48 hours from now
+    twoDaysFromNow.setHours(23, 59, 59, 999) // Set the time to that day's midnight
+
+    application.homeVisitScheduleExpiryDate = twoDaysFromNow.toISOString()
+
+    await sendEmail(application.applicantEmail, subject, message)
+  }
+
+  if (status === Status.ReactivationRequestDeclined) {
+    const { subject, message } = getApplicantReactivationDeclineEmail(
+      application._id.toString()
+    )
+
+    application.status = Status.Closed
+
+    await sendEmail(application.applicantEmail, subject, message)
+  }
+
   await application.save()
 
   return { code: 200, message: 'Application status updated successfully' }

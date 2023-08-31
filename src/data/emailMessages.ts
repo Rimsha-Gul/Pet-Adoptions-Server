@@ -12,8 +12,8 @@ export const getResetPasswordEmail = (resetToken: string) => {
   const subject = 'Purrfect Adoptions - Password Reset Request'
 
   const message = `
-    <p>We received a request to reset your password. The password reset window is limited to one hour.</p>
-    <p>If you do not reset your password within one hour, you will need to submit a new request.</p>
+    <p>We received a request to reset your password. The password reset window is limited to five minutes.</p>
+    <p>If you do not reset your password within five minutes, you will need to submit a new request.</p>
     <p>Please click on the following link to complete the process:</p>
      <p><a href="http://127.0.0.1:5173/resetPassword/${resetToken}/">Reset</a></p>
     <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
@@ -35,6 +35,8 @@ export const getHomeVisitRequestEmail = (applicationID: string) => {
     <p>Dear Applicant,</p>
     <p>Your application for adoption, ID: <strong>${applicationID}</strong>, has reached the stage where a home visit is required.</p>
     <p>As part of our process, we ask that you schedule this visit within the next week, by <strong>${nextWeekDate}</strong>. This visit is an important step in ensuring that the pet will be comfortable and secure in their potential new home.</p>
+    <p><strong>Note:</strong> If you'd like to schedule your visit, please do so at least one day in advance to allow the shelter time for preparations.</p>
+    <p><strong>Important:</strong> If you do not schedule your visit by the aforementioned date, your application will be marked as "expired." Should this happen, you'll need to request to reactivate your application to proceed further.</p>
     <p>Please click <a href="http://127.0.0.1:5173/${applicationID}/scheduleHomeVisit">here</a> to schedule your home visit.</p>
     <p>If you have any questions or require any assistance, please feel free to respond to this email.</p>
     <p>Thank you for your cooperation and your interest in adopting.</p>
@@ -274,6 +276,7 @@ export const getShelterInvitationEmail = (invitationLink: string) => {
     message
   }
 }
+
 export const getPetAdoptionNotificationEmail = (applicationID: string) => {
   const subject = 'Purrfect Adoptions - Pet Adoption Update'
 
@@ -282,6 +285,83 @@ export const getPetAdoptionNotificationEmail = (applicationID: string) => {
     <p>We hope this message finds you well. We are reaching out to inform you that the pet you applied for, application ID: <strong>${applicationID}</strong>, has found a new home.</p>
     <p>We understand that you may be disappointed, and we appreciate your understanding. There are many other pets in need of a loving home, and we encourage you to consider applying for another pet.</p>
     <p>Thank you for your interest in providing a home for our pets. Your compassion makes a huge difference in their lives.</p>
+  `
+
+  return {
+    subject,
+    message
+  }
+}
+
+export const requestAlternateEmailForShelter = (userName: string) => {
+  const subject = 'Purrfect Adoptions - Email Address Action Required'
+
+  const message = `
+    <p>Dear <strong>${userName}</strong>,</p>
+    <p>We recently received a request to use your email address for a 'Shelter' registration on Purrfect Adoptions. However, this email is already associated with a 'User' account on our platform.</p>
+    <p>If you intended to register as a 'Shelter' or were expecting this change, we kindly ask that you provide a different email address for this registration or transition.</p>
+    <p>If you did not initiate this request or have questions about this process, please do not hesitate to respond to this email. Our team is ready to assist you and provide clarity.</p>
+    <p>Your active participation and trust in our platform are truly appreciated. We look forward to continuing our shared mission of finding deserving pets their forever homes.</p>
+    <p>Warm regards,</p>
+    <p>The Purrfect Adoptions Team</p>
+  `
+
+  return {
+    subject,
+    message
+  }
+}
+
+export const getReactivationRequestEmail = (
+  applicationID: string,
+  shelterName: string
+) => {
+  const subject = 'Purrfect Adoptions - Reactivation Request Received'
+
+  const message = `
+    <p>Dear ${shelterName},</p>
+    <p>We have received a request to reactivate the application with ID: <strong>${applicationID}</strong>.</p>
+    <p>The applicant has provided reasons for their previous inability to proceed and expressed a desire to reactivate the application process.</p>
+    <p>To review the details and take appropriate actions, please <a href="http://127.0.0.1:5173/view/application/${applicationID}/">click here</a>.</p>
+    <p>Thank you for your attention to this matter.</p>
+    <p>Best Regards,</p>
+    <p>The Purrfect Adoptions Team</p>
+  `
+
+  return {
+    subject,
+    message
+  }
+}
+
+export const getApplicantReactivationApprovalEmail = (
+  applicationID: string
+) => {
+  const subject = 'Purrfect Adoptions - Reactivation Request Approved'
+
+  const message = `
+    <p>Good news! We are pleased to inform you that your reactivation request for application ID: <strong>${applicationID}</strong> has been approved.</p>
+    <p>You now have the opportunity to schedule your home visit within the next <strong>48 hours</strong>. Please note that failure to schedule within this timeframe will result in the permanent closure of your application.</p>
+    <p>We are committed to helping pets find loving homes, and we're excited to move forward with your application. If you have any questions or require further clarification, please don't hesitate to reach out.</p>
+    <p>Thank you for your commitment to animal adoption and for being a part of the Purrfect Adoptions community.</p>
+  `
+
+  return {
+    subject,
+    message
+  }
+}
+
+export const getApplicantReactivationDeclineEmail = (applicationID: string) => {
+  const subject = 'Purrfect Adoptions - Reactivation Request Declined'
+
+  const message = `
+    <p>We regret to inform you that your reactivation request for application ID: <strong>${applicationID}</strong> has been declined.</p>
+    <p>This means that your application has been permanently closed and will no longer be processed for further steps.</p>
+    <p>If you are still interested in adopting, you may start a new application. However, we recommend reaching out to our team for more information on why your application was declined before proceeding.</p>
+    <p>We understand that this news might be disappointing. Our team is committed to ensuring that all adoptions are well-suited to both the applicant and the pet.</p>
+    <p>If you have any questions or concerns, please don't hesitate to contact us.</p>
+    <p>Thank you for your interest in animal adoption and for being a part of the Purrfect Adoptions community.</p>
   `
 
   return {
