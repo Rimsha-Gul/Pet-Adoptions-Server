@@ -50,6 +50,7 @@ import { canReview } from '../utils/canReview'
 import { generateTimeSlots } from '../utils/generateTimeSlots'
 import { Notification } from '../models/Notification'
 import { emitUserNotification } from '../socket'
+import moment from 'moment'
 
 @Route('application')
 @Tags('Application')
@@ -564,6 +565,9 @@ const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
   const application = await Application.findById(id)
   if (!application) throw { code: 404, message: 'Application not found' }
 
+  const pet = await Pet.findOne({ microchipID: application.microchipID })
+  if (!pet) throw { code: 404, message: 'Pet not found' }
+
   application.homeVisitDate = visitDate
 
   const shelter = await User.findOne({
@@ -612,6 +616,22 @@ const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
 
   await visit.save()
 
+  const notification = new Notification({
+    userEmail: application.applicantEmail,
+    applicationID: id,
+    status: Status.UserVisitScheduled,
+    petImage: getImageURL(pet.images[0]),
+    actionUrl: `/view/application/${id}`,
+    date: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]')
+  })
+
+  const savedNotification = await notification.save()
+  const notificationWithId = {
+    ...savedNotification,
+    id: savedNotification._id.toString()
+  }
+  emitUserNotification(application.applicantEmail, notificationWithId)
+
   return { code: 200, message: 'Home Visit has been scheduled' }
 }
 
@@ -619,6 +639,9 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
   const { id, visitDate } = body
   const application = await Application.findById(id)
   if (!application) throw { code: 404, message: 'Application not found' }
+
+  const pet = await Pet.findOne({ microchipID: application.microchipID })
+  if (!pet) throw { code: 404, message: 'Pet not found' }
 
   application.shelterVisitDate = visitDate
 
@@ -673,6 +696,22 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
   })
 
   await visit.save()
+
+  const notification = new Notification({
+    userEmail: application.applicantEmail,
+    applicationID: id,
+    status: Status.UserVisitScheduled,
+    petImage: getImageURL(pet.images[0]),
+    actionUrl: `/view/application/${id}`,
+    date: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]')
+  })
+
+  const savedNotification = await notification.save()
+  const notificationWithId = {
+    ...savedNotification,
+    id: savedNotification._id.toString()
+  }
+  emitUserNotification(application.applicantEmail, notificationWithId)
 
   return { code: 200, message: 'Shelter Visit has been scheduled' }
 }
@@ -829,12 +868,18 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
     const notification = new Notification({
       userEmail: application.applicantEmail,
       applicationID: id,
-      message: `Your application status has been updated to ${status}`,
-      actionUrl: `/applications/${id}`
+      status: status,
+      petImage: getImageURL(pet.images[0]),
+      actionUrl: `/view/application/${id}`,
+      date: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]')
     })
 
     const savedNotification = await notification.save()
-    emitUserNotification(application.applicantEmail, savedNotification)
+    const notificationWithId = {
+      ...savedNotification,
+      id: savedNotification._id.toString()
+    }
+    emitUserNotification(application.applicantEmail, notificationWithId)
 
     return { code: 200, message: responseMessage }
   } catch (error) {

@@ -1,15 +1,23 @@
 import { Model, Schema, model } from 'mongoose'
+import { Status } from './Application'
 
-export interface NotificationResponse {
+export interface NotificationPayload {
+  id: string
+}
+
+export interface NotificationResponse extends NotificationPayload {
   userEmail: string
   applicationID: Schema.Types.ObjectId
-  message: string
-  read: boolean
+  status: Status
+  petImage: string
+  isRead: boolean
   actionUrl: string
   date: string
 }
 
-export interface NotificationDocument extends NotificationResponse, Document {}
+export interface NotificationDocument
+  extends Omit<NotificationResponse, 'id'>,
+    Document {}
 
 const NotificationSchema = new Schema<NotificationDocument>(
   {
@@ -19,10 +27,11 @@ const NotificationSchema = new Schema<NotificationDocument>(
       ref: 'Application',
       required: true
     },
-    message: { type: String, required: true },
-    read: { type: Boolean, default: false },
-    actionUrl: { type: String, default: null },
-    date: { type: String }
+    status: { type: String, enum: Status, required: true },
+    petImage: { type: String, required: true },
+    isRead: { type: Boolean, default: false },
+    actionUrl: { type: String },
+    date: { type: String, required: true }
   },
   { timestamps: true }
 )

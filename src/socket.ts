@@ -37,7 +37,9 @@ io.on('connection', (socket: Socket) => {
     console.log('Fetching all notifications')
 
     // Fetch all notifications from MongoDB
-    const allNotifications = await Notification.find({ userEmail: userEmail })
+    const allNotifications = await Notification.find({
+      userEmail: userEmail
+    }).sort({ date: -1 })
 
     console.log('notifications', allNotifications)
     socket.emit('notifications', allNotifications)
@@ -53,10 +55,7 @@ export const emitUserNotification = async (
   data: NotificationResponse
 ) => {
   console.log(`Emitting user notification to email: ${userEmail}`)
+  console.log('Data being emitted:', data)
 
-  // Create a new Notification document in MongoDB
-  const newNotification = new Notification(data)
-  await newNotification.save()
-
-  io.to(`user-room-${userEmail}`).emit('newNotification', newNotification)
+  io.to(`user-room-${userEmail}`).emit('new_notification', data)
 }

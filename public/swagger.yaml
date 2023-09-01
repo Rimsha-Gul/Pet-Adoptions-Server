@@ -753,6 +753,14 @@ components:
                 - reasonToReactivate
             type: object
             additionalProperties: false
+        NotificationPayload:
+            properties:
+                id:
+                    type: string
+            required:
+                - id
+            type: object
+            additionalProperties: false
     securitySchemes:
         bearerAuth:
             type: http
@@ -1821,6 +1829,35 @@ paths:
                 -
                     bearerAuth: []
             parameters: []
+    /notification/markAsRead:
+        put:
+            operationId: MarkAsRead
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
+            summary: 'Accepts notification ID and marks it as read'
+            tags:
+                - Notification
+            security:
+                -
+                    bearerAuth: []
+            parameters: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NotificationPayload'
 servers:
     -
         url: /
