@@ -10,6 +10,7 @@ export interface NotificationResponse extends NotificationPayload {
   applicationID: Schema.Types.ObjectId
   status: Status
   petImage: string
+  isSeen: boolean
   isRead: boolean
   actionUrl: string
   date: string
@@ -29,6 +30,7 @@ const NotificationSchema = new Schema<NotificationDocument>(
     },
     status: { type: String, enum: Status, required: true },
     petImage: { type: String, required: true },
+    isSeen: { type: Boolean, default: false },
     isRead: { type: Boolean, default: false },
     actionUrl: { type: String },
     date: { type: String, required: true }

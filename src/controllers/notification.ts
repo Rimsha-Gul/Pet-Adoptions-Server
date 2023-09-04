@@ -1,3 +1,4 @@
+import { emitReadNotification } from '../socket'
 import Notification, { NotificationPayload } from '../models/Notification'
 import { Body, Put, Route, Security, Tags } from 'tsoa'
 
@@ -17,13 +18,15 @@ export class NotificationController {
 
 const markAsRead = async (body: NotificationPayload) => {
   const { id } = body
-  console.log('id', id)
 
   const notification = await Notification.findById(id)
 
   if (!notification) throw { code: 404, message: 'Notification not found' }
 
+  notification.isSeen = true
   notification.isRead = true
   notification.save()
+
+  emitReadNotification(notification.userEmail, notification._id.toString())
   return { code: 200, message: 'Notification successfully marked as read' }
 }

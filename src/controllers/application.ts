@@ -717,22 +717,21 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
 }
 
 const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
+  const { id, status } = body
+  let responseMessage = 'Application status updated successfully'
+
+  const application = await Application.findById(id)
+  if (!application) throw { code: 404, message: 'Application not found' }
+
+  const shelter = await User.findOne({
+    role: Role.Shelter,
+    _id: application.shelterID
+  })
+  if (!shelter) throw { code: 404, message: 'Shelter not found' }
+
+  const pet = await Pet.findOne({ microchipID: application.microchipID })
+  if (!pet) throw { code: 404, message: 'Pet not found' }
   try {
-    const { id, status } = body
-    let responseMessage = 'Application status updated successfully'
-
-    const application = await Application.findById(id)
-    if (!application) throw { code: 404, message: 'Application not found' }
-
-    const shelter = await User.findOne({
-      role: Role.Shelter,
-      _id: application.shelterID
-    })
-    if (!shelter) throw { code: 404, message: 'Shelter not found' }
-
-    const pet = await Pet.findOne({ microchipID: application.microchipID })
-    if (!pet) throw { code: 404, message: 'Pet not found' }
-
     if (
       status !== Status.ReactivationRequestApproved &&
       status !== Status.ReactivationRequestDeclined
@@ -883,7 +882,6 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
 
     return { code: 200, message: responseMessage }
   } catch (error) {
-    console.log(error)
-    return { code: 500, message: 'Error updating application status: ' }
+    throw { code: 500, message: 'Error updating application status: ' }
   }
 }

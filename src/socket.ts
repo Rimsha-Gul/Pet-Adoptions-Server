@@ -34,6 +34,7 @@ io.on('connection', (socket: Socket) => {
   //   )
 
   socket.on('get_notifications', async (userEmail: string) => {
+    console.log(userEmail)
     console.log('Fetching all notifications')
 
     // Fetch all notifications from MongoDB
@@ -43,6 +44,14 @@ io.on('connection', (socket: Socket) => {
 
     console.log('notifications', allNotifications)
     socket.emit('notifications', allNotifications)
+  })
+
+  socket.on('mark_notifications_as_seen', async (userEmail: string) => {
+    await Notification.updateMany(
+      { userEmail, isRead: false, isSeen: false },
+      { $set: { isSeen: true } }
+    )
+    socket.emit('notifications_marked_as_seen')
   })
 
   socket.on('disconnect', () => {
@@ -58,4 +67,16 @@ export const emitUserNotification = async (
   console.log('Data being emitted:', data)
 
   io.to(`user-room-${userEmail}`).emit('new_notification', data)
+}
+
+export const emitReadNotification = async (
+  userEmail: string,
+  notificationID: string
+) => {
+  console.log(`Emitting read notification to email: ${userEmail}`)
+
+  io.to(`user-room-${userEmail}`).emit(
+    'notification_marked_as_read',
+    notificationID
+  )
 }
