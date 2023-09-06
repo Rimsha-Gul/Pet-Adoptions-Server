@@ -7,6 +7,7 @@ import applicationRouter from './application'
 import shelterRouter from './shelter'
 import reviewRouter from './review'
 import reactivationRequestRouter from './reactivationRequest'
+import notificationRouter from './notification'
 
 const router = express.Router()
 
@@ -17,6 +18,7 @@ router.use('/application', applicationRouter)
 router.use('/shelter', shelterRouter)
 router.use('/review', reviewRouter)
 router.use('/reactivationRequest', reactivationRequestRouter)
+router.use('/notification', notificationRouter)
 router.use(
   '/',
   swaggerUi.serve,
