@@ -26,26 +26,28 @@ let dbPromise: Promise<void> | null = null
 
 let uri: string
 
-if (process.env.NODE_ENV === 'test') {
-  uri = `${process.env.MONGO_URI_TEST}`
-} else {
-  uri = `${process.env.MONGO_URI_DEV}`
-}
+if (process.env.NODE_ENV !== 'cypress_test') {
+  if (process.env.NODE_ENV === 'test') {
+    uri = `${process.env.MONGO_URI_TEST}`
+  } else {
+    uri = `${process.env.MONGO_URI_DEV}`
+  }
 
-dbPromise = mongoose
-  .connect(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  } as ConnectOptions)
-  .then(() => {
-    if (process.env.NODE_ENV !== 'test') {
-      Cron()
-    }
-    console.log('MongoDB Connected')
-  })
-  .catch((err) => {
-    console.error('MongoDB Connection Error: ', err)
-    throw err
-  })
+  dbPromise = mongoose
+    .connect(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    } as ConnectOptions)
+    .then(() => {
+      if (process.env.NODE_ENV !== 'test') {
+        Cron()
+      }
+      console.log('MongoDB Connected')
+    })
+    .catch((err) => {
+      console.error('MongoDB Connection Error: ', err)
+      throw err
+    })
+}
 
 export { app, dbPromise }

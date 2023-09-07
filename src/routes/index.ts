@@ -20,7 +20,7 @@ router.use('/shelter', shelterRouter)
 router.use('/review', reviewRouter)
 router.use('/reactivationRequest', reactivationRequestRouter)
 router.use('/notification', notificationRouter)
-if (process.env.NODE_ENV === 'test') {
+if (process.env.NODE_ENV === 'cypress_test') {
   router.use('/test', testRouter)
 }
 router.use(
