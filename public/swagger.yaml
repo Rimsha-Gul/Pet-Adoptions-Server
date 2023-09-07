@@ -1858,6 +1858,48 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/NotificationPayload'
+    /test/seed:
+        post:
+            operationId: SeedDB
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
+            summary: 'Populates db with test data'
+            tags:
+                - Test
+            security: []
+            parameters: []
+    /test/clear:
+        delete:
+            operationId: ClearDB
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    message: {type: string}
+                                    code: {type: number, format: double}
+                                required:
+                                    - message
+                                    - code
+                                type: object
+            summary: 'Clears db of test data'
+            tags:
+                - Test
+            security: []
+            parameters: []
 servers:
     -
         url: /

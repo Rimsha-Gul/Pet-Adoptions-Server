@@ -43,6 +43,7 @@ import {
   dateDifferenceInDays,
   dateDifferenceInSeconds
 } from './utils/getTimeDifference'
+import * as socketModule from '../socket'
 
 describe('application', () => {
   beforeAll(async () => {
@@ -2069,7 +2070,8 @@ describe('application', () => {
       applicationID,
       payload: UpdateApplicationPayload,
       sendEmailSpy: jest.SpyInstance,
-      expectedRecipient
+      expectedRecipient,
+      socketSpy: jest.SpyInstance
     const TOLERANCE_IN_SECONDS = 119
 
     beforeEach(async () => {
@@ -2084,6 +2086,9 @@ describe('application', () => {
       // Spy on the sendEmail function
       sendEmailSpy = jest.spyOn(sendEmailModule, 'sendEmail')
       sendEmailSpy.mockImplementation(() => Promise.resolve())
+
+      socketSpy = jest.spyOn(socketModule, 'emitUserNotification')
+      socketSpy.mockImplementation(() => Promise.resolve())
     })
 
     afterEach(async () => {
@@ -2228,6 +2233,14 @@ describe('application', () => {
       )
 
       expect(differenceInDays).toBeLessThanOrEqual(7)
+
+      expect(socketSpy).toHaveBeenCalledTimes(1)
+      // Destructure the arguments with which the function has been called
+      const [emailArg, notificationArg] = socketSpy.mock.calls[0]
+
+      // Perform checks on individual fields
+      expect(emailArg).toEqual('test@gmail.com')
+      expect(notificationArg._doc.status).toEqual(Status.HomeVisitRequested)
     })
 
     it('should successfully update application status to HomeApproved', async () => {
@@ -2278,6 +2291,14 @@ describe('application', () => {
       } else {
         throw new Error('Date not found in the expectedMessage')
       }
+
+      expect(socketSpy).toHaveBeenCalledTimes(1)
+      // Destructure the arguments with which the function has been called
+      const [emailArg, notificationArg] = socketSpy.mock.calls[0]
+
+      // Perform checks on individual fields
+      expect(emailArg).toEqual('test@gmail.com')
+      expect(notificationArg._doc.status).toEqual(Status.HomeApproved)
     })
 
     it('should successfully update application status to HomeRejected', async () => {
@@ -2329,6 +2350,14 @@ describe('application', () => {
       } else {
         throw new Error('Date not found in the expectedMessage')
       }
+
+      expect(socketSpy).toHaveBeenCalledTimes(1)
+      // Destructure the arguments with which the function has been called
+      const [emailArg, notificationArg] = socketSpy.mock.calls[0]
+
+      // Perform checks on individual fields
+      expect(emailArg).toEqual('test@gmail.com')
+      expect(notificationArg._doc.status).toEqual(Status.HomeRejected)
     })
 
     it('should successfully update application status to Rejected', async () => {
@@ -2398,6 +2427,14 @@ describe('application', () => {
 
       checkDateInMessage(expectedApplicantMessage)
       checkDateInMessage(expectedShelterMessage)
+
+      expect(socketSpy).toHaveBeenCalledTimes(1)
+      // Destructure the arguments with which the function has been called
+      const [emailArg, notificationArg] = socketSpy.mock.calls[0]
+
+      // Perform checks on individual fields
+      expect(emailArg).toEqual('test@gmail.com')
+      expect(notificationArg._doc.status).toEqual(Status.Rejected)
     })
 
     it('should successfully update application status to Approved', async () => {
@@ -2487,6 +2524,14 @@ describe('application', () => {
 
       checkDateInMessage(expectedApplicantMessage)
       checkDateInMessage(expectedShelterMessage)
+
+      expect(socketSpy).toHaveBeenCalledTimes(1)
+      // Destructure the arguments with which the function has been called
+      const [emailArg, notificationArg] = socketSpy.mock.calls[0]
+
+      // Perform checks on individual fields
+      expect(emailArg).toEqual('test@gmail.com')
+      expect(notificationArg._doc.status).toEqual(Status.Approved)
     })
   })
 })

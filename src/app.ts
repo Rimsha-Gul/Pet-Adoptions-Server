@@ -24,20 +24,28 @@ app.use('/', router)
 
 let dbPromise: Promise<void> | null = null
 
-if (process.env.NODE_ENV !== 'test') {
-  dbPromise = mongoose
-    .connect(`${process.env.MONGO_URI}`, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    } as ConnectOptions)
-    .then(() => {
-      Cron()
-      console.log('MongoDB Connected')
-    })
-    .catch((err) => {
-      console.error('MongoDB Connection Error: ', err)
-      throw err
-    })
+let uri: string
+
+if (process.env.NODE_ENV === 'test') {
+  uri = `${process.env.MONGO_URI_TEST}`
+} else {
+  uri = `${process.env.MONGO_URI_DEV}`
 }
+
+dbPromise = mongoose
+  .connect(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  } as ConnectOptions)
+  .then(() => {
+    if (process.env.NODE_ENV !== 'test') {
+      Cron()
+    }
+    console.log('MongoDB Connected')
+  })
+  .catch((err) => {
+    console.error('MongoDB Connection Error: ', err)
+    throw err
+  })
 
 export { app, dbPromise }
