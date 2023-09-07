@@ -8,7 +8,7 @@ import shelterRouter from './shelter'
 import reviewRouter from './review'
 import reactivationRequestRouter from './reactivationRequest'
 import notificationRouter from './notification'
-import testRouter from './test'
+import testRouter from './test-db'
 
 const router = express.Router()
 
