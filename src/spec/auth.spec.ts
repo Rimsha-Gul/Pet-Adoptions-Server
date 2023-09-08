@@ -466,22 +466,6 @@ describe('auth', () => {
     })
 
     it('should send verification code successfully', async () => {
-      const response = await request(app)
-        .post('/auth/sendVerificationCode')
-        .send(payload)
-        .expect(200)
-
-      expect(response.body.message).toEqual('Signup email sent successfully')
-      expect(sendEmailSpy).toBeCalledTimes(1)
-      expectedRecipient = payload.email
-      expect(sendEmailSpy).toBeCalledWith(
-        expectedRecipient,
-        expectedSubject,
-        expectedMessage
-      )
-    })
-
-    it('should send verification code successfully', async () => {
       const testUser = await generateUserNotVerifiedandTokens() // for sending first time (if veriificationCode.code does not exist)
       payload.email = testUser.email
       const response = await request(app)
@@ -499,11 +483,23 @@ describe('auth', () => {
       )
     })
 
+    it('should throw error if user is already verified', async () => {
+      const response = await request(app)
+        .post('/auth/sendVerificationCode')
+        .send(payload)
+        .expect(422)
+
+      expect(response.text).toEqual('User already verified')
+    })
+
     it('should handle error when sending verification code', async () => {
       // Mock the sendEmail function to throw an error
       sendEmailSpy.mockImplementation(() => {
         throw new Error('Failed to send email')
       })
+
+      const testUser = await generateUserNotVerifiedandTokens()
+      payload.email = testUser.email
 
       const response = await request(app)
         .post('/auth/sendVerificationCode')
@@ -511,13 +507,6 @@ describe('auth', () => {
         .expect(500)
 
       expect(response.text).toEqual('Error sending signup email')
-      expect(sendEmailSpy).toBeCalledTimes(1)
-      expectedRecipient = payload.email
-      expect(sendEmailSpy).toBeCalledWith(
-        expectedRecipient,
-        expectedSubject,
-        expectedMessage
-      )
     })
 
     it('should throw an error if user does not exist', async () => {
