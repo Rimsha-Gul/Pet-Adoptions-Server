@@ -306,6 +306,10 @@ const sendVerificationCode = async (
       if (!user) throw { code: 404, message: 'User not found' }
     }
   }
+
+  if (!emailChangeRequest && user.isVerified === true)
+    throw { code: 422, message: 'User already verified' } // User is already verified and thus cannot be verified again
+
   const verificationCode: string = generateVerificationCode()
   try {
     const codeEmail = getVerificationCodeEmail(verificationCode)

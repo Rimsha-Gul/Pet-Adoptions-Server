@@ -1,5 +1,7 @@
 import { Role, User } from '../models/User'
 import { Delete, Post, Route, Tags } from 'tsoa'
+import { generateAccessToken } from '../utils/generateAccessToken'
+import { generateRefreshToken } from '../utils/generateRefreshToken'
 
 @Route('test')
 @Tags('Test')
@@ -27,6 +29,18 @@ const seedDB = async () => {
   try {
     await User.deleteMany({})
 
+    const oneMinuteAgo = new Date(Date.now() - 60000) // 60000 milliseconds = 1 minute
+
+    const dummyAccessToken = generateAccessToken(
+      'test-user@example.com',
+      Role.User
+    )
+
+    const dummyRefreshToken = generateRefreshToken(
+      'test-user@example.com',
+      Role.User
+    )
+
     await User.create([
       {
         role: Role.User,
@@ -43,8 +57,8 @@ const seedDB = async () => {
           updatedAt: new Date()
         },
         tokens: {
-          accessToken: 'dummy_access_token',
-          refreshToken: 'dummy_refresh_token'
+          accessToken: dummyAccessToken,
+          refreshToken: dummyRefreshToken
         }
       },
       {
@@ -52,7 +66,24 @@ const seedDB = async () => {
         name: 'Unverified User',
         email: 'test-unverified-user@example.com',
         password: User.hashPassword('123456'),
-        isVerified: false
+        isVerified: false,
+        verificationCode: {
+          code: '123456',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      },
+      {
+        role: Role.User,
+        name: 'Expired Code User',
+        email: 'test-expired-code-user@example.com',
+        password: User.hashPassword('123456'),
+        isVerified: false,
+        verificationCode: {
+          code: '123456',
+          createdAt: oneMinuteAgo,
+          updatedAt: oneMinuteAgo
+        }
       }
     ])
     return { code: 200, message: 'Database seeded!' }
