@@ -1,5 +1,5 @@
 import { Role, User } from '../models/User'
-import { Delete, Post, Route, Tags } from 'tsoa'
+import { Delete, Get, Post, Route, Tags } from 'tsoa'
 import { generateAccessToken } from '../utils/generateAccessToken'
 import { generateRefreshToken } from '../utils/generateRefreshToken'
 
@@ -22,6 +22,15 @@ export class TestController {
   @Delete('/clear')
   public async clearDB() {
     return clearDB()
+  }
+
+  /**
+   * @summary Returns reset token
+   *
+   */
+  @Get('/getResetToken')
+  public async getResetToken() {
+    return getResetToken()
   }
 }
 
@@ -99,5 +108,26 @@ const clearDB = async () => {
     return { code: 200, message: 'Database cleared!' }
   } catch (error) {
     return { code: 500, message: 'Failed to clear database' }
+  }
+}
+
+const getResetToken = async () => {
+  try {
+    // Find the user in the database
+    const user = await User.findOne({ email: 'test-user@example.com' })
+    if (!user) {
+      return { code: 404, message: 'User not found' }
+    }
+
+    // Get the reset token from the user document
+    const resetToken = user.passwordResetToken
+    if (!resetToken) {
+      return { code: 404, message: 'No reset token found for this user' }
+    }
+
+    // Return the reset token
+    return { code: 200, resetToken: resetToken }
+  } catch (error) {
+    return { code: 500, message: 'Failed to fetch token' }
   }
 }
