@@ -31,4 +31,13 @@ testRouter.get('/getResetToken', async (_req, res) => {
   }
 })
 
+testRouter.post('/seedPets', async (_req, res) => {
+  try {
+    const response = await controller.seedPetsDB()
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
+  }
+})
+
 export default testRouter
