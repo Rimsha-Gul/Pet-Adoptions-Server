@@ -11,6 +11,7 @@ import User, {
   CheckPasswordPayload,
   UpdateProfilePayload,
   Role,
+  EmailChangeRequest,
   ResetPasswordPayload
 } from '../models/User'
 import { generateAccessToken } from '../utils/generateAccessToken'
@@ -297,7 +298,10 @@ const sendVerificationCode = async (
 ) => {
   const { email, emailChangeRequest } = body
   let user
-  if (!emailChangeRequest) {
+  if (
+    !emailChangeRequest ||
+    emailChangeRequest === EmailChangeRequest.currentEmailStep
+  ) {
     user = await User.findOne({ email })
     if (!user) throw { code: 404, message: 'User not found' }
   } else {
@@ -314,7 +318,9 @@ const sendVerificationCode = async (
   try {
     const codeEmail = getVerificationCodeEmail(verificationCode)
     await sendEmail(
-      emailChangeRequest ? email : user.email,
+      emailChangeRequest === EmailChangeRequest.newEmailStep
+        ? email
+        : user.email,
       codeEmail.subject,
       codeEmail.message
     )

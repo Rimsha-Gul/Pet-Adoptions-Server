@@ -13,6 +13,11 @@ export enum Role {
   User = 'USER'
 }
 
+export enum EmailChangeRequest {
+  currentEmailStep = 'currentEmailStep',
+  newEmailStep = 'newEmailStep'
+}
+
 export interface UserPayload {
   name: string
   email: string
@@ -27,7 +32,7 @@ export interface LoginPayload {
 
 export interface SendCodePayload {
   email: string
-  emailChangeRequest?: boolean
+  emailChangeRequest?: EmailChangeRequest
 }
 
 export interface VerificationPayload {

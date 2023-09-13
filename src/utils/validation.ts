@@ -1,7 +1,7 @@
 import Joi from 'joi'
 import { ActivityNeeds, Category, Gender, LevelOfGrooming } from '../models/Pet'
 import { ResidenceType, Status } from '../models/Application'
-import { Role } from '../models/User'
+import { EmailChangeRequest, Role } from '../models/User'
 import { VisitType } from '../models/Visit'
 
 const nameSchema = Joi.string().min(3).max(32)
@@ -22,6 +22,9 @@ const residenceTypeSchema = Joi.string().valid(...Object.values(ResidenceType))
 const statusSchema = Joi.string().valid(...Object.values(Status))
 const visitTypeSchema = Joi.string().valid(...Object.values(VisitType))
 const roleSchema = Joi.string().valid(...Object.values(Role))
+const emailChangeSchema = Joi.string().valid(
+  ...Object.values(EmailChangeRequest)
+)
 
 const today = new Date()
 const weekFromNow = new Date()
@@ -46,7 +49,7 @@ export const sendVerificationCodeValidation = (
 ): Joi.ValidationResult =>
   Joi.object({
     email: emailSchema.required(),
-    emailChangeRequest: Joi.boolean()
+    emailChangeRequest: emailChangeSchema
   }).validate(data)
 
 export const verifyEmailValidation = (data: any): Joi.ValidationResult =>
