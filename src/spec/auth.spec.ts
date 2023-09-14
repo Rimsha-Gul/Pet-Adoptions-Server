@@ -1,4 +1,5 @@
 import {
+  EmailChangeRequest,
   EmailPayload,
   ResetPasswordPayload,
   Role,
@@ -445,8 +446,7 @@ describe('auth', () => {
     beforeEach(async () => {
       user = await generateUserandTokens()
       payload = {
-        email: user.email,
-        emailChangeRequest: false
+        email: user.email
       }
       // Spy on the generateVerificationCode function and mock its implementation
       generateVerificationCodeSpy = jest.spyOn(
@@ -521,7 +521,7 @@ describe('auth', () => {
     })
 
     it('should throw an error if user data in req.user is invalid', async () => {
-      payload.emailChangeRequest = true
+      payload.emailChangeRequest = EmailChangeRequest.newEmailStep
 
       // Send the request without that header.
       const response = await request(app)
@@ -534,7 +534,7 @@ describe('auth', () => {
     })
 
     it('should send email change request successfully', async () => {
-      payload.emailChangeRequest = true
+      payload.emailChangeRequest = EmailChangeRequest.newEmailStep
 
       const response = await request(app)
         .post('/auth/sendVerificationCode')
@@ -583,7 +583,9 @@ describe('auth', () => {
         .send(incorrectPayload)
         .expect(400)
 
-      expect(response.text).toEqual(`"emailChangeRequest" must be a boolean`)
+      expect(response.text).toEqual(
+        `"emailChangeRequest" must be one of [currentEmailStep, newEmailStep]`
+      )
       expect(response.body).toEqual({})
     })
 
@@ -594,7 +596,9 @@ describe('auth', () => {
         .send(incorrectPayload)
         .expect(400)
 
-      expect(response.text).toEqual(`"emailChangeRequest" must be a boolean`)
+      expect(response.text).toEqual(
+        `"emailChangeRequest" must be one of [currentEmailStep, newEmailStep]`
+      )
       expect(response.body).toEqual({})
     })
 
