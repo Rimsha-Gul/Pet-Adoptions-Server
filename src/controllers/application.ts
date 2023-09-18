@@ -875,7 +875,7 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
 
     const savedNotification = await notification.save()
     const notificationWithId = {
-      ...savedNotification,
+      ...savedNotification.toObject(),
       id: savedNotification._id.toString()
     }
     emitUserNotification(application.applicantEmail, notificationWithId)

@@ -18,34 +18,6 @@ io.on('connection', (socket: Socket) => {
     socket.join(`user-room-${userEmail}`)
   })
 
-  //   socket.on(
-  //     'create_notification',
-  //     async (notification: NotificationResponse) => {
-  //       console.log('Creating a new notification:', notification)
-
-  //       // Create a new Notification document in MongoDB
-  //       const newNotification = new Notification(notification)
-  //       await newNotification.save()
-
-  //       const room = `user-room-${notification.userEmail}`
-  //       console.log(`Emitting new notification to room: ${room}`)
-  //       io.to(room).emit('new_notification', newNotification)
-  //     }
-  //   )
-
-  socket.on('get_notifications', async (userEmail: string) => {
-    console.log(userEmail)
-    console.log('Fetching all notifications')
-
-    // Fetch all notifications from MongoDB
-    const allNotifications = await Notification.find({
-      userEmail: userEmail
-    }).sort({ date: -1 })
-
-    console.log('notifications', allNotifications)
-    socket.emit('notifications', allNotifications)
-  })
-
   socket.on('mark_notifications_as_seen', async (userEmail: string) => {
     await Notification.updateMany(
       { userEmail, isRead: false, isSeen: false },
