@@ -2240,7 +2240,7 @@ describe('application', () => {
 
       // Perform checks on individual fields
       expect(emailArg).toEqual('test@gmail.com')
-      expect(notificationArg._doc.status).toEqual(Status.HomeVisitRequested)
+      expect(notificationArg.status).toEqual(Status.HomeVisitRequested)
     })
 
     it('should successfully update application status to HomeApproved', async () => {
@@ -2298,7 +2298,7 @@ describe('application', () => {
 
       // Perform checks on individual fields
       expect(emailArg).toEqual('test@gmail.com')
-      expect(notificationArg._doc.status).toEqual(Status.HomeApproved)
+      expect(notificationArg.status).toEqual(Status.HomeApproved)
     })
 
     it('should successfully update application status to HomeRejected', async () => {
@@ -2357,7 +2357,7 @@ describe('application', () => {
 
       // Perform checks on individual fields
       expect(emailArg).toEqual('test@gmail.com')
-      expect(notificationArg._doc.status).toEqual(Status.HomeRejected)
+      expect(notificationArg.status).toEqual(Status.HomeRejected)
     })
 
     it('should successfully update application status to Rejected', async () => {
@@ -2434,7 +2434,7 @@ describe('application', () => {
 
       // Perform checks on individual fields
       expect(emailArg).toEqual('test@gmail.com')
-      expect(notificationArg._doc.status).toEqual(Status.Rejected)
+      expect(notificationArg.status).toEqual(Status.Rejected)
     })
 
     it('should successfully update application status to Approved', async () => {
@@ -2531,7 +2531,7 @@ describe('application', () => {
 
       // Perform checks on individual fields
       expect(emailArg).toEqual('test@gmail.com')
-      expect(notificationArg._doc.status).toEqual(Status.Approved)
+      expect(notificationArg.status).toEqual(Status.Approved)
     })
   })
 })
