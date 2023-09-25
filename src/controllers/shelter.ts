@@ -208,10 +208,10 @@ const verifyInvitationToken = async (
     return { email, role }
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
-      throw { code: 400, message: 'Expired reset token' }
+      throw { code: 400, message: 'Expired invitation token' }
     }
     if (err.name === 'JsonWebTokenError') {
-      throw { code: 400, message: 'Invalid reset token' }
+      throw { code: 400, message: 'Invalid invitation token' }
     }
     throw err
   }

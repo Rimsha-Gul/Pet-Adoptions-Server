@@ -1,4 +1,4 @@
-import { Visit } from '../models/Visit'
+import { Visit, VisitType } from '../models/Visit'
 import { Review } from '../models/Review'
 import moment from 'moment'
 
@@ -10,6 +10,7 @@ export const canReview = async (
     await Visit.findOne({
       shelterID: shelterId,
       applicantEmail: userEmail,
+      visitType: VisitType.Shelter,
       visitDate: { $lt: moment().utc().toISOString() }
     })
   )
