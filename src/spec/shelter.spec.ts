@@ -304,7 +304,7 @@ describe('review', () => {
         .get('/shelter/verifyInvitationToken?invitationToken=invalidToken')
         .expect(400)
 
-      expect(response.body.message).toEqual('Invalid reset token')
+      expect(response.body.message).toEqual('Invalid invitation token')
     })
 
     it('should respond with Bad Request if token is expired', async () => {
@@ -318,7 +318,7 @@ describe('review', () => {
         )
         .expect(400)
 
-      expect(response.body.message).toEqual('Expired reset token')
+      expect(response.body.message).toEqual('Expired invitation token')
     })
 
     it('should respond with Bad Request if token is already accepted', async () => {

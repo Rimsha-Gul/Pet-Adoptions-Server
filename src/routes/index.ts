@@ -8,7 +8,6 @@ import shelterRouter from './shelter'
 import reviewRouter from './review'
 import reactivationRequestRouter from './reactivationRequest'
 import notificationRouter from './notification'
-import testRouter from './test-db'
 
 const router = express.Router()
 
@@ -20,9 +19,7 @@ router.use('/shelter', shelterRouter)
 router.use('/review', reviewRouter)
 router.use('/reactivationRequest', reactivationRequestRouter)
 router.use('/notification', notificationRouter)
-if (process.env.NODE_ENV === 'cypress_test') {
-  router.use('/test', testRouter)
-}
+
 router.use(
   '/',
   swaggerUi.serve,
