@@ -1939,7 +1939,7 @@ describe('auth', () => {
 
     it('should fail to verify with expired token', async () => {
       // replace this with your function to generate an expired token
-      const expiredToken = generateExpiredToken(user.email, 'RESET')
+      const expiredToken = generateExpiredToken(user.email)
 
       const response = await request(app)
         .get(`/auth/verifyResetToken?resetToken=${expiredToken}`)
@@ -2031,7 +2031,7 @@ describe('auth', () => {
       // Set expired token for the user
       await UserModel.updateOne(
         { email: userEmail },
-        { passwordResetToken: generateExpiredToken(userEmail, 'RESET') }
+        { passwordResetToken: generateExpiredToken(userEmail) }
       )
 
       const response = await request(app)

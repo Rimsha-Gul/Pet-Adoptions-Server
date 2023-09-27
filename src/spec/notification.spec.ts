@@ -3,6 +3,7 @@ import { app } from '../app'
 import { removeAllApplications } from './utils/generateApplication'
 import {
   generateNotification,
+  generateNotifications,
   removeAllNotifications
 } from './utils/generateNotification'
 import { generatePetWithApplication, removePets } from './utils/generatePet'
@@ -14,6 +15,7 @@ import {
 import { dropCollections, dropDatabase, mongooseSetUp } from './utils/setup'
 import request from 'supertest'
 import * as socketModule from '../socket'
+import { generateAccessToken } from '../utils/generateAccessToken'
 
 describe('notification', () => {
   beforeAll(async () => {
@@ -66,7 +68,6 @@ describe('notification', () => {
         'Notification successfully marked as read'
       )
       expect(socketSpy).toHaveBeenCalledTimes(1)
-
       expect(socketSpy).toHaveBeenCalledWith(user.email, notificationID)
     })
 
@@ -132,6 +133,66 @@ describe('notification', () => {
         .expect(401)
 
       expect(response.text).toBe('Unauthorized')
+    })
+  })
+
+  describe('get all notification', () => {
+    let user: User, applicationID
+
+    beforeEach(async () => {
+      user = await generateUserandTokens()
+      applicationID = await generatePetWithApplication(user.email)
+      await generateNotifications(applicationID)
+    })
+
+    afterEach(async () => {
+      await removeAllUsers()
+      await removePets()
+      await removeAllApplications()
+      await removeAllNotifications()
+      jest.clearAllMocks()
+    })
+
+    it('should successfully return all notifications for the specified user', async () => {
+      const response = await request(app)
+        .get('/notification/')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body).toBeInstanceOf(Array)
+      expect(response.body).toHaveLength(5)
+    })
+
+    it('should return zero notifications for the specified user', async () => {
+      await removeAllNotifications()
+      const response = await request(app)
+        .get('/notification/')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(response.body).toBeInstanceOf(Array)
+      expect(response.body).toHaveLength(0)
+    })
+
+    it('should return error if user is not found', async () => {
+      const nonExistentEmailToken = generateAccessToken(
+        'nonexistent@gmail.com',
+        'USER'
+      )
+      const response = await request(app)
+        .get('/notification/')
+        .auth(nonExistentEmailToken, { type: 'bearer' })
+        .expect(404)
+
+      expect(response.text).toBe('User not found')
+      expect(response.body).toEqual({})
+    })
+
+    it('should return error if token is missing', async () => {
+      const response = await request(app).get('/notification/').expect(401)
+
+      expect(response.text).toBe('Unauthorized')
+      expect(response.body).toEqual({})
     })
   })
 })

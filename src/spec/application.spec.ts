@@ -2533,5 +2533,85 @@ describe('application', () => {
       expect(emailArg).toEqual('test@gmail.com')
       expect(notificationArg.status).toEqual(Status.Approved)
     })
+
+    it('should successfully update application status to ReactivationRequestApproved', async () => {
+      const expectedSubject = `Purrfect Adoptions - Reactivation Request Approved`
+      const expectedMessage = `
+    <p>Good news! We are pleased to inform you that your reactivation request for application ID: <strong>${applicationID}</strong> has been approved.</p>
+    <p>You now have the opportunity to schedule your home visit within the next <strong>48 hours</strong>. Please note that failure to schedule within this timeframe will result in the permanent closure of your application.</p>
+    <p>We are committed to helping pets find loving homes, and we're excited to move forward with your application. If you have any questions or require further clarification, please don't hesitate to reach out.</p>
+    <p>Thank you for your commitment to animal adoption and for being a part of the Purrfect Adoptions community.</p>
+  `
+      payload.status = Status.ReactivationRequestApproved
+      const response = await request(app)
+        .put(`/application/updateStatus`)
+        .auth(shelter.tokens.accessToken, { type: 'bearer' })
+        .send(payload)
+        .expect(200)
+
+      expect(response.body.message).toEqual(
+        'Application status updated successfully'
+      )
+      const application = await Application.findOne({ _id: applicationID })
+      console.log(application?.status)
+      expect(application?.status).toEqual(Status.HomeVisitRequested)
+
+      // Check that sendEmail was called with the correct arguments.
+      expect(sendEmailSpy).toBeCalledTimes(1)
+      expectedRecipient = user.email
+      expect(sendEmailSpy).toHaveBeenCalledWith(
+        expectedRecipient,
+        expectedSubject,
+        expectedMessage
+      )
+
+      // Destructure the arguments with which the function has been called
+      const [emailArg, notificationArg] = socketSpy.mock.calls[0]
+
+      // Perform checks on individual fields
+      expect(emailArg).toEqual('test@gmail.com')
+      expect(notificationArg.status).toEqual(Status.ReactivationRequestApproved)
+    })
+
+    it('should successfully update application status to ReactivationRequestDeclined', async () => {
+      const expectedSubject = `Purrfect Adoptions - Reactivation Request Declined`
+      const expectedMessage = `
+    <p>We regret to inform you that your reactivation request for application ID: <strong>${applicationID}</strong> has been declined.</p>
+    <p>This means that your application has been permanently closed and will no longer be processed for further steps.</p>
+    <p>If you are still interested in adopting, you may start a new application. However, we recommend reaching out to our team for more information on why your application was declined before proceeding.</p>
+    <p>We understand that this news might be disappointing. Our team is committed to ensuring that all adoptions are well-suited to both the applicant and the pet.</p>
+    <p>If you have any questions or concerns, please don't hesitate to contact us.</p>
+    <p>Thank you for your interest in animal adoption and for being a part of the Purrfect Adoptions community.</p>
+  `
+      payload.status = Status.ReactivationRequestDeclined
+      const response = await request(app)
+        .put(`/application/updateStatus`)
+        .auth(shelter.tokens.accessToken, { type: 'bearer' })
+        .send(payload)
+        .expect(200)
+
+      expect(response.body.message).toEqual(
+        'Application status updated successfully'
+      )
+      const application = await Application.findOne({ _id: applicationID })
+      console.log(application?.status)
+      expect(application?.status).toEqual(Status.Closed)
+
+      // Check that sendEmail was called with the correct arguments.
+      expect(sendEmailSpy).toBeCalledTimes(1)
+      expectedRecipient = user.email
+      expect(sendEmailSpy).toHaveBeenCalledWith(
+        expectedRecipient,
+        expectedSubject,
+        expectedMessage
+      )
+
+      // Destructure the arguments with which the function has been called
+      const [emailArg, notificationArg] = socketSpy.mock.calls[0]
+
+      // Perform checks on individual fields
+      expect(emailArg).toEqual('test@gmail.com')
+      expect(notificationArg.status).toEqual(Status.ReactivationRequestDeclined)
+    })
   })
 })

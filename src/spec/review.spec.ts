@@ -9,7 +9,11 @@ import { dropCollections, dropDatabase, mongooseSetUp } from './utils/setup'
 import { app } from '../app'
 import { generateShelters, removeAllShelters } from './utils/generateShelters'
 import { Role, User as UserModel } from '../models/User'
-import { generateReview, generateReviews } from './utils/generateReview'
+import {
+  generateReview,
+  generateReviews,
+  removeAllReviews
+} from './utils/generateReview'
 import { generateAccessToken } from '../utils/generateAccessToken'
 
 describe('review', () => {
@@ -26,12 +30,17 @@ describe('review', () => {
   })
 
   describe('add review', () => {
-    let user: User, shelters
+    let user: User, shelters, body
 
     beforeEach(async () => {
       user = await generateUserandTokens()
       await generateShelters()
       shelters = await UserModel.find({ role: 'SHELTER' })
+      body = {
+        shelterID: shelters[0]._id.toString(),
+        rating: 5,
+        reviewText: 'Great shelter!'
+      }
     })
 
     afterEach(async () => {
@@ -41,11 +50,6 @@ describe('review', () => {
 
     it('should successfully add a review and update the shelter rating', async () => {
       const originalShelter = shelters[0]
-      const body = {
-        shelterID: shelters[0]._id.toString(),
-        rating: 5,
-        reviewText: 'Great shelter!'
-      }
 
       const response = await request(app)
         .post('/review/')
@@ -68,11 +72,6 @@ describe('review', () => {
     })
 
     it('should throw an error if a review already exists for this user and shelter', async () => {
-      const body = {
-        shelterID: shelters[0]._id.toString(),
-        rating: 5,
-        reviewText: 'Great shelter!'
-      }
       await generateReview(body.shelterID)
 
       const response = await request(app)
@@ -90,11 +89,7 @@ describe('review', () => {
         'nonexistent@gmail.com',
         'USER'
       )
-      const body = {
-        shelterID: 'someShelterId',
-        rating: 5,
-        reviewText: 'Great shelter!'
-      }
+      body.shelterID = 'someShelterId'
 
       const response = await request(app)
         .post('/review/')
@@ -108,11 +103,6 @@ describe('review', () => {
 
     it('should throw an error if shelter tries to add a review', async () => {
       const shelter = await generateAdminandTokens(Role.Shelter)
-      const body = {
-        shelterID: shelters[0]._id.toString(),
-        rating: 5,
-        reviewText: 'Great shelter!'
-      }
 
       const response = await request(app)
         .post('/review/')
@@ -126,11 +116,6 @@ describe('review', () => {
 
     it('should throw an error if admin tries to add a review', async () => {
       const admin = await generateAdminandTokens(Role.Admin)
-      const body = {
-        shelterID: shelters[0]._id.toString(),
-        rating: 5,
-        reviewText: 'Great shelter!'
-      }
 
       const response = await request(app)
         .post('/review/')
@@ -139,6 +124,136 @@ describe('review', () => {
         .expect(403)
 
       expect(response.text).toBe('Permission denied')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if shelter ID is empty', async () => {
+      body.shelterID = ''
+
+      const response = await request(app)
+        .post('/review/')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(400)
+
+      expect(response.text).toBe('"shelterID" is not allowed to be empty')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if shelter ID is missing', async () => {
+      const incompleteBody = {
+        rating: 5,
+        reviewText: 'Great shelter!'
+      }
+
+      const response = await request(app)
+        .post('/review/')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(incompleteBody)
+        .expect(400)
+
+      expect(response.text).toBe('"shelterID" is required')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if rating is missing', async () => {
+      const incompleteBody = {
+        shelterID: shelters[0]._id.toString(),
+        reviewText: 'Great shelter!'
+      }
+
+      const response = await request(app)
+        .post('/review/')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(incompleteBody)
+        .expect(400)
+
+      expect(response.text).toBe('"rating" is required')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if review text is missing', async () => {
+      const incompleteBody = {
+        shelterID: shelters[0]._id.toString(),
+        rating: 5
+      }
+
+      const response = await request(app)
+        .post('/review/')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(incompleteBody)
+        .expect(400)
+
+      expect(response.text).toBe('"reviewText" is required')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if rating is empty', async () => {
+      body.reviewText = ''
+
+      const response = await request(app)
+        .post('/review/')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(400)
+
+      expect(response.text).toBe('"reviewText" is not allowed to be empty')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if shelter ID is less than 24 characters long', async () => {
+      body.shelterID = '123456'
+
+      const response = await request(app)
+        .post('/review/')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(400)
+
+      expect(response.text).toBe(
+        '"shelterID" length must be 24 characters long'
+      )
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if shelter ID is greater than 24 characters long', async () => {
+      body.shelterID = '1234567890123456789012345'
+
+      const response = await request(app)
+        .post('/review/')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(400)
+
+      expect(response.text).toBe(
+        '"shelterID" length must be 24 characters long'
+      )
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if rating is less than 1', async () => {
+      body.rating = 0
+
+      const response = await request(app)
+        .post('/review/')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(400)
+
+      expect(response.text).toBe('"rating" must be greater than or equal to 1')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if rating is greater than 5', async () => {
+      body.rating = 6
+
+      const response = await request(app)
+        .post('/review/')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(400)
+
+      expect(response.text).toBe('"rating" must be less than or equal to 5')
       expect(response.body).toEqual({})
     })
   })
@@ -265,6 +380,247 @@ describe('review', () => {
         .expect(400)
 
       expect(response.text).toEqual('"page" must be a number')
+    })
+  })
+
+  describe('update review', () => {
+    let user: User, shelters, body
+
+    beforeEach(async () => {
+      user = await generateUserandTokens()
+      await generateShelters()
+      shelters = await UserModel.find({ role: 'SHELTER' })
+      await generateReview(shelters[0]._id)
+      body = {
+        shelterID: shelters[0]._id.toString(),
+        rating: 4,
+        reviewText: 'Good shelter!'
+      }
+    })
+
+    afterEach(async () => {
+      await removeAllUsers()
+      jest.restoreAllMocks()
+    })
+
+    it('should successfully update the review', async () => {
+      const originalShelter = await UserModel.findOne(shelters[0]._id)
+      if (!originalShelter) throw { code: 404, message: 'Shelter not found' }
+
+      const response = await request(app)
+        .put('/review/update')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(200)
+
+      expect(response.body.message).toBe('Review updated successfully')
+      // Check if the shelter rating has been updated
+      const updatedShelter = await UserModel.findOne(shelters[0]._id)
+      const newRating =
+        (originalShelter.rating * originalShelter.numberOfReviews -
+          originalShelter.rating +
+          body.rating) /
+        originalShelter.numberOfReviews
+
+      expect(updatedShelter?.rating).toBeCloseTo(newRating)
+      expect(updatedShelter?.numberOfReviews).toBe(
+        originalShelter.numberOfReviews
+      )
+    })
+
+    it('should throw an error if review is not found', async () => {
+      await removeAllReviews()
+
+      const response = await request(app)
+        .put('/review/update')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(404)
+
+      expect(response.text).toBe('Review not found')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if user is not found', async () => {
+      const nonExistentEmailToken = generateAccessToken(
+        'nonexistent@gmail.com',
+        'USER'
+      )
+
+      const response = await request(app)
+        .put('/review/update')
+        .auth(nonExistentEmailToken, { type: 'bearer' })
+        .send(body)
+        .expect(404)
+
+      expect(response.text).toBe('User not found')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if shelter tries to update a review', async () => {
+      const shelter = await generateAdminandTokens(Role.Shelter)
+
+      const response = await request(app)
+        .put('/review/update')
+        .auth(shelter.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(403)
+
+      expect(response.text).toBe('Permission denied')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if admin tries to update a review', async () => {
+      const admin = await generateAdminandTokens(Role.Admin)
+
+      const response = await request(app)
+        .put('/review/update')
+        .auth(admin.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(403)
+
+      expect(response.text).toBe('Permission denied')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if shelter ID is empty', async () => {
+      body.shelterID = ''
+
+      const response = await request(app)
+        .put('/review/update')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(400)
+
+      expect(response.text).toBe('"shelterID" is not allowed to be empty')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if shelter ID is missing', async () => {
+      const incompleteBody = {
+        rating: 5,
+        reviewText: 'Great shelter!'
+      }
+
+      const response = await request(app)
+        .put('/review/update')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(incompleteBody)
+        .expect(400)
+
+      expect(response.text).toBe('"shelterID" is required')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if rating is missing', async () => {
+      const incompleteBody = {
+        shelterID: shelters[0]._id.toString(),
+        reviewText: 'Great shelter!'
+      }
+
+      const response = await request(app)
+        .put('/review/update')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(incompleteBody)
+        .expect(400)
+
+      expect(response.text).toBe('"rating" is required')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if review text is missing', async () => {
+      const incompleteBody = {
+        shelterID: shelters[0]._id.toString(),
+        rating: 5
+      }
+
+      const response = await request(app)
+        .put('/review/update')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(incompleteBody)
+        .expect(400)
+
+      expect(response.text).toBe('"reviewText" is required')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if rating is empty', async () => {
+      body.reviewText = ''
+
+      const response = await request(app)
+        .put('/review/update')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(400)
+
+      expect(response.text).toBe('"reviewText" is not allowed to be empty')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if shelter ID is less than 24 characters long', async () => {
+      body.shelterID = '123456'
+
+      const response = await request(app)
+        .put('/review/update')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(400)
+
+      expect(response.text).toBe(
+        '"shelterID" length must be 24 characters long'
+      )
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if shelter ID is greater than 24 characters long', async () => {
+      body.shelterID = '1234567890123456789012345'
+
+      const response = await request(app)
+        .put('/review/update')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(400)
+
+      expect(response.text).toBe(
+        '"shelterID" length must be 24 characters long'
+      )
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if rating is less than 1', async () => {
+      body.rating = 0
+
+      const response = await request(app)
+        .put('/review/update')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(400)
+
+      expect(response.text).toBe('"rating" must be greater than or equal to 1')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if rating is greater than 5', async () => {
+      body.rating = 6
+
+      const response = await request(app)
+        .put('/review/update')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(400)
+
+      expect(response.text).toBe('"rating" must be less than or equal to 5')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw Unauthorized if token is missing', async () => {
+      const response = await request(app)
+        .put('/review/update')
+        .send(body)
+        .expect(401)
+
+      expect(response.text).toBe('Unauthorized')
+      expect(response.body).toEqual({})
     })
   })
 })

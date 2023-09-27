@@ -188,7 +188,7 @@ export const scheduleVisitValidation = (data: any): Joi.ValidationResult =>
 export const addReviewValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
     shelterID: objectIDSchema.required(),
-    rating: Joi.number().integer().min(1).max(5),
+    rating: Joi.number().integer().min(1).max(5).required(),
     reviewText: Joi.string().required()
   }).validate(data)
 

@@ -152,9 +152,7 @@ const updateReview = async (body: ReviewPayload, req: UserRequest) => {
     applicantEmail: req.user?.email
   })
 
-  if (!existingReview) {
-    throw { code: 400, message: 'Review not found' }
-  }
+  if (!existingReview) throw { code: 404, message: 'Review not found' }
 
   const user = await User.findOne({ email: req.user?.email })
   if (!user) throw { code: 404, message: 'User not found' }
@@ -169,9 +167,7 @@ const updateReview = async (body: ReviewPayload, req: UserRequest) => {
   // Fetch the shelter
   const shelter = await User.findOne({ _id: shelterID })
 
-  if (!shelter) {
-    throw { code: 404, message: 'Shelter not found' }
-  }
+  if (!shelter) throw { code: 404, message: 'Shelter not found' }
 
   // Calculate the new average rating
   // Subtract the old rating and add the new rating, then divide by the total number of reviews
