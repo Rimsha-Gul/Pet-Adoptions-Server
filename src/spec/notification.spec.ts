@@ -159,8 +159,8 @@ describe('notification', () => {
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
-      expect(response.body).toBeInstanceOf(Array)
-      expect(response.body).toHaveLength(5)
+      expect(response.body.notifications).toBeInstanceOf(Array)
+      expect(response.body.notifications).toHaveLength(5)
     })
 
     it('should return zero notifications for the specified user', async () => {
@@ -170,8 +170,8 @@ describe('notification', () => {
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
-      expect(response.body).toBeInstanceOf(Array)
-      expect(response.body).toHaveLength(0)
+      expect(response.body.notifications).toBeInstanceOf(Array)
+      expect(response.body.notifications).toHaveLength(0)
     })
 
     it('should return error if user is not found', async () => {
