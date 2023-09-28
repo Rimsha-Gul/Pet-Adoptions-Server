@@ -225,3 +225,11 @@ export const requestReactivationValidation = (
     reasonNotScheduled: Joi.string().required(),
     reasonToReactivate: Joi.string().required()
   }).validate(data)
+
+export const getAllNotificationsValidation = (
+  data: any
+): Joi.ValidationResult =>
+  Joi.object({
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).default(8)
+  }).validate(data)

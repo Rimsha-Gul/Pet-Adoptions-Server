@@ -1,9 +1,9 @@
 import { emitReadNotification } from '../socket'
 import Notification, {
-  NotificationPayload,
-  NotificationResponse
+  AllNotificationsResponse,
+  NotificationPayload
 } from '../models/Notification'
-import { Body, Get, Put, Request, Route, Security, Tags } from 'tsoa'
+import { Body, Get, Put, Query, Request, Route, Security, Tags } from 'tsoa'
 import { UserRequest } from '../types/Request'
 import { User } from '../models/User'
 
@@ -17,9 +17,11 @@ export class NotificationController {
    */
   @Get('/')
   public async getallNotifications(
+    @Query('page') page: number,
+    @Query('limit') limit: number,
     @Request() req: UserRequest
-  ): Promise<NotificationResponse[]> {
-    return getallNotifications(req)
+  ): Promise<AllNotificationsResponse> {
+    return getallNotifications(page, limit, req)
   }
   /**
    * @summary Accepts notification ID and marks it as read
@@ -32,28 +34,41 @@ export class NotificationController {
 }
 
 const getallNotifications = async (
+  page: number,
+  limit: number,
   req: UserRequest
-): Promise<NotificationResponse[]> => {
+): Promise<AllNotificationsResponse> => {
   let user
   if (req.user) {
     user = await User.findOne({ email: req.user.email })
   }
   if (!user) throw { code: 404, message: 'User not found' }
-  const notifications = await Notification.find({ userEmail: user.email }).sort(
-    { date: -1 }
-  )
+  // // Calculate total number of notifications for the user
+  const totalNotifications = await Notification.countDocuments({
+    userEmail: user.email
+  })
+  const totalPages = Math.ceil(totalNotifications / limit)
 
-  return notifications.map((notification) => ({
-    id: notification._id.toString(),
-    userEmail: notification.userEmail,
-    applicationID: notification.applicationID,
-    status: notification.status,
-    petImage: notification.petImage,
-    isSeen: notification.isSeen,
-    isRead: notification.isRead,
-    actionUrl: notification.actionUrl,
-    date: notification.date
-  }))
+  // Adjust the query to use skip and limit for pagination
+  const notifications = await Notification.find({ userEmail: user.email })
+    .sort({ date: -1 })
+    .skip((page - 1) * limit)
+    .limit(limit)
+
+  return {
+    notifications: notifications.map((notification) => ({
+      id: notification._id.toString(),
+      userEmail: notification.userEmail,
+      applicationID: notification.applicationID.toString(),
+      status: notification.status,
+      petImage: notification.petImage,
+      isSeen: notification.isSeen,
+      isRead: notification.isRead,
+      actionUrl: notification.actionUrl,
+      date: notification.date
+    })),
+    totalPages: totalPages
+  }
 }
 
 const markAsRead = async (body: NotificationPayload) => {

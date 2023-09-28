@@ -39,12 +39,17 @@ components:
                 - role
             type: object
             additionalProperties: false
+        EmailChangeRequest:
+            enum:
+                - currentEmailStep
+                - newEmailStep
+            type: string
         SendCodePayload:
             properties:
                 email:
                     type: string
                 emailChangeRequest:
-                    type: boolean
+                    $ref: '#/components/schemas/EmailChangeRequest'
             required:
                 - email
             type: object
@@ -751,6 +756,52 @@ components:
             required:
                 - reasonNotScheduled
                 - reasonToReactivate
+            type: object
+            additionalProperties: false
+        NotificationResponse:
+            properties:
+                id:
+                    type: string
+                userEmail:
+                    type: string
+                applicationID:
+                    type: string
+                status:
+                    $ref: '#/components/schemas/Status'
+                petImage:
+                    type: string
+                isSeen:
+                    type: boolean
+                isRead:
+                    type: boolean
+                actionUrl:
+                    type: string
+                date:
+                    type: string
+            required:
+                - id
+                - userEmail
+                - applicationID
+                - status
+                - petImage
+                - isSeen
+                - isRead
+                - actionUrl
+                - date
+            type: object
+            additionalProperties: false
+        AllNotificationsResponse:
+            properties:
+                notifications:
+                    items:
+                        $ref: '#/components/schemas/NotificationResponse'
+                    type: array
+                totalPages:
+                    type: number
+                    format: double
+            required:
+                - notifications
+                - totalPages
             type: object
             additionalProperties: false
         NotificationPayload:
@@ -1829,6 +1880,37 @@ paths:
                 -
                     bearerAuth: []
             parameters: []
+    /notification:
+        get:
+            operationId: GetallNotifications
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AllNotificationsResponse'
+            summary: 'Returns all notifications of the user'
+            tags:
+                - Notification
+            security:
+                -
+                    bearerAuth: []
+            parameters:
+                -
+                    in: query
+                    name: page
+                    required: true
+                    schema:
+                        format: double
+                        type: number
+                -
+                    in: query
+                    name: limit
+                    required: true
+                    schema:
+                        format: double
+                        type: number
     /notification/markAsRead:
         put:
             operationId: MarkAsRead
@@ -1858,48 +1940,6 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/NotificationPayload'
-    /test/seed:
-        post:
-            operationId: SeedDB
-            responses:
-                '200':
-                    description: Ok
-                    content:
-                        application/json:
-                            schema:
-                                properties:
-                                    message: {type: string}
-                                    code: {type: number, format: double}
-                                required:
-                                    - message
-                                    - code
-                                type: object
-            summary: 'Populates db with test data'
-            tags:
-                - Test
-            security: []
-            parameters: []
-    /test/clear:
-        delete:
-            operationId: ClearDB
-            responses:
-                '200':
-                    description: Ok
-                    content:
-                        application/json:
-                            schema:
-                                properties:
-                                    message: {type: string}
-                                    code: {type: number, format: double}
-                                required:
-                                    - message
-                                    - code
-                                type: object
-            summary: 'Clears db of test data'
-            tags:
-                - Test
-            security: []
-            parameters: []
 servers:
     -
         url: /

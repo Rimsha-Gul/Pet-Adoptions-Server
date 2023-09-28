@@ -48,7 +48,7 @@ import { sendEmail } from '../middleware/sendEmail'
 import { Visit, VisitType } from '../models/Visit'
 import { canReview } from '../utils/canReview'
 import { generateTimeSlots } from '../utils/generateTimeSlots'
-import { Notification } from '../models/Notification'
+import { Notification, NotificationResponse } from '../models/Notification'
 import { emitUserNotification } from '../socket'
 import moment from 'moment'
 
@@ -626,9 +626,10 @@ const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
   })
 
   const savedNotification = await notification.save()
-  const notificationWithId = {
-    ...savedNotification,
-    id: savedNotification._id.toString()
+  const notificationWithId: NotificationResponse = {
+    ...savedNotification.toObject(),
+    id: savedNotification._id.toString(),
+    applicationID: savedNotification.applicationID.toString()
   }
   emitUserNotification(application.applicantEmail, notificationWithId)
 
@@ -707,9 +708,10 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
   })
 
   const savedNotification = await notification.save()
-  const notificationWithId = {
-    ...savedNotification,
-    id: savedNotification._id.toString()
+  const notificationWithId: NotificationResponse = {
+    ...savedNotification.toObject(),
+    id: savedNotification._id.toString(),
+    applicationID: savedNotification.applicationID.toString()
   }
   emitUserNotification(application.applicantEmail, notificationWithId)
 
@@ -874,9 +876,10 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
     })
 
     const savedNotification = await notification.save()
-    const notificationWithId = {
+    const notificationWithId: NotificationResponse = {
       ...savedNotification.toObject(),
-      id: savedNotification._id.toString()
+      id: savedNotification._id.toString(),
+      applicationID: savedNotification.applicationID.toString()
     }
     emitUserNotification(application.applicantEmail, notificationWithId)
 
