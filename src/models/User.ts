@@ -19,8 +19,20 @@ export enum EmailChangeRequest {
 }
 
 export interface UserPayload {
+  /**
+   * Name of user
+   * @example "Jack"
+   */
   name: string
+  /**
+   * Email of user
+   * @example "email@tetrahex.com"
+   */
   email: string
+  /**
+   * Password for user
+   * @example "123456"
+   */
   password: string
   role: Role
 }

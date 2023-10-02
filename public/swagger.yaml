@@ -26,10 +26,16 @@ components:
             properties:
                 name:
                     type: string
+                    description: 'Name of user'
+                    example: Jack
                 email:
                     type: string
+                    description: 'Email of user'
+                    example: email@tetrahex.com
                 password:
                     type: string
+                    description: 'Password for user'
+                    example: '123456'
                 role:
                     $ref: '#/components/schemas/Role'
             required:
