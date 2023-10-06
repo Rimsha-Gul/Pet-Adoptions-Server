@@ -85,7 +85,6 @@ const requestReactivation = async (body: ReactivationRequestPayload) => {
 const getReactivationRequest = async (
   req: UserRequest
 ): Promise<ReactivationRequestResponse> => {
-  console.log(req.query.id)
   const application = await Application.findById(req.query.id)
   if (!application) throw { code: 404, message: 'Application not found' }
   const request = await ReactivationRequest.findOne({

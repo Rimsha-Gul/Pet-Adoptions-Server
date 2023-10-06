@@ -132,7 +132,8 @@ authRouter.get('/checkEmail', authenticateAccessToken, async (req, res) => {
   const { error } = emailValidation(req.query)
   if (error) return res.status(400).send(error.details[0].message)
   try {
-    const response = await controller.checkEmail(req)
+    const newEmail = req.query.email as string
+    const response = await controller.checkEmail(req, newEmail)
     return res.send(response)
   } catch (err: any) {
     return res.status(err.code).send(err.message)

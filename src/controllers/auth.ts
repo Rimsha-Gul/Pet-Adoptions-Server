@@ -26,6 +26,7 @@ import {
   Get,
   Post,
   Put,
+  Query,
   Request,
   Route,
   Security,
@@ -129,17 +130,23 @@ export class AuthController {
   /**
    * @summary Checks if user's new email already has a linked account
    */
-  @Example<EmailPayload>(emailPayloadExample)
   @Security('bearerAuth')
   @Get('/checkEmail')
-  public async checkEmail(@Request() req: UserRequest) {
-    return checkEmail(req)
+  public async checkEmail(
+    @Request() req: UserRequest,
+    /**
+     * New email for user
+     * @example "jackdoe@example.com"
+     */
+    @Query() email: string
+  ) {
+    return checkEmail(req, email)
   }
 
   /**
    * @summary Changes user's email
    */
-  @Example<EmailPayload>(emailPayloadExample)
+  @Example<TokenResponse>(tokenResponseExample)
   @Security('bearerAuth')
   @Put('/changeEmail')
   public async changeEmail(
@@ -225,7 +232,7 @@ export class AuthController {
   }
 
   /**
-   * @summary Changes user's role
+   * @summary Sends email to user to provide alternate email to sign up as shelter
    */
   @Example<EmailPayload>(emailPayloadExample)
   @Security('bearerAuth')
@@ -235,28 +242,13 @@ export class AuthController {
   }
 }
 
-const getAlternateEmail = async (body: EmailPayload) => {
-  const { email } = body
-
-  const existingUser = await User.findOne({ email })
-
-  if (!existingUser) throw { code: 404, message: 'User not found' }
-
-  if (existingUser.role === Role.Shelter)
-    throw { code: 409, message: 'User is already a shelter' }
-
-  const { subject, message } = requestAlternateEmailForShelter(
-    existingUser.name
-  )
-
-  await sendEmail(email, subject, message)
-
-  return { code: 200, message: 'User notified successfully' }
-}
-
 const signup = async (body: UserPayload): Promise<SignupResponse> => {
   const { name, email, password, role } = body
 
+  if (role === Role.Admin) {
+    const existingAdmin = await User.findOne({ role: Role.Admin })
+    if (existingAdmin) throw { code: 409, message: 'Admin user already exists' }
+  }
   if (role === Role.Shelter) {
     const invitation = await Invitation.findOne({ shelterEmail: email })
     if (!invitation) throw { code: 400, message: 'Invalid invitation' }
@@ -447,7 +439,7 @@ const updateProfile = async (
   return { code: 200, message: 'Profile updated successfully' }
 }
 
-const checkEmail = async (req: UserRequest) => {
+const checkEmail = async (req: UserRequest, email: string) => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = (await User.findOne({ email: req.user?.email }))!
 
@@ -455,7 +447,6 @@ const checkEmail = async (req: UserRequest) => {
     throw { code: 403, message: 'User not verified' }
   } else {
     // if user is verified, check if there's already a user with new emmail
-    const { email } = req.query
     const existingUser = await User.findOne({ email: email })
     if (existingUser) {
       throw { code: 409, message: 'A user with this email already exists' }
@@ -637,4 +628,23 @@ const resetPassword = async (body: ResetPasswordPayload) => {
     }
     throw { code: 500, message: 'Internal server error' }
   }
+}
+
+const getAlternateEmail = async (body: EmailPayload) => {
+  const { email } = body
+
+  const existingUser = await User.findOne({ email })
+
+  if (!existingUser) throw { code: 404, message: 'User not found' }
+
+  if (existingUser.role === Role.Shelter)
+    throw { code: 409, message: 'User is already a shelter' }
+
+  const { subject, message } = requestAlternateEmailForShelter(
+    existingUser.name
+  )
+
+  await sendEmail(email, subject, message)
+
+  return { code: 200, message: 'User notified successfully' }
 }

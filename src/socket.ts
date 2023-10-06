@@ -36,7 +36,6 @@ export const emitUserNotification = async (
   data: NotificationResponse
 ) => {
   console.log(`Emitting user notification to email: ${userEmail}`)
-  console.log('Data being emitted:', data)
 
   io.to(`user-room-${userEmail}`).emit('new_notification', data)
 }

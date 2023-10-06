@@ -2553,7 +2553,6 @@ describe('application', () => {
         'Application status updated successfully'
       )
       const application = await Application.findOne({ _id: applicationID })
-      console.log(application?.status)
       expect(application?.status).toEqual(Status.HomeVisitRequested)
 
       // Check that sendEmail was called with the correct arguments.
@@ -2594,7 +2593,6 @@ describe('application', () => {
         'Application status updated successfully'
       )
       const application = await Application.findOne({ _id: applicationID })
-      console.log(application?.status)
       expect(application?.status).toEqual(Status.Closed)
 
       // Check that sendEmail was called with the correct arguments.

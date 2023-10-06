@@ -26,16 +26,10 @@ components:
             properties:
                 name:
                     type: string
-                    description: 'Name of user'
-                    example: Jack
                 email:
                     type: string
-                    description: 'Email of user'
-                    example: email@tetrahex.com
                 password:
                     type: string
-                    description: 'Password for user'
-                    example: '123456'
                 role:
                     $ref: '#/components/schemas/Role'
             required:
@@ -45,6 +39,11 @@ components:
                 - role
             type: object
             additionalProperties: false
+            example:
+                name: 'Jack Doe'
+                email: jackdoe@example.com
+                password: '123456'
+                role: USER
         EmailChangeRequest:
             enum:
                 - currentEmailStep
@@ -54,6 +53,8 @@ components:
             properties:
                 email:
                     type: string
+                    description: 'Email of user'
+                    example: jackdoe@example.com
                 emailChangeRequest:
                     $ref: '#/components/schemas/EmailChangeRequest'
             required:
@@ -83,8 +84,12 @@ components:
             properties:
                 email:
                     type: string
+                    description: 'Email of user'
+                    example: jackdoe@example.com
                 verificationCode:
                     type: string
+                    description: 'Verification code of user'
+                    example: '654321'
             required:
                 - email
                 - verificationCode
@@ -110,8 +115,12 @@ components:
             properties:
                 email:
                     type: string
+                    description: 'Email of user'
+                    example: jackdoe@example.com
                 password:
                     type: string
+                    description: 'Password for user'
+                    example: '123456'
             required:
                 - email
                 - password
@@ -121,6 +130,8 @@ components:
             properties:
                 email:
                     type: string
+                    description: 'Email of user'
+                    example: jackdoe@example.com
             required:
                 - email
             type: object
@@ -129,6 +140,8 @@ components:
             properties:
                 password:
                     type: string
+                    description: 'Password for user'
+                    example: '123456'
             required:
                 - password
             type: object
@@ -180,33 +193,33 @@ components:
             additionalProperties: false
         Gender:
             enum:
-                - MALE
-                - FEMALE
+                - Male
+                - Female
             type: string
         Category:
             enum:
-                - CAT
-                - DOG
-                - HORSE
-                - RABBIT
-                - BIRD
-                - SMALL_AND_FURRY
-                - SCALES_FINS_AND_OTHERS
-                - BARNYARD
+                - Cat
+                - Dog
+                - Horse
+                - Rabbit
+                - Bird
+                - 'Small and Furry'
+                - 'Scales, Fins and Others'
+                - Barnyard
             type: string
         ActivityNeeds:
             enum:
-                - LOW
-                - VERY_LOW
-                - MIDRANGE
-                - HIGH
-                - VERY_HIGH
+                - Low
+                - 'Very Low'
+                - Midrange
+                - High
+                - 'Very High'
             type: string
         LevelOfGrooming:
             enum:
-                - LOW
-                - MEDIUM
-                - HIGH
+                - Low
+                - Medium
+                - High
             type: string
         PetsResponse:
             properties:
@@ -1017,7 +1030,14 @@ paths:
             security:
                 -
                     bearerAuth: []
-            parameters: []
+            parameters:
+                -
+                    description: 'New email for user'
+                    in: query
+                    name: email
+                    required: true
+                    schema:
+                        type: string
     /auth/changeEmail:
         put:
             operationId: ChangeEmail
@@ -1251,7 +1271,7 @@ paths:
                             examples:
                                 'Example 1':
                                     value: {email: johndoe@example.com}
-            summary: 'Changes user''s role'
+            summary: 'Sends email to user to provide alternate email to sign up as shelter'
             tags:
                 - Auth
             security:
@@ -1296,7 +1316,7 @@ paths:
                                 $ref: '#/components/schemas/AddPetResponse'
                             examples:
                                 'Example 1':
-                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: MALE, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false, shelterRating: 4.8}}
+                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: Male, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: Cat, activityNeeds: Low, levelOfGrooming: High, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false, shelterRating: 4.8}}
             summary: 'Accepts pet info, adds pet to db and returns pet info'
             tags:
                 - Pet
@@ -1386,7 +1406,7 @@ paths:
                                 $ref: '#/components/schemas/AddPetResponse'
                             examples:
                                 'Example 1':
-                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: MALE, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false, shelterRating: 4.8}}
+                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: Male, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: Cat, activityNeeds: Low, levelOfGrooming: High, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false, shelterRating: 4.8}}
             summary: 'Returns details of a pet given its id'
             tags:
                 - Pet
@@ -1406,7 +1426,7 @@ paths:
                                 $ref: '#/components/schemas/AllPetsResponse'
                             examples:
                                 'Example 1':
-                                    value: {pets: [{shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Fluffy, gender: FEMALE, birthDate: '2001-01-01', color: White, breed: Persian, category: CAT, activityNeeds: LOW, levelOfGrooming: HIGH, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Fluffy is a calm and friendly cat...', traits: [Affectionate, independent], adoptionFee: $100, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: true}, {shelterName: 'Furry Adoption Center', microchipID: B123456789, name: Buddy, gender: MALE, birthDate: '2001-01-01', color: Brown, breed: 'Labrador Retriever', category: DOG, activityNeeds: HIGH, levelOfGrooming: MEDIUM, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Buddy is a playful and energetic dog...', traits: [Friendly, loyal], adoptionFee: $150, images: ['https://example.com/images/buddy1.jpg', 'https://example.com/images/buddy2.jpg'], hasAdoptionRequest: false, isAdopted: false}], totalPages: 5, colors: [White, Black, Brown], breeds: [Persian, 'Labrador Retriever', 'Golden Retriever'], genders: [Male, Female], ages: [1, 2, 3, 4, 5]}
+                                    value: {pets: [{shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Fluffy, gender: Female, birthDate: '2001-01-01', color: White, breed: Persian, category: Cat, activityNeeds: Low, levelOfGrooming: High, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Fluffy is a calm and friendly cat...', traits: [Affectionate, independent], adoptionFee: $100, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: true}, {shelterName: 'Furry Adoption Center', microchipID: B123456789, name: Buddy, gender: Male, birthDate: '2001-01-01', color: Brown, breed: 'Labrador Retriever', category: Dog, activityNeeds: High, levelOfGrooming: Medium, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Buddy is a playful and energetic dog...', traits: [Friendly, loyal], adoptionFee: $150, images: ['https://example.com/images/buddy1.jpg', 'https://example.com/images/buddy2.jpg'], hasAdoptionRequest: false, isAdopted: false}], totalPages: 5, colors: [White, Black, Brown], breeds: [Persian, 'Labrador Retriever', 'Golden Retriever'], genders: [Male, Female], ages: [1, 2, 3, 4, 5]}
             summary: 'Returns all pets'
             tags:
                 - Pet

@@ -1,12 +1,6 @@
 import { model, Document, Model, Schema } from 'mongoose'
 import bcrypt from 'bcrypt'
 
-//import mongooseSequence from "mongoose-sequence";
-
-//const AutoIncrement = mongooseSequence(mongoose);
-
-//const AutoIncrement = AutoIncrementFactory(mongoose);
-
 export enum Role {
   Admin = 'ADMIN',
   Shelter = 'SHELTER',
@@ -18,15 +12,26 @@ export enum EmailChangeRequest {
   newEmailStep = 'newEmailStep'
 }
 
+/**
+ * @example {
+ *  "name": "Jack Doe",
+ *  "email": "jackdoe@example.com",
+ *  "password": "123456",
+ *  "role": "USER"
+ * }
+ */
+
 export interface UserPayload {
-  /**
-   * Name of user
-   * @example "Jack"
-   */
   name: string
+  email: string
+  password: string
+  role: Role
+}
+
+export interface LoginPayload {
   /**
    * Email of user
-   * @example "email@tetrahex.com"
+   * @example "jackdoe@example.com"
    */
   email: string
   /**
@@ -34,21 +39,27 @@ export interface UserPayload {
    * @example "123456"
    */
   password: string
-  role: Role
-}
-
-export interface LoginPayload {
-  email: string
-  password: string
 }
 
 export interface SendCodePayload {
+  /**
+   * Email of user
+   * @example "jackdoe@example.com"
+   */
   email: string
   emailChangeRequest?: EmailChangeRequest
 }
 
 export interface VerificationPayload {
+  /**
+   * Email of user
+   * @example "jackdoe@example.com"
+   */
   email: string
+  /**
+   * Verification code of user
+   * @example "654321"
+   */
   verificationCode: string
 }
 
@@ -77,10 +88,18 @@ export interface VerificationResponse extends TokenResponse {
 }
 
 export interface EmailPayload {
+  /**
+   * Email of user
+   * @example "jackdoe@example.com"
+   */
   email: string
 }
 
 export interface CheckPasswordPayload {
+  /**
+   * Password for user
+   * @example "123456"
+   */
   password: string
 }
 
@@ -194,8 +213,6 @@ UserSchema.method('comparePassword', function (password: string): boolean {
   if (bcrypt.compareSync(password, this.password)) return true
   return false
 })
-
-//UserSchema.plugin(AutoIncrement, { inc_field: "id" });
 
 export const User: IUserModel = model<IUser, IUserModel>('User', UserSchema)
 

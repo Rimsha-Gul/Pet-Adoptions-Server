@@ -81,7 +81,6 @@ const markAsRead = async (body: NotificationPayload) => {
   notification.isSeen = true
   notification.isRead = true
   notification.save()
-  console.log('read hehe')
   emitReadNotification(notification.userEmail, notification._id.toString())
   return { code: 200, message: 'Notification successfully marked as read' }
 }

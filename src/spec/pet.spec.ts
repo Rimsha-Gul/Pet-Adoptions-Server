@@ -1123,7 +1123,7 @@ describe('pet', () => {
         .attach('images', tmpFilePath3)
         .expect(400)
 
-      expect(response.text).toEqual(`"gender" must be one of [MALE, FEMALE]`)
+      expect(response.text).toEqual(`"gender" must be one of [Male, Female]`)
       expect(response.body).toEqual({})
     })
 
@@ -1252,7 +1252,7 @@ describe('pet', () => {
         .expect(400)
 
       expect(response.text).toEqual(
-        `"category" must be one of [CAT, DOG, HORSE, RABBIT, BIRD, SMALL_AND_FURRY, SCALES_FINS_AND_OTHERS, BARNYARD]`
+        `"category" must be one of [Cat, Dog, Horse, Rabbit, Bird, Small and Furry, Scales, Fins and Others, Barnyard]`
       )
       expect(response.body).toEqual({})
     })
@@ -1286,7 +1286,7 @@ describe('pet', () => {
         .expect(400)
 
       expect(response.text).toEqual(
-        `"activityNeeds" must be one of [LOW, VERY_LOW, MIDRANGE, HIGH, VERY_HIGH]`
+        `"activityNeeds" must be one of [Low, Very Low, Midrange, High, Very High]`
       )
       expect(response.body).toEqual({})
     })
@@ -1320,7 +1320,7 @@ describe('pet', () => {
         .expect(400)
 
       expect(response.text).toEqual(
-        `"levelOfGrooming" must be one of [LOW, MEDIUM, HIGH]`
+        `"levelOfGrooming" must be one of [Low, Medium, High]`
       )
       expect(response.body).toEqual({})
     })
@@ -1651,7 +1651,7 @@ describe('pet', () => {
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .field('microchipID', pet.microchipID)
         .field('name', pet.name)
-        .field('gender', 'Male') // should be MALE
+        .field('gender', 'MALE') // should be Male
         .field('birthDate', pet.birthDate)
         .field('color', pet.color)
         .field('breed', pet.breed)
@@ -1673,7 +1673,7 @@ describe('pet', () => {
         .attach('images', tmpFilePath3)
         .expect(400)
 
-      expect(response.text).toEqual(`"gender" must be one of [MALE, FEMALE]`)
+      expect(response.text).toEqual(`"gender" must be one of [Male, Female]`)
       expect(response.body).toEqual({})
     })
 
@@ -1687,7 +1687,7 @@ describe('pet', () => {
         .field('birthDate', pet.birthDate)
         .field('color', pet.color)
         .field('breed', pet.breed)
-        .field('category', 'Cat') // should be CAT
+        .field('category', 'CAT') // should be Cat
         .field('activityNeeds', pet.activityNeeds)
         .field('levelOfGrooming', pet.levelOfGrooming)
         .field('isHouseTrained', pet.isHouseTrained)
@@ -1706,7 +1706,7 @@ describe('pet', () => {
         .expect(400)
 
       expect(response.text).toEqual(
-        `"category" must be one of [CAT, DOG, HORSE, RABBIT, BIRD, SMALL_AND_FURRY, SCALES_FINS_AND_OTHERS, BARNYARD]`
+        `"category" must be one of [Cat, Dog, Horse, Rabbit, Bird, Small and Furry, Scales, Fins and Others, Barnyard]`
       )
       expect(response.body).toEqual({})
     })
@@ -1722,7 +1722,7 @@ describe('pet', () => {
         .field('color', pet.color)
         .field('breed', pet.breed)
         .field('category', pet.category)
-        .field('activityNeeds', 'Low') // should be LOW
+        .field('activityNeeds', 'LOW') // should be Low
         .field('levelOfGrooming', pet.levelOfGrooming)
         .field('isHouseTrained', pet.isHouseTrained)
         .field('healthCheck', pet.healthCheck)
@@ -1740,7 +1740,7 @@ describe('pet', () => {
         .expect(400)
 
       expect(response.text).toEqual(
-        `"activityNeeds" must be one of [LOW, VERY_LOW, MIDRANGE, HIGH, VERY_HIGH]`
+        `"activityNeeds" must be one of [Low, Very Low, Midrange, High, Very High]`
       )
       expect(response.body).toEqual({})
     })
@@ -1757,7 +1757,7 @@ describe('pet', () => {
         .field('breed', pet.breed)
         .field('category', pet.category)
         .field('activityNeeds', pet.activityNeeds)
-        .field('levelOfGrooming', 'Medium') // should be MEDIUM
+        .field('levelOfGrooming', 'MEDIUM') // should be Medium
         .field('isHouseTrained', pet.isHouseTrained)
         .field('healthCheck', pet.healthCheck)
         .field('allergiesTreated', pet.allergiesTreated)
@@ -1774,7 +1774,7 @@ describe('pet', () => {
         .expect(400)
 
       expect(response.text).toEqual(
-        `"levelOfGrooming" must be one of [LOW, MEDIUM, HIGH]`
+        `"levelOfGrooming" must be one of [Low, Medium, High]`
       )
       expect(response.body).toEqual({})
     })
@@ -2270,10 +2270,10 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(3)
     })
 
-    it('should return zero pets on filter pets by category=BARNYARD and return 200', async () => {
+    it('should return zero pets on filter pets by category=Barnyard and return 200', async () => {
       await removeAllPets(Category.Barnyard)
       const response = await request(app)
-        .get('/pet/all?filterOption=BARNYARD')
+        .get('/pet/all?filterOption=Barnyard')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2282,9 +2282,9 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(0)
     })
 
-    it('should return pets whose category is BARNYARD on filter pets by category=BARNYARD and return 200', async () => {
+    it('should return pets whose category is Barnyard on filter pets by category=Barnyard and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BARNYARD')
+        .get('/pet/all?filterOption=Barnyard')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2292,14 +2292,14 @@ describe('pet', () => {
       expect(response.body.pets.length).toEqual(1)
       expect(response.body.totalPages).toEqual(1)
       expect(
-        response.body.pets.every((pet: Pet) => pet.category === 'BARNYARD')
+        response.body.pets.every((pet: Pet) => pet.category === 'Barnyard')
       ).toBe(true)
     })
 
-    it('should return zero pets on filter pets by category=BIRD and return 200', async () => {
+    it('should return zero pets on filter pets by category=Bird and return 200', async () => {
       await removeAllPets(Category.Bird)
       const response = await request(app)
-        .get('/pet/all?filterOption=BIRD')
+        .get('/pet/all?filterOption=Bird')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2308,9 +2308,9 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(0)
     })
 
-    it('should return pets whose category is BIRD on filter pets by category=BIRD and return 200', async () => {
+    it('should return pets whose category is Bird on filter pets by category=Bird and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BIRD')
+        .get('/pet/all?filterOption=Bird')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2318,14 +2318,14 @@ describe('pet', () => {
       expect(response.body.pets.length).toEqual(1)
       expect(response.body.totalPages).toEqual(1)
       expect(
-        response.body.pets.every((pet: Pet) => pet.category === 'BIRD')
+        response.body.pets.every((pet: Pet) => pet.category === 'Bird')
       ).toBe(true)
     })
 
-    it('should return zero pets on filter pets by category=CAT and return 200', async () => {
+    it('should return zero pets on filter pets by category=Cat and return 200', async () => {
       await removeAllPets(Category.Cat)
       const response = await request(app)
-        .get('/pet/all?filterOption=CAT')
+        .get('/pet/all?filterOption=Cat')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2334,9 +2334,9 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(0)
     })
 
-    it('should return pets whose category is CAT on filter pets by category=CAT and return 200', async () => {
+    it('should return pets whose category is Cat on filter pets by category=Cat and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=CAT')
+        .get('/pet/all?filterOption=Cat')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2344,14 +2344,14 @@ describe('pet', () => {
       expect(response.body.pets.length).toEqual(1)
       expect(response.body.totalPages).toEqual(1)
       expect(
-        response.body.pets.every((pet: Pet) => pet.category === 'CAT')
+        response.body.pets.every((pet: Pet) => pet.category === 'Cat')
       ).toBe(true)
     })
 
-    it('should return zero pets on filter pets by category=DOG and return 200', async () => {
+    it('should return zero pets on filter pets by category=Dog and return 200', async () => {
       await removeAllPets(Category.Dog)
       const response = await request(app)
-        .get('/pet/all?filterOption=DOG')
+        .get('/pet/all?filterOption=Dog')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2360,9 +2360,9 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(0)
     })
 
-    it('should return pets whose category is DOG on filter pets by category=DOG and return 200', async () => {
+    it('should return pets whose category is Dog on filter pets by category=Dog and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=DOG')
+        .get('/pet/all?filterOption=Dog')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2370,14 +2370,14 @@ describe('pet', () => {
       expect(response.body.pets.length).toEqual(1)
       expect(response.body.totalPages).toEqual(1)
       expect(
-        response.body.pets.every((pet: Pet) => pet.category === 'DOG')
+        response.body.pets.every((pet: Pet) => pet.category === 'Dog')
       ).toBe(true)
     })
 
-    it('should return zero pets on filter pets by category=HORSE and return 200', async () => {
+    it('should return zero pets on filter pets by category=Horse and return 200', async () => {
       await removeAllPets(Category.Horse)
       const response = await request(app)
-        .get('/pet/all?filterOption=HORSE')
+        .get('/pet/all?filterOption=Horse')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2386,9 +2386,9 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(0)
     })
 
-    it('should return pets whose category is HORSE on filter pets by category=HORSE and return 200', async () => {
+    it('should return pets whose category is Horse on filter pets by category=Horse and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=HORSE')
+        .get('/pet/all?filterOption=Horse')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2396,14 +2396,14 @@ describe('pet', () => {
       expect(response.body.pets.length).toEqual(1)
       expect(response.body.totalPages).toEqual(1)
       expect(
-        response.body.pets.every((pet: Pet) => pet.category === 'HORSE')
+        response.body.pets.every((pet: Pet) => pet.category === 'Horse')
       ).toBe(true)
     })
 
-    it('should return zero pets on filter pets by category=RABBIT and return 200', async () => {
+    it('should return zero pets on filter pets by category=Rabbit and return 200', async () => {
       await removeAllPets(Category.Rabbit)
       const response = await request(app)
-        .get('/pet/all?filterOption=RABBIT')
+        .get('/pet/all?filterOption=Rabbit')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2412,9 +2412,9 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(0)
     })
 
-    it('should return pets whose category is RABBIT on filter pets by category=RABBIT and return 200', async () => {
+    it('should return pets whose category is Rabbit on filter pets by category=Rabbit and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=RABBIT')
+        .get('/pet/all?filterOption=Rabbit')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2422,14 +2422,14 @@ describe('pet', () => {
       expect(response.body.pets.length).toEqual(1)
       expect(response.body.totalPages).toEqual(1)
       expect(
-        response.body.pets.every((pet: Pet) => pet.category === 'RABBIT')
+        response.body.pets.every((pet: Pet) => pet.category === 'Rabbit')
       ).toBe(true)
     })
 
-    it('should return zero pets on filter pets by category=SCALES_FINS_AND_OTHERS and return 200', async () => {
+    it('should return zero pets on filter pets by category=Scales, Fins and Others and return 200', async () => {
       await removeAllPets(Category.ScalesFinsAndOthers)
       const response = await request(app)
-        .get('/pet/all?filterOption=SCALES_FINS_AND_OTHERS')
+        .get('/pet/all?filterOption=Scales, Fins and Others')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2438,9 +2438,9 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(0)
     })
 
-    it('should return pets whose category is SCALES_FINS_AND_OTHERS on filter pets by category=SCALES_FINS_AND_OTHERS and return 200', async () => {
+    it('should return pets whose category is Scales, Fins and Others on filter pets by category=Scales, Fins and Others and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=SCALES_FINS_AND_OTHERS')
+        .get('/pet/all?filterOption=Scales, Fins and Others')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2449,15 +2449,15 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'SCALES_FINS_AND_OTHERS'
+          (pet: Pet) => pet.category === 'Scales, Fins and Others'
         )
       ).toBe(true)
     })
 
-    it('should return zero pets on filter pets by category=SMALL_AND_FURRY and return 200', async () => {
+    it('should return zero pets on filter pets by category=Small and Furry and return 200', async () => {
       await removeAllPets(Category.SmallAndFurry)
       const response = await request(app)
-        .get('/pet/all?filterOption=SMALL_AND_FURRY')
+        .get('/pet/all?filterOption=Small and Furry')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2466,9 +2466,9 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(0)
     })
 
-    it('should return pets whose category is SMALL_AND_FURRY on filter pets by category=SMALL_AND_FURRY and return 200', async () => {
+    it('should return pets whose category is Small and Furry on filter pets by category=Small and Furry and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=SMALL_AND_FURRY')
+        .get('/pet/all?filterOption=Small and Furry')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2477,14 +2477,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'SMALL_AND_FURRY'
+          (pet: Pet) => pet.category === 'Small and Furry'
         )
       ).toBe(true)
     })
 
     it('should filter Dogs by color and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=DOG&colorFilter=Brown')
+        .get('/pet/all?filterOption=Dog&colorFilter=Brown')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2492,14 +2492,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'DOG' && pet.color === 'Brown'
+          (pet: Pet) => pet.category === 'Dog' && pet.color === 'Brown'
         )
       ).toBe(true)
     })
 
     it('should return zero Dogs by color and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=DOG&colorFilter=Black')
+        .get('/pet/all?filterOption=Dog&colorFilter=Black')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2509,7 +2509,7 @@ describe('pet', () => {
 
     it('should filter Cats by color and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=CAT&colorFilter=Brown')
+        .get('/pet/all?filterOption=Cat&colorFilter=Brown')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2517,14 +2517,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'CAT' && pet.color === 'Brown'
+          (pet: Pet) => pet.category === 'Cat' && pet.color === 'Brown'
         )
       ).toBe(true)
     })
 
     it('should return zero Cats by color and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=CAT&colorFilter=Black')
+        .get('/pet/all?filterOption=Cat&colorFilter=Black')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2534,7 +2534,7 @@ describe('pet', () => {
 
     it('should filter Horses by color and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=HORSE&colorFilter=Brown')
+        .get('/pet/all?filterOption=Horse&colorFilter=Brown')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2542,14 +2542,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'HORSE' && pet.color === 'Brown'
+          (pet: Pet) => pet.category === 'Horse' && pet.color === 'Brown'
         )
       ).toBe(true)
     })
 
     it('should return zero Horses by color and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=HORSE&colorFilter=Black')
+        .get('/pet/all?filterOption=Horse&colorFilter=Black')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2559,7 +2559,7 @@ describe('pet', () => {
 
     it('should filter Rabbits by color and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=RABBIT&colorFilter=Brown')
+        .get('/pet/all?filterOption=Rabbit&colorFilter=Brown')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2567,14 +2567,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'RABBIT' && pet.color === 'Brown'
+          (pet: Pet) => pet.category === 'Rabbit' && pet.color === 'Brown'
         )
       ).toBe(true)
     })
 
     it('should return zero Rabbits by color and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=RABBIT&colorFilter=Black')
+        .get('/pet/all?filterOption=Rabbit&colorFilter=Black')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2584,7 +2584,7 @@ describe('pet', () => {
 
     it('should filter Birds by color and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BIRD&colorFilter=Brown')
+        .get('/pet/all?filterOption=Bird&colorFilter=Brown')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2592,14 +2592,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'BIRD' && pet.color === 'Brown'
+          (pet: Pet) => pet.category === 'Bird' && pet.color === 'Brown'
         )
       ).toBe(true)
     })
 
     it('should return zero Birds by color and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BIRD&colorFilter=Black')
+        .get('/pet/all?filterOption=Bird&colorFilter=Black')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2609,7 +2609,7 @@ describe('pet', () => {
 
     it('should filter Small and furry pets by color and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=SMALL_AND_FURRY&colorFilter=Brown')
+        .get('/pet/all?filterOption=Small and Furry&colorFilter=Brown')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2618,14 +2618,14 @@ describe('pet', () => {
       expect(
         response.body.pets.every(
           (pet: Pet) =>
-            pet.category === 'SMALL_AND_FURRY' && pet.color === 'Brown'
+            pet.category === 'Small and Furry' && pet.color === 'Brown'
         )
       ).toBe(true)
     })
 
     it('should return zero Small and furry pets by color and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=SMALL_AND_FURRY&colorFilter=Black')
+        .get('/pet/all?filterOption=Small and Furry&colorFilter=Black')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2635,7 +2635,7 @@ describe('pet', () => {
 
     it('should filter Scales and fins pets by color and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=SCALES_FINS_AND_OTHERS&colorFilter=Brown')
+        .get('/pet/all?filterOption=Scales, Fins and Others&colorFilter=Brown')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2644,14 +2644,14 @@ describe('pet', () => {
       expect(
         response.body.pets.every(
           (pet: Pet) =>
-            pet.category === 'SCALES_FINS_AND_OTHERS' && pet.color === 'Brown'
+            pet.category === 'Scales, Fins and Others' && pet.color === 'Brown'
         )
       ).toBe(true)
     })
 
     it('should return zero Scales and fins pets by color and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=SCALES_FINS_AND_OTHERS&colorFilter=Black')
+        .get('/pet/all?filterOption=Scales, Fins and Others&colorFilter=Black')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2661,7 +2661,7 @@ describe('pet', () => {
 
     it('should filter Barnyards pets by color and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BARNYARD&colorFilter=Brown')
+        .get('/pet/all?filterOption=Barnyard&colorFilter=Brown')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2669,14 +2669,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'BARNYARD' && pet.color === 'Brown'
+          (pet: Pet) => pet.category === 'Barnyard' && pet.color === 'Brown'
         )
       ).toBe(true)
     })
 
     it('should return zero Barnyards pets by color and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BARNYARD&colorFilter=Black')
+        .get('/pet/all?filterOption=Barnyard&colorFilter=Black')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2686,7 +2686,7 @@ describe('pet', () => {
 
     it('should filter Dogs by breed and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=DOG&breedFilter=Labrador')
+        .get('/pet/all?filterOption=Dog&breedFilter=Labrador')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2694,14 +2694,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'DOG' && pet.breed === 'Labrador'
+          (pet: Pet) => pet.category === 'Dog' && pet.breed === 'Labrador'
         )
       ).toBe(true)
     })
 
     it('should return zero Dogs by breed and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=DOG&breedFilter=Persian')
+        .get('/pet/all?filterOption=Dog&breedFilter=Persian')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2711,7 +2711,7 @@ describe('pet', () => {
 
     it('should filter Cats by breed and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=CAT&breedFilter=Labrador')
+        .get('/pet/all?filterOption=Cat&breedFilter=Labrador')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2719,14 +2719,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'CAT' && pet.breed === 'Labrador'
+          (pet: Pet) => pet.category === 'Cat' && pet.breed === 'Labrador'
         )
       ).toBe(true)
     })
 
     it('should return zero Cats by breed and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=CAT&breedFilter=Persian')
+        .get('/pet/all?filterOption=Cat&breedFilter=Persian')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2736,7 +2736,7 @@ describe('pet', () => {
 
     it('should filter Horses by breed and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=HORSE&breedFilter=Labrador')
+        .get('/pet/all?filterOption=Horse&breedFilter=Labrador')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2744,14 +2744,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'HORSE' && pet.breed === 'Labrador'
+          (pet: Pet) => pet.category === 'Horse' && pet.breed === 'Labrador'
         )
       ).toBe(true)
     })
 
     it('should return zero Horses by breed and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=HORSE&breedFilter=Persian')
+        .get('/pet/all?filterOption=Horse&breedFilter=Persian')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2761,7 +2761,7 @@ describe('pet', () => {
 
     it('should filter Rabbits by breed and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=RABBIT&breedFilter=Labrador')
+        .get('/pet/all?filterOption=Rabbit&breedFilter=Labrador')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2769,14 +2769,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'RABBIT' && pet.breed === 'Labrador'
+          (pet: Pet) => pet.category === 'Rabbit' && pet.breed === 'Labrador'
         )
       ).toBe(true)
     })
 
     it('should return zero Rabbits by breed and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=RABBIT&breedFilter=Persian')
+        .get('/pet/all?filterOption=Rabbit&breedFilter=Persian')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2786,7 +2786,7 @@ describe('pet', () => {
 
     it('should filter Birds by breed and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BIRD&breedFilter=Labrador')
+        .get('/pet/all?filterOption=Bird&breedFilter=Labrador')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2794,14 +2794,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'BIRD' && pet.breed === 'Labrador'
+          (pet: Pet) => pet.category === 'Bird' && pet.breed === 'Labrador'
         )
       ).toBe(true)
     })
 
     it('should return zero Birds by breed and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BIRD&breedFilter=Persian')
+        .get('/pet/all?filterOption=Bird&breedFilter=Persian')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2811,7 +2811,7 @@ describe('pet', () => {
 
     it('should filter Small and furry pets by breed and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=SMALL_AND_FURRY&breedFilter=Labrador')
+        .get('/pet/all?filterOption=Small and Furry&breedFilter=Labrador')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2820,14 +2820,14 @@ describe('pet', () => {
       expect(
         response.body.pets.every(
           (pet: Pet) =>
-            pet.category === 'SMALL_AND_FURRY' && pet.breed === 'Labrador'
+            pet.category === 'Small and Furry' && pet.breed === 'Labrador'
         )
       ).toBe(true)
     })
 
     it('should return zero Small and furry pets by breed and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=SMALL_AND_FURRY&breedFilter=Persian')
+        .get('/pet/all?filterOption=Small and Furry&breedFilter=Persian')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2838,7 +2838,7 @@ describe('pet', () => {
     it('should filter Scales and fins pets by breed and return 200', async () => {
       const response = await request(app)
         .get(
-          '/pet/all?filterOption=SCALES_FINS_AND_OTHERS&breedFilter=Labrador'
+          '/pet/all?filterOption=Scales, Fins and Others&breedFilter=Labrador'
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
@@ -2848,7 +2848,7 @@ describe('pet', () => {
       expect(
         response.body.pets.every(
           (pet: Pet) =>
-            pet.category === 'SCALES_FINS_AND_OTHERS' &&
+            pet.category === 'Scales, Fins and Others' &&
             pet.breed === 'Labrador'
         )
       ).toBe(true)
@@ -2856,7 +2856,9 @@ describe('pet', () => {
 
     it('should return zero Scales and fins pets by breed and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=SCALES_FINS_AND_OTHERS&breedFilter=Persian')
+        .get(
+          '/pet/all?filterOption=Scales, Fins and Others&breedFilter=Persian'
+        )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2866,7 +2868,7 @@ describe('pet', () => {
 
     it('should filter Barnyard pets by breed and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BARNYARD&breedFilter=Labrador')
+        .get('/pet/all?filterOption=Barnyard&breedFilter=Labrador')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2874,14 +2876,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'BARNYARD' && pet.breed === 'Labrador'
+          (pet: Pet) => pet.category === 'Barnyard' && pet.breed === 'Labrador'
         )
       ).toBe(true)
     })
 
     it('should return zero Barnyard pets by breed and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BARNYARD&breedFilter=Persian')
+        .get('/pet/all?filterOption=Barnyard&breedFilter=Persian')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2891,7 +2893,7 @@ describe('pet', () => {
 
     it('should filter Dogs by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=DOG&genderFilter=MALE')
+        .get('/pet/all?filterOption=Dog&genderFilter=Male')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2899,14 +2901,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'DOG' && pet.gender === 'MALE'
+          (pet: Pet) => pet.category === 'Dog' && pet.gender === 'Male'
         )
       ).toBe(true)
     })
 
     it('should return zero Dogs by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=DOG&genderFilter=FEMALE')
+        .get('/pet/all?filterOption=Dog&genderFilter=Female')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2916,7 +2918,7 @@ describe('pet', () => {
 
     it('should filter Cats by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=CAT&genderFilter=MALE')
+        .get('/pet/all?filterOption=Cat&genderFilter=Male')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2924,14 +2926,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'CAT' && pet.gender === 'MALE'
+          (pet: Pet) => pet.category === 'Cat' && pet.gender === 'Male'
         )
       ).toBe(true)
     })
 
     it('should return zero Cats by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=CAT&genderFilter=FEMALE')
+        .get('/pet/all?filterOption=Cat&genderFilter=Female')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2941,7 +2943,7 @@ describe('pet', () => {
 
     it('should filter Horses by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=HORSE&genderFilter=MALE')
+        .get('/pet/all?filterOption=Horse&genderFilter=Male')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2949,14 +2951,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'HORSE' && pet.gender === 'MALE'
+          (pet: Pet) => pet.category === 'Horse' && pet.gender === 'Male'
         )
       ).toBe(true)
     })
 
     it('should return zero Horses by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=HORSE&genderFilter=FEMALE')
+        .get('/pet/all?filterOption=Horse&genderFilter=Female')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2966,7 +2968,7 @@ describe('pet', () => {
 
     it('should filter Rabbits by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=RABBIT&genderFilter=MALE')
+        .get('/pet/all?filterOption=Rabbit&genderFilter=Male')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2974,14 +2976,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'RABBIT' && pet.gender === 'MALE'
+          (pet: Pet) => pet.category === 'Rabbit' && pet.gender === 'Male'
         )
       ).toBe(true)
     })
 
     it('should return zero Rabbits by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=RABBIT&genderFilter=FEMALE')
+        .get('/pet/all?filterOption=Rabbit&genderFilter=Female')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2991,7 +2993,7 @@ describe('pet', () => {
 
     it('should filter Birds by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BIRD&genderFilter=MALE')
+        .get('/pet/all?filterOption=Bird&genderFilter=Male')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -2999,14 +3001,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'BIRD' && pet.gender === 'MALE'
+          (pet: Pet) => pet.category === 'Bird' && pet.gender === 'Male'
         )
       ).toBe(true)
     })
 
     it('should return zero Birds by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BIRD&genderFilter=FEMALE')
+        .get('/pet/all?filterOption=Bird&genderFilter=Female')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3016,7 +3018,7 @@ describe('pet', () => {
 
     it('should filter Small and furry pets by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=SMALL_AND_FURRY&genderFilter=MALE')
+        .get('/pet/all?filterOption=Small and Furry&genderFilter=Male')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3025,14 +3027,14 @@ describe('pet', () => {
       expect(
         response.body.pets.every(
           (pet: Pet) =>
-            pet.category === 'SMALL_AND_FURRY' && pet.gender === 'MALE'
+            pet.category === 'Small and Furry' && pet.gender === 'Male'
         )
       ).toBe(true)
     })
 
     it('should return zero Small and furry pets by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=SMALL_AND_FURRY&genderFilter=FEMALE')
+        .get('/pet/all?filterOption=Small and Furry&genderFilter=Female')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3042,7 +3044,7 @@ describe('pet', () => {
 
     it('should filter Scales and fins pets by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=SCALES_FINS_AND_OTHERS&genderFilter=MALE')
+        .get('/pet/all?filterOption=Scales, Fins and Others&genderFilter=Male')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3051,14 +3053,16 @@ describe('pet', () => {
       expect(
         response.body.pets.every(
           (pet: Pet) =>
-            pet.category === 'SCALES_FINS_AND_OTHERS' && pet.gender === 'MALE'
+            pet.category === 'Scales, Fins and Others' && pet.gender === 'Male'
         )
       ).toBe(true)
     })
 
     it('should return zero Scales and fins pets by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=SCALES_FINS_AND_OTHERS&genderFilter=FEMALE')
+        .get(
+          '/pet/all?filterOption=Scales, Fins and Others&genderFilter=Female'
+        )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3068,7 +3072,7 @@ describe('pet', () => {
 
     it('should filter Barnyard pets by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BARNYARD&genderFilter=MALE')
+        .get('/pet/all?filterOption=Barnyard&genderFilter=Male')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3076,14 +3080,14 @@ describe('pet', () => {
       expect(response.body.totalPages).toEqual(1)
       expect(
         response.body.pets.every(
-          (pet: Pet) => pet.category === 'BARNYARD' && pet.gender === 'MALE'
+          (pet: Pet) => pet.category === 'Barnyard' && pet.gender === 'Male'
         )
       ).toBe(true)
     })
 
     it('should return zero Barnyard pets by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BARNYARD&genderFilter=FEMALE')
+        .get('/pet/all?filterOption=Barnyard&genderFilter=Female')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3093,7 +3097,7 @@ describe('pet', () => {
 
     it('should filter Dogs by age and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=DOG&ageFilter=1-2')
+        .get('/pet/all?filterOption=Dog&ageFilter=1-2')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3104,14 +3108,14 @@ describe('pet', () => {
         response.body.pets.every((pet: Pet) => {
           const birthdate = new Date(pet.birthDate)
           const age = calculateAgeFromBirthdate(birthdate)
-          return age >= 1 && age <= 2 && pet.category === 'DOG'
+          return age >= 1 && age <= 2 && pet.category === 'Dog'
         })
       ).toBe(true)
     })
 
     it('should return zero Dogs by age and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=DOG&ageFilter=2-5')
+        .get('/pet/all?filterOption=Dog&ageFilter=2-5')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3121,7 +3125,7 @@ describe('pet', () => {
 
     it('should filter Cats by age and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=CAT&ageFilter=0-2')
+        .get('/pet/all?filterOption=Cat&ageFilter=0-2')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3132,14 +3136,14 @@ describe('pet', () => {
         response.body.pets.every((pet: Pet) => {
           const birthdate = new Date(pet.birthDate)
           const age = calculateAgeFromBirthdate(birthdate)
-          return age >= 0 && age <= 2 && pet.category === 'CAT'
+          return age >= 0 && age <= 2 && pet.category === 'Cat'
         })
       ).toBe(true)
     })
 
     it('should return zero Cats by age and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=CAT&ageFilter=2-5')
+        .get('/pet/all?filterOption=Cat&ageFilter=2-5')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3149,7 +3153,7 @@ describe('pet', () => {
 
     it('should filter Horses by age and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=HORSE&ageFilter=1-2')
+        .get('/pet/all?filterOption=Horse&ageFilter=1-2')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3160,14 +3164,14 @@ describe('pet', () => {
         response.body.pets.every((pet: Pet) => {
           const birthdate = new Date(pet.birthDate)
           const age = calculateAgeFromBirthdate(birthdate)
-          return age >= 1 && age <= 2 && pet.category === 'HORSE'
+          return age >= 1 && age <= 2 && pet.category === 'Horse'
         })
       ).toBe(true)
     })
 
     it('should return zero Horses by age and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=HORSE&ageFilter=2-5')
+        .get('/pet/all?filterOption=Horse&ageFilter=2-5')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3177,7 +3181,7 @@ describe('pet', () => {
 
     it('should filter Rabbits by age and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=RABBIT&ageFilter=1-2')
+        .get('/pet/all?filterOption=Rabbit&ageFilter=1-2')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3188,14 +3192,14 @@ describe('pet', () => {
         response.body.pets.every((pet: Pet) => {
           const birthdate = new Date(pet.birthDate)
           const age = calculateAgeFromBirthdate(birthdate)
-          return age >= 1 && age <= 2 && pet.category === 'RABBIT'
+          return age >= 1 && age <= 2 && pet.category === 'Rabbit'
         })
       ).toBe(true)
     })
 
     it('should return zero Rabbits by age and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=RABBIT&ageFilter=2-5')
+        .get('/pet/all?filterOption=Rabbit&ageFilter=2-5')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3205,7 +3209,7 @@ describe('pet', () => {
 
     it('should filter Birds by age and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BIRD&ageFilter=1-2')
+        .get('/pet/all?filterOption=Bird&ageFilter=1-2')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3216,14 +3220,14 @@ describe('pet', () => {
         response.body.pets.every((pet: Pet) => {
           const birthdate = new Date(pet.birthDate)
           const age = calculateAgeFromBirthdate(birthdate)
-          return age >= 1 && age <= 2 && pet.category === 'BIRD'
+          return age >= 1 && age <= 2 && pet.category === 'Bird'
         })
       ).toBe(true)
     })
 
     it('should return zero Birds by age and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BIRD&ageFilter=2-5')
+        .get('/pet/all?filterOption=Bird&ageFilter=2-5')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3233,7 +3237,7 @@ describe('pet', () => {
 
     it('should filter Small and furry pets by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=SMALL_AND_FURRY&ageFilter=1-2')
+        .get('/pet/all?filterOption=Small and Furry&ageFilter=1-2')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3244,14 +3248,14 @@ describe('pet', () => {
         response.body.pets.every((pet: Pet) => {
           const birthdate = new Date(pet.birthDate)
           const age = calculateAgeFromBirthdate(birthdate)
-          return age >= 1 && age <= 2 && pet.category === 'SMALL_AND_FURRY'
+          return age >= 1 && age <= 2 && pet.category === 'Small and Furry'
         })
       ).toBe(true)
     })
 
     it('should return zero Small and furry pets by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=SMALL_AND_FURRY&ageFilter=2-5')
+        .get('/pet/all?filterOption=Small and Furry&ageFilter=2-5')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3261,7 +3265,7 @@ describe('pet', () => {
 
     it('should filter Scales and fins pets by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=SCALES_FINS_AND_OTHERS&ageFilter=1-2')
+        .get('/pet/all?filterOption=Scales, Fins and Others&ageFilter=1-2')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3273,7 +3277,7 @@ describe('pet', () => {
           const birthdate = new Date(pet.birthDate)
           const age = calculateAgeFromBirthdate(birthdate)
           return (
-            age >= 1 && age <= 2 && pet.category === 'SCALES_FINS_AND_OTHERS'
+            age >= 1 && age <= 2 && pet.category === 'Scales, Fins and Others'
           )
         })
       ).toBe(true)
@@ -3281,7 +3285,7 @@ describe('pet', () => {
 
     it('should return zero Scales and fins pets by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=SCALES_FINS_AND_OTHERS&ageFilter=2-5')
+        .get('/pet/all?filterOption=Scales, Fins and Others&ageFilter=2-5')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3291,7 +3295,7 @@ describe('pet', () => {
 
     it('should filter Barnyard pets by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BARNYARD&ageFilter=1-2')
+        .get('/pet/all?filterOption=Barnyard&ageFilter=1-2')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3302,14 +3306,14 @@ describe('pet', () => {
         response.body.pets.every((pet: Pet) => {
           const birthdate = new Date(pet.birthDate)
           const age = calculateAgeFromBirthdate(birthdate)
-          return age >= 1 && age <= 2 && pet.category === 'BARNYARD'
+          return age >= 1 && age <= 2 && pet.category === 'Barnyard'
         })
       ).toBe(true)
     })
 
     it('should return zero Barnyard pets by gender and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=BARNYARD&ageFilter=2-5')
+        .get('/pet/all?filterOption=Barnyard&ageFilter=2-5')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3334,24 +3338,24 @@ describe('pet', () => {
 
     it('should respond with Bad Request if category is invalid enum type', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=Dog')
+        .get('/pet/all?filterOption=DOG')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
       expect(response.text).toEqual(
-        `"filterOption" must be one of [CAT, DOG, HORSE, RABBIT, BIRD, SMALL_AND_FURRY, SCALES_FINS_AND_OTHERS, BARNYARD, ]`
+        `"filterOption" must be one of [Cat, Dog, Horse, Rabbit, Bird, Small and Furry, Scales, Fins and Others, Barnyard, ]`
       )
       expect(response.body).toEqual({})
     })
 
     it('should respond with Bad Request if gender is invalid enum type', async () => {
       const response = await request(app)
-        .get('/pet/all?genderFilter=Male')
+        .get('/pet/all?genderFilter=MALE')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
       expect(response.text).toEqual(
-        `"genderFilter" must be one of [MALE, FEMALE, ]`
+        `"genderFilter" must be one of [Male, Female, ]`
       )
       expect(response.body).toEqual({})
     })
@@ -3405,7 +3409,7 @@ describe('pet', () => {
         .expect(400)
 
       expect(response.text).toEqual(
-        `"filterOption" must be one of [CAT, DOG, HORSE, RABBIT, BIRD, SMALL_AND_FURRY, SCALES_FINS_AND_OTHERS, BARNYARD, ]`
+        `"filterOption" must be one of [Cat, Dog, Horse, Rabbit, Bird, Small and Furry, Scales, Fins and Others, Barnyard, ]`
       )
       expect(response.body).toEqual({})
     })
@@ -3417,7 +3421,7 @@ describe('pet', () => {
         .expect(400)
 
       expect(response.text).toEqual(
-        `"genderFilter" must be one of [MALE, FEMALE, ]`
+        `"genderFilter" must be one of [Male, Female, ]`
       )
       expect(response.body).toEqual({})
     })
@@ -3439,7 +3443,7 @@ describe('pet', () => {
 
     it('should filter Cats by age and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=CAT&ageFilter=0-')
+        .get('/pet/all?filterOption=Cat&ageFilter=0-')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3450,14 +3454,14 @@ describe('pet', () => {
         response.body.pets.every((pet: Pet) => {
           const birthdate = new Date(pet.birthDate)
           const age = calculateAgeFromBirthdate(birthdate)
-          return age >= 0 && age < 1 && pet.category === 'CAT'
+          return age >= 0 && age < 1 && pet.category === 'Cat'
         })
       ).toBe(true)
     })
 
     it('should filter Dogs by age and return 200', async () => {
       const response = await request(app)
-        .get('/pet/all?filterOption=DOG&ageFilter=-1')
+        .get('/pet/all?filterOption=Dog&ageFilter=-1')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -3468,7 +3472,7 @@ describe('pet', () => {
         response.body.pets.every((pet: Pet) => {
           const birthdate = new Date(pet.birthDate)
           const age = calculateAgeFromBirthdate(birthdate)
-          return age >= 1 && pet.category === 'DOG'
+          return age >= 1 && pet.category === 'Dog'
         })
       ).toBe(true)
     })
