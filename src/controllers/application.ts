@@ -1,8 +1,8 @@
 import { Pet } from '../models/Pet'
 import {
+  allApplicationsExample,
   applicationExample,
-  scheduleHomeVisitPayloadExample,
-  updateApplicationExample
+  timeSlotsResponseExample
 } from '../examples/application'
 import Application, {
   AllApplicationsResponse,
@@ -59,7 +59,7 @@ export class ApplicationController {
    * @summary Accepts application info and creates application if all fields are valid
    *
    */
-  @Example<ApplicationPayload>(applicationExample)
+  @Example<ApplictionResponseForUser>(applicationExample)
   @Security('bearerAuth')
   @Post('/')
   public async applyForAPet(
@@ -73,20 +73,23 @@ export class ApplicationController {
    * @summary Returns an application's details given id
    *
    */
+  @Example<ApplictionResponseForUser>(applicationExample)
   @Security('bearerAuth')
   @Get('/')
   public async getApplicationDetails(
-    @Request() req: UserRequest
+    @Request() req: UserRequest,
+    @Query() id: string
   ): Promise<ApplictionResponseForUser> {
-    return getApplicationDetails(req)
+    return getApplicationDetails(req, id)
   }
 
   /**
    * @summary Returns list of applications of a user
    *
    */
+  @Example<AllApplicationsResponse>(allApplicationsExample)
   @Security('bearerAuth')
-  @Get('/applications')
+  @Get('/all')
   public async getApplications(
     @Query('page') page: number,
     @Query('limit') limit: number,
@@ -107,19 +110,22 @@ export class ApplicationController {
    * @summary Returns time slots available to shcedule visit on a particular day
    *
    */
+  @Example<TimeSlotsResponse>(timeSlotsResponseExample)
   @Security('bearerAuth')
   @Get('/timeSlots')
   public async getTimeSlots(
-    @Request() req: UserRequest
+    @Query() shelterID: string,
+    @Query() petID: string,
+    @Query() visitDate: string,
+    @Query() visitType: string
   ): Promise<TimeSlotsResponse> {
-    return getTimeSlots(req)
+    return getTimeSlots(shelterID, petID, visitDate, visitType)
   }
 
   /**
    * @summary Accepts application id and date for home visit and sends email to applicant and shelter
    *
    */
-  @Example<ScheduleHomeVisitPayload>(scheduleHomeVisitPayloadExample)
   @Security('bearerAuth')
   @Post('/scheduleHomeVisit')
   public async scheduleHomeVisit(@Body() body: ScheduleHomeVisitPayload) {
@@ -130,7 +136,6 @@ export class ApplicationController {
    * @summary Accepts application id and date for shelter visit and sends email to applicant and shelter
    *
    */
-  @Example<ScheduleHomeVisitPayload>(scheduleHomeVisitPayloadExample)
   @Security('bearerAuth')
   @Post('/scheduleShelterVisit')
   public async scheduleShelterVisit(@Body() body: ScheduleHomeVisitPayload) {
@@ -141,7 +146,6 @@ export class ApplicationController {
    * @summary Updates an application's status
    *
    */
-  @Example<UpdateApplicationPayload>(updateApplicationExample)
   @Security('bearerAuth')
   @Put('/updateStatus')
   public async updateApplicationStatus(@Body() body: UpdateApplicationPayload) {
@@ -168,7 +172,7 @@ const applyForAPet = async (
     handlePetIssues,
     moveWithPet,
     canAffordPetsNeeds,
-    canAffordPetsMediacal,
+    canAffordPetsMedical,
     petTravelPlans,
     petOutlivePlans
   } = body
@@ -210,7 +214,7 @@ const applyForAPet = async (
     handlePetIssues: handlePetIssues,
     moveWithPet: moveWithPet,
     canAffordPetsNeeds: canAffordPetsNeeds,
-    canAffordPetsMediacal: canAffordPetsMediacal,
+    canAffordPetsMedical: canAffordPetsMedical,
     petTravelPlans: petTravelPlans,
     petOutlivePlans: petOutlivePlans,
     status: Status.UnderReview
@@ -221,9 +225,9 @@ const applyForAPet = async (
     application: {
       ...application.toObject(),
       id: application._id,
-      status: application.status,
+      // status: application.status,
       submissionDate: application.createdAt.toISOString().split('T')[0],
-      microchipID: application.microchipID,
+      // microchipID: application.microchipID,
       petImage: getImageURL(pet.images[0]),
       petName: pet.name,
       shelterName: shelter.name
@@ -232,9 +236,14 @@ const applyForAPet = async (
 }
 
 const getApplicationDetails = async (
-  req: UserRequest
+  req: UserRequest,
+  id: string
 ): Promise<ApplictionResponseForUser> => {
-  const application = await Application.findById(req.query.id)
+  const application = await Application.findOne({
+    id,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    applicantEmail: req.user!.email
+  })
 
   if (!application) throw { code: 404, message: 'Application not found' }
 
@@ -254,16 +263,16 @@ const getApplicationDetails = async (
     application: {
       ...application.toObject(),
       id: application._id.toString(),
-      status: application.status,
+      // status: application.status,
       submissionDate: application.createdAt.toISOString().split('T')[0],
-      microchipID: application.microchipID,
+      // microchipID: application.microchipID,
       petImage: getImageURL(pet.images[0]),
       petName: pet.name,
-      shelterName: shelter.name,
-      homeVisitDate: application.homeVisitDate,
-      shelterVisitDate: application.shelterVisitDate,
-      homeVisitEmailSentDate: application.homeVisitEmailSentDate,
-      shelterVisitEmailSentDate: application.shelterVisitEmailSentDate
+      shelterName: shelter.name
+      // homeVisitDate: application.homeVisitDate,
+      // shelterVisitDate: application.shelterVisitDate,
+      // homeVisitEmailSentDate: application.homeVisitEmailSentDate,
+      // shelterVisitEmailSentDate: application.shelterVisitEmailSentDate
     },
     canReview: canUserReview
   }
@@ -486,7 +495,7 @@ const getApplications = async (
       const applicationResponse = {
         ...application,
         id: application._id.toString(),
-        submissionDate: application.createdAt,
+        submissionDate: application.createdAt.toISOString().split('T')[0],
         petImage: imageURLs[0],
         petName: pet.name,
         shelterName: shelter.name,
@@ -511,9 +520,12 @@ const getApplications = async (
   }
 }
 
-const getTimeSlots = async (req: UserRequest): Promise<TimeSlotsResponse> => {
-  const { id, petID, visitDate, visitType } = req.query
-
+const getTimeSlots = async (
+  shelterID: string,
+  petID: string,
+  visitDate: string,
+  visitType: string
+): Promise<TimeSlotsResponse> => {
   // Generate all possible time slots for the day
   const allTimeSlots = generateTimeSlots()
 
@@ -530,7 +542,7 @@ const getTimeSlots = async (req: UserRequest): Promise<TimeSlotsResponse> => {
       $gte: startOfVisitDate.toISOString(),
       $lt: startOfNextDate.toISOString()
     },
-    shelterID: id
+    shelterID: shelterID
   }
 
   // Conditionally add petID to the query if the visitType is 'Shelter'
@@ -539,6 +551,7 @@ const getTimeSlots = async (req: UserRequest): Promise<TimeSlotsResponse> => {
   }
 
   const bookedVisits = await Visit.find(query)
+  console.log('bookedVisits:', bookedVisits)
 
   const timezoneOffsetHours = 5 // Offset between local time and UTC in hours
 

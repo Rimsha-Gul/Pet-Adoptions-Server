@@ -6,7 +6,6 @@ import User, {
   VerificationResponse,
   VerificationPayload,
   SendCodePayload,
-  ShelterResponse,
   EmailPayload,
   CheckPasswordPayload,
   UpdateProfilePayload,
@@ -42,14 +41,10 @@ import {
   requestAlternateEmailForShelter
 } from '../data/emailMessages'
 import {
-  emailPayloadExample,
-  checkPasswordPayloadExample,
-  shelterResponseExample,
   signupResponseExample,
   tokenResponseExample,
   updateProfilePayloadExample,
-  verificationResponseExample,
-  resetPasswordPayloadExample
+  verificationResponseExample
 } from '../examples/auth'
 import { Invitation, InvitationStatus } from '../models/Invitation'
 import { generateResetToken } from '../utils/generateResetToken'
@@ -136,7 +131,7 @@ export class AuthController {
     @Request() req: UserRequest,
     /**
      * New email for user
-     * @example "jackdoe@example.com"
+     * @example "johndoe@example.com"
      */
     @Query() email: string
   ) {
@@ -159,7 +154,6 @@ export class AuthController {
   /**
    * @summary Checks if user's entered password is correct
    */
-  @Example<CheckPasswordPayload>(checkPasswordPayloadExample)
   @Security('bearerAuth')
   @Post('/checkPassword')
   public async checkPassword(
@@ -172,7 +166,6 @@ export class AuthController {
   /**
    * @summary Changes user's password
    */
-  @Example<CheckPasswordPayload>(checkPasswordPayloadExample)
   @Security('bearerAuth')
   @Put('/changePassword')
   public async changePassword(
@@ -192,22 +185,8 @@ export class AuthController {
   }
 
   /**
-   * @summary Returns ids and names of all shelters
-   *
-   */
-  @Example<ShelterResponse>(shelterResponseExample)
-  @Security('bearerAuth')
-  @Get('/shelters')
-  public async getShelters(
-    @Request() req: UserRequest
-  ): Promise<ShelterResponse[]> {
-    return getShelters(req)
-  }
-
-  /**
    * @summary Checks if user's entered email has an associated account and create reset tokens
    */
-  @Example<EmailPayload>(emailPayloadExample)
   @Post('/requestPasswordReset')
   public async requestPasswordReset(@Body() body: EmailPayload) {
     return requestPasswordReset(body)
@@ -218,14 +197,13 @@ export class AuthController {
    *
    */
   @Get('/verifyResetToken')
-  public async VerifyResetToken(@Request() req: UserRequest) {
-    return VerifyResetToken(req)
+  public async VerifyResetToken(@Query() resetToken: string) {
+    return VerifyResetToken(resetToken)
   }
 
   /**
    * @summary Changes user's password
    */
-  @Example<ResetPasswordPayload>(resetPasswordPayloadExample)
   @Put('/resetPassword')
   public async resetPassword(@Body() body: ResetPasswordPayload) {
     return resetPassword(body)
@@ -234,7 +212,6 @@ export class AuthController {
   /**
    * @summary Sends email to user to provide alternate email to sign up as shelter
    */
-  @Example<EmailPayload>(emailPayloadExample)
   @Security('bearerAuth')
   @Post('/getAlternateEmail')
   public async getAlternateEmail(@Body() body: EmailPayload) {
@@ -519,16 +496,6 @@ const logout = async (req: UserRequest) => {
   return { code: 200, message: 'Logout successful' }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getShelters = async (_req: UserRequest): Promise<ShelterResponse[]> => {
-  const shelters = await User.find({ role: 'SHELTER' }, '_id name')
-  const shelterResponses: ShelterResponse[] = shelters.map((shelter) => ({
-    id: shelter._id.toString(),
-    name: shelter.name
-  }))
-  return shelterResponses
-}
-
 const requestPasswordReset = async (body: EmailPayload) => {
   const { email } = body
 
@@ -542,10 +509,8 @@ const requestPasswordReset = async (body: EmailPayload) => {
 
   await user.save()
 
-  // Create the reset password email content.
   const resetEmail = getResetPasswordEmail(resetToken)
 
-  // Send the email
   try {
     await sendEmail(user.email, resetEmail.subject, resetEmail.message)
   } catch (error) {
@@ -555,9 +520,7 @@ const requestPasswordReset = async (body: EmailPayload) => {
   return { code: 200, message: 'Reset password email sent successfully' }
 }
 
-const VerifyResetToken = async (req: UserRequest) => {
-  const { resetToken } = req.query
-
+const VerifyResetToken = async (resetToken: string) => {
   try {
     // decode and verify the token synchronously
     const decoded: any = jwt.verify(

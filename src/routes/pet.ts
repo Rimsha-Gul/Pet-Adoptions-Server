@@ -91,7 +91,8 @@ petRouter.get('/', authenticateAccessToken, async (req, res) => {
     return res.status(400).send(error.details[0].message)
   }
   try {
-    const response = await petController.getPetDetails(req)
+    const petID = req.query.id as string
+    const response = await petController.getPetDetails(req, petID)
     return res.send(response)
   } catch (err: any) {
     return res.status(err.code).send(err.message)

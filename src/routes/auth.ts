@@ -182,20 +182,6 @@ authRouter.delete('/logout', authenticateAccessToken, async (req, res) => {
   }
 })
 
-authRouter.get(
-  '/shelters',
-  authenticateAccessToken,
-  isAdmin,
-  async (req, res) => {
-    try {
-      const response = await controller.getShelters(req)
-      return res.send(response)
-    } catch (err: any) {
-      return res.status(err.code).send(err.message)
-    }
-  }
-)
-
 authRouter.post('/requestPasswordReset', async (req, res) => {
   const { error } = emailValidation(req.body)
   if (error) return res.status(400).send(error.details[0].message)
@@ -211,7 +197,8 @@ authRouter.get('/verifyResetToken', async (req, res) => {
   const { error } = verifyResetTokenValidation(req.query)
   if (error) return res.status(400).send(error.details[0].message)
   try {
-    const response = await controller.VerifyResetToken(req)
+    const resetToken = req.query.resetToken as string
+    const response = await controller.VerifyResetToken(resetToken)
     return res.send(response)
   } catch (err: any) {
     return res.status(err.code).send(err.message)

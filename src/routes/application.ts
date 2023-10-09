@@ -39,7 +39,8 @@ applicationRouter.get(
     const { error } = idValidation(req.query)
     if (error) return res.status(400).send(error.details[0].message)
     try {
-      const response = await controller.getApplicationDetails(req)
+      const id = req.query.id as string
+      const response = await controller.getApplicationDetails(req, id)
       return res.send(response)
     } catch (err: any) {
       return res.status(err.code).send(err.message)
@@ -47,33 +48,29 @@ applicationRouter.get(
   }
 )
 
-applicationRouter.get(
-  '/applications',
-  authenticateAccessToken,
-  async (req, res) => {
-    const { error } = getAllApplicationsValidation(req.query)
-    if (error) return res.status(400).send(error.details[0].message)
-    try {
-      const {
-        page = '1',
-        limit = '5',
-        searchQuery,
-        applicationStatusFilter
-      } = req.query
+applicationRouter.get('/all', authenticateAccessToken, async (req, res) => {
+  const { error } = getAllApplicationsValidation(req.query)
+  if (error) return res.status(400).send(error.details[0].message)
+  try {
+    const {
+      page = '1',
+      limit = '5',
+      searchQuery,
+      applicationStatusFilter
+    } = req.query
 
-      const response = await controller.getApplications(
-        parseInt(page as string),
-        parseInt(limit as string),
-        req,
-        searchQuery as string,
-        applicationStatusFilter as string
-      )
-      return res.send(response)
-    } catch (err: any) {
-      return res.status(err.code).send(err.message)
-    }
+    const response = await controller.getApplications(
+      parseInt(page as string),
+      parseInt(limit as string),
+      req,
+      searchQuery as string,
+      applicationStatusFilter as string
+    )
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
   }
-)
+})
 
 applicationRouter.get(
   '/timeSlots',
@@ -82,7 +79,13 @@ applicationRouter.get(
     const { error } = getTimeSlotsValidation(req.query)
     if (error) return res.status(400).send(error.details[0].message)
     try {
-      const response = await controller.getTimeSlots(req)
+      const { shelterID, petID, visitDate, visitType } = req.query
+      const response = await controller.getTimeSlots(
+        shelterID as string,
+        petID as string,
+        visitDate as string,
+        visitType as string
+      )
       return res.send(response)
     } catch (err: any) {
       return res.status(err.code).send(err.message)
@@ -101,6 +104,7 @@ applicationRouter.post(
       const response = await controller.scheduleHomeVisit(req.body)
       return res.send(response)
     } catch (err: any) {
+      console.log(err)
       return res.status(err.code).send(err.message)
     }
   }

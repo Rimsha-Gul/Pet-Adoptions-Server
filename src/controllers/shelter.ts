@@ -2,17 +2,28 @@ import Application, {
   ApplictionResponseForShelter
 } from '../models/Application'
 import { UserRequest } from '../types/Request'
-import { Body, Example, Get, Post, Request, Route, Security, Tags } from 'tsoa'
+import {
+  Body,
+  Example,
+  Get,
+  Post,
+  Query,
+  Request,
+  Route,
+  Security,
+  Tags
+} from 'tsoa'
 import { Pet } from '../models/Pet'
 import {
   EmailPayload,
   Role,
   ShelterProfileResponse,
+  ShelterResponse,
   User,
   VerifyInvitationResponse
 } from '../models/User'
 import { getImageURL } from '../utils/getImageURL'
-import { emailPayloadExample } from '../examples/auth'
+import { emailPayloadExample, shelterResponseExample } from '../examples/auth'
 import { generateInvitationToken } from '../utils/generateInvitationToken'
 import Invitation, { InvitationStatus } from '../models/Invitation'
 import { getShelterInvitationEmail } from '../data/emailMessages'
@@ -35,9 +46,23 @@ export class ShelterController {
   @Get('/')
   @Example<ShelterProfileResponse>(shelterProfileResponseExample)
   public async getShelter(
-    @Request() req: UserRequest
+    @Request() req: UserRequest,
+    @Query() id: string
   ): Promise<ShelterProfileResponse> {
-    return getShelter(req)
+    return getShelter(req, id)
+  }
+
+  /**
+   * @summary Returns ids and names of all shelters
+   *
+   */
+  @Example<ShelterResponse>(shelterResponseExample)
+  @Security('bearerAuth')
+  @Get('/all')
+  public async getShelters(
+    @Request() req: UserRequest
+  ): Promise<ShelterResponse[]> {
+    return getShelters(req)
   }
 
   /**
@@ -47,9 +72,10 @@ export class ShelterController {
   @Security('bearerAuth')
   @Get('/application')
   public async getApplicationDetails(
-    @Request() req: UserRequest
+    @Request() req: UserRequest,
+    @Query() id: string
   ): Promise<ApplictionResponseForShelter> {
-    return getApplicationDetails(req)
+    return getApplicationDetails(req, id)
   }
 
   /**
@@ -70,16 +96,17 @@ export class ShelterController {
   @Get('/verifyInvitationToken')
   @Example<VerifyInvitationResponse>(verifyInvitationResponseExample)
   public async verifyInvitationToken(
-    @Request() req: UserRequest
+    @Query() invitationToken: string
   ): Promise<VerifyInvitationResponse> {
-    return verifyInvitationToken(req)
+    return verifyInvitationToken(invitationToken)
   }
 }
 
 const getShelter = async (
-  req: UserRequest
+  req: UserRequest,
+  id: string
 ): Promise<ShelterProfileResponse> => {
-  const shelter = await User.findById(req.query.id)
+  const shelter = await User.findById(id)
   if (!shelter) throw { code: 404, message: 'Shelter not found' }
 
   let profilePhotoUrl
@@ -107,10 +134,25 @@ const getShelter = async (
   return shelterResponse
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const getShelters = async (_req: UserRequest): Promise<ShelterResponse[]> => {
+  const shelters = await User.find({ role: 'SHELTER' }, '_id name')
+  const shelterResponses: ShelterResponse[] = shelters.map((shelter) => ({
+    id: shelter._id.toString(),
+    name: shelter.name
+  }))
+  return shelterResponses
+}
+
 const getApplicationDetails = async (
-  req: UserRequest
+  req: UserRequest,
+  id: string
 ): Promise<ApplictionResponseForShelter> => {
-  const application = await Application.findById(req.query.id)
+  const application = await Application.findOne({
+    id,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    shelterID: req.user!._id
+  })
   if (!application) throw { code: 404, message: 'Application not found' }
   const applicant = await User.findOne({
     email: application.applicantEmail
@@ -160,10 +202,8 @@ const inviteShelter = async (body: EmailPayload) => {
 }
 
 const verifyInvitationToken = async (
-  req: UserRequest
+  invitationToken: string
 ): Promise<VerifyInvitationResponse> => {
-  const { invitationToken } = req.query
-
   try {
     // decode and verify the token synchronously
     const decoded: any = jwt.verify(

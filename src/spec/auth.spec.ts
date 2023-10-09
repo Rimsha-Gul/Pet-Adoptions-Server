@@ -1760,7 +1760,7 @@ describe('auth', () => {
       await cleanup() // Delete the temporary file after the test
     })
 
-    it('should throw an error if new profile photo a pdf file', async () => {
+    it('should throw an error if new profile photo is a pdf file', async () => {
       const { path: tmpFilePath, cleanup } = await tmp.file({
         postfix: '.pdf'
       })

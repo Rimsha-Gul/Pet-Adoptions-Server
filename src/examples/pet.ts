@@ -23,7 +23,7 @@ export const petResponseExample = {
     },
     bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.',
     traits: ['Affectionate', 'independent'],
-    adoptionFee: '$300',
+    adoptionFee: '300 USD',
     images: [
       'https://example.com/images/fluffy1.jpg',
       'https://example.com/images/fluffy2.jpg'
@@ -58,7 +58,7 @@ export const petsResponseExample = {
       },
       bio: 'Fluffy is a calm and friendly cat...',
       traits: ['Affectionate', 'independent'],
-      adoptionFee: '$100',
+      adoptionFee: '100 USD',
       images: [
         'https://example.com/images/fluffy1.jpg',
         'https://example.com/images/fluffy2.jpg'
@@ -88,7 +88,7 @@ export const petsResponseExample = {
       },
       bio: 'Buddy is a playful and energetic dog...',
       traits: ['Friendly', 'loyal'],
-      adoptionFee: '$150',
+      adoptionFee: '150 USD',
       images: [
         'https://example.com/images/buddy1.jpg',
         'https://example.com/images/buddy2.jpg'

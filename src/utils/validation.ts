@@ -145,7 +145,7 @@ export const applyForPetValidation = (data: any): Joi.ValidationResult =>
     handlePetIssues: Joi.string().required(),
     moveWithPet: Joi.string().required(),
     canAffordPetsNeeds: Joi.boolean().required(),
-    canAffordPetsMediacal: Joi.boolean().required(),
+    canAffordPetsMedical: Joi.boolean().required(),
     petTravelPlans: Joi.string().required(),
     petOutlivePlans: Joi.string().required()
   }).validate(data)
@@ -173,7 +173,7 @@ export const updateApplicationStatusValidation = (
 
 export const getTimeSlotsValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    id: objectIDSchema.required(),
+    shelterID: objectIDSchema.required(),
     visitDate: Joi.date().greater(today).less(weekFromNow).required(),
     visitType: visitTypeSchema.required(),
     petID: Joi.string().length(10).required()

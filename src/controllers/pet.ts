@@ -96,9 +96,10 @@ export class PetController {
   @Security('bearerAuth')
   @Get('/')
   public async getPetDetails(
-    @Request() req: ExpressRequest
+    @Request() req: ExpressRequest,
+    @Query() id: string
   ): Promise<AddPetResponse> {
-    return getPetDetails(req)
+    return getPetDetails(req, id)
   }
 
   /**
@@ -220,8 +221,11 @@ const addPet = async (
   }
 }
 
-const getPetDetails = async (req: UserRequest): Promise<AddPetResponse> => {
-  const petID = req.query.id
+const getPetDetails = async (
+  req: UserRequest,
+  id: string
+): Promise<AddPetResponse> => {
+  const petID = id
   const pet = await Pet.findOne({ microchipID: petID })
   if (!pet) throw { code: 404, message: 'Pet not found' }
 

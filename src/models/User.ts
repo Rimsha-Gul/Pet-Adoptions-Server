@@ -15,7 +15,7 @@ export enum EmailChangeRequest {
 /**
  * @example {
  *  "name": "Jack Doe",
- *  "email": "jackdoe@example.com",
+ *  "email": "johndoe@example.com",
  *  "password": "123456",
  *  "role": "USER"
  * }
@@ -31,7 +31,7 @@ export interface UserPayload {
 export interface LoginPayload {
   /**
    * Email of user
-   * @example "jackdoe@example.com"
+   * @example "johndoe@example.com"
    */
   email: string
   /**
@@ -44,7 +44,7 @@ export interface LoginPayload {
 export interface SendCodePayload {
   /**
    * Email of user
-   * @example "jackdoe@example.com"
+   * @example "johndoe@example.com"
    */
   email: string
   emailChangeRequest?: EmailChangeRequest
@@ -53,7 +53,7 @@ export interface SendCodePayload {
 export interface VerificationPayload {
   /**
    * Email of user
-   * @example "jackdoe@example.com"
+   * @example "johndoe@example.com"
    */
   email: string
   /**
@@ -90,7 +90,7 @@ export interface VerificationResponse extends TokenResponse {
 export interface EmailPayload {
   /**
    * Email of user
-   * @example "jackdoe@example.com"
+   * @example "johndoe@example.com"
    */
   email: string
 }
@@ -172,7 +172,15 @@ export interface VerifyInvitationResponse {
 }
 
 export interface ResetPasswordPayload {
+  /**
+   * Email of user
+   * @example "johndoe@example.com"
+   */
   email: string
+  /**
+   * Password for user
+   * @example "123456"
+   */
   newPassword: string
 }
 

@@ -41,7 +41,7 @@ components:
             additionalProperties: false
             example:
                 name: 'Jack Doe'
-                email: jackdoe@example.com
+                email: johndoe@example.com
                 password: '123456'
                 role: USER
         EmailChangeRequest:
@@ -54,7 +54,7 @@ components:
                 email:
                     type: string
                     description: 'Email of user'
-                    example: jackdoe@example.com
+                    example: johndoe@example.com
                 emailChangeRequest:
                     $ref: '#/components/schemas/EmailChangeRequest'
             required:
@@ -85,7 +85,7 @@ components:
                 email:
                     type: string
                     description: 'Email of user'
-                    example: jackdoe@example.com
+                    example: johndoe@example.com
                 verificationCode:
                     type: string
                     description: 'Verification code of user'
@@ -116,7 +116,7 @@ components:
                 email:
                     type: string
                     description: 'Email of user'
-                    example: jackdoe@example.com
+                    example: johndoe@example.com
                 password:
                     type: string
                     description: 'Password for user'
@@ -131,7 +131,7 @@ components:
                 email:
                     type: string
                     description: 'Email of user'
-                    example: jackdoe@example.com
+                    example: johndoe@example.com
             required:
                 - email
             type: object
@@ -146,23 +146,16 @@ components:
                 - password
             type: object
             additionalProperties: false
-        ShelterResponse:
-            properties:
-                id:
-                    type: string
-                name:
-                    type: string
-            required:
-                - id
-                - name
-            type: object
-            additionalProperties: false
         ResetPasswordPayload:
             properties:
                 email:
                     type: string
+                    description: 'Email of user'
+                    example: johndoe@example.com
                 newPassword:
                     type: string
+                    description: 'Password for user'
+                    example: '123456'
             required:
                 - email
                 - newPassword
@@ -404,7 +397,7 @@ components:
                     type: string
                 canAffordPetsNeeds:
                     type: boolean
-                canAffordPetsMediacal:
+                canAffordPetsMedical:
                     type: boolean
                 petTravelPlans:
                     type: string
@@ -447,7 +440,7 @@ components:
                 - handlePetIssues
                 - moveWithPet
                 - canAffordPetsNeeds
-                - canAffordPetsMediacal
+                - canAffordPetsMedical
                 - petTravelPlans
                 - petOutlivePlans
                 - id
@@ -499,7 +492,7 @@ components:
                     type: string
                 canAffordPetsNeeds:
                     type: boolean
-                canAffordPetsMediacal:
+                canAffordPetsMedical:
                     type: boolean
                 petTravelPlans:
                     type: string
@@ -520,11 +513,29 @@ components:
                 - handlePetIssues
                 - moveWithPet
                 - canAffordPetsNeeds
-                - canAffordPetsMediacal
+                - canAffordPetsMedical
                 - petTravelPlans
                 - petOutlivePlans
             type: object
             additionalProperties: false
+            example:
+                shelterID: 6475e9630044288a2b4880b5
+                microchipID: A123456789
+                residenceType: rentHouse
+                hasRentPetPermission: 'true'
+                hasChildren: 'true'
+                childrenAges: '2,4'
+                hasOtherPets: 'true'
+                otherPetsInfo: 'Cat 1, Dog 2'
+                petAloneTime: '4'
+                hasPlayTimeParks: 'true'
+                petActivities: 'walking, playing around the house, swimming, sky diving'
+                handlePetIssues: 'i will pat him'
+                moveWithPet: 'i will take him with me'
+                canAffordPetsNeeds: 'true'
+                canAffordPetsMedical: 'true'
+                petTravelPlans: 'i will take him wherever i go'
+                petOutlivePlans: 'My friend, Alex will take care of him'
         AllApplicationsResponse:
             properties:
                 applications:
@@ -558,8 +569,12 @@ components:
             properties:
                 id:
                     type: string
+                    description: 'ID of application'
+                    example: 64b14bd7ba2fba2af4b5338d
                 visitDate:
                     type: string
+                    description: 'Date for visit'
+                    example: '2023-08-19T04:00:00Z'
             required:
                 - id
                 - visitDate
@@ -569,6 +584,8 @@ components:
             properties:
                 id:
                     type: string
+                    description: 'ID of application'
+                    example: 64b14bd7ba2fba2af4b5338d
                 status:
                     $ref: '#/components/schemas/Status'
             required:
@@ -607,6 +624,17 @@ components:
                 - canReview
             type: object
             additionalProperties: false
+        ShelterResponse:
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+            required:
+                - id
+                - name
+            type: object
+            additionalProperties: false
         ApplictionResponseShelter:
             properties:
                 shelterID:
@@ -638,7 +666,7 @@ components:
                     type: string
                 canAffordPetsNeeds:
                     type: boolean
-                canAffordPetsMediacal:
+                canAffordPetsMedical:
                     type: boolean
                 petTravelPlans:
                     type: string
@@ -674,7 +702,7 @@ components:
                 - handlePetIssues
                 - moveWithPet
                 - canAffordPetsNeeds
-                - canAffordPetsMediacal
+                - canAffordPetsMedical
                 - petTravelPlans
                 - petOutlivePlans
                 - id
@@ -1021,9 +1049,6 @@ paths:
                                     - message
                                     - code
                                 type: object
-                            examples:
-                                'Example 1':
-                                    value: {email: johndoe@example.com}
             summary: 'Checks if user''s new email already has a linked account'
             tags:
                 - Auth
@@ -1050,7 +1075,7 @@ paths:
                                 $ref: '#/components/schemas/TokenResponse'
                             examples:
                                 'Example 1':
-                                    value: {email: johndoe@example.com}
+                                    value: {tokens: {accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..., refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...}}
             summary: 'Changes user''s email'
             tags:
                 - Auth
@@ -1080,9 +1105,6 @@ paths:
                                     - message
                                     - code
                                 type: object
-                            examples:
-                                'Example 1':
-                                    value: {password: '123456'}
             summary: 'Checks if user''s entered password is correct'
             tags:
                 - Auth
@@ -1112,9 +1134,6 @@ paths:
                                     - message
                                     - code
                                 type: object
-                            examples:
-                                'Example 1':
-                                    value: {password: '123456'}
             summary: 'Changes user''s password'
             tags:
                 - Auth
@@ -1151,28 +1170,6 @@ paths:
                 -
                     bearerAuth: []
             parameters: []
-    /auth/shelters:
-        get:
-            operationId: GetShelters
-            responses:
-                '200':
-                    description: Ok
-                    content:
-                        application/json:
-                            schema:
-                                items:
-                                    $ref: '#/components/schemas/ShelterResponse'
-                                type: array
-                            examples:
-                                'Example 1':
-                                    value: {id: 60df5df17f4c6a01ac63491c, name: 'Furry Friends Sanctuary'}
-            summary: 'Returns ids and names of all shelters'
-            tags:
-                - Auth
-            security:
-                -
-                    bearerAuth: []
-            parameters: []
     /auth/requestPasswordReset:
         post:
             operationId: RequestPasswordReset
@@ -1189,9 +1186,6 @@ paths:
                                     - message
                                     - code
                                 type: object
-                            examples:
-                                'Example 1':
-                                    value: {email: johndoe@example.com}
             summary: 'Checks if user''s entered email has an associated account and create reset tokens'
             tags:
                 - Auth
@@ -1221,7 +1215,13 @@ paths:
             tags:
                 - Auth
             security: []
-            parameters: []
+            parameters:
+                -
+                    in: query
+                    name: resetToken
+                    required: true
+                    schema:
+                        type: string
     /auth/resetPassword:
         put:
             operationId: ResetPassword
@@ -1238,9 +1238,6 @@ paths:
                                     - message
                                     - code
                                 type: object
-                            examples:
-                                'Example 1':
-                                    value: {email: johndoe@example.com, newPassword: '123456'}
             summary: 'Changes user''s password'
             tags:
                 - Auth
@@ -1268,9 +1265,6 @@ paths:
                                     - message
                                     - code
                                 type: object
-                            examples:
-                                'Example 1':
-                                    value: {email: johndoe@example.com}
             summary: 'Sends email to user to provide alternate email to sign up as shelter'
             tags:
                 - Auth
@@ -1316,7 +1310,7 @@ paths:
                                 $ref: '#/components/schemas/AddPetResponse'
                             examples:
                                 'Example 1':
-                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: Male, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: Cat, activityNeeds: Low, levelOfGrooming: High, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false, shelterRating: 4.8}}
+                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: Male, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: Cat, activityNeeds: Low, levelOfGrooming: High, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: '300 USD', images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false, shelterRating: 4.8}}
             summary: 'Accepts pet info, adds pet to db and returns pet info'
             tags:
                 - Pet
@@ -1406,14 +1400,20 @@ paths:
                                 $ref: '#/components/schemas/AddPetResponse'
                             examples:
                                 'Example 1':
-                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: Male, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: Cat, activityNeeds: Low, levelOfGrooming: High, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: $300, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false, shelterRating: 4.8}}
+                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: Male, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: Cat, activityNeeds: Low, levelOfGrooming: High, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: '300 USD', images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false, shelterRating: 4.8}}
             summary: 'Returns details of a pet given its id'
             tags:
                 - Pet
             security:
                 -
                     bearerAuth: []
-            parameters: []
+            parameters:
+                -
+                    in: query
+                    name: id
+                    required: true
+                    schema:
+                        type: string
     /pet/all:
         get:
             operationId: GetAllPets
@@ -1426,7 +1426,7 @@ paths:
                                 $ref: '#/components/schemas/AllPetsResponse'
                             examples:
                                 'Example 1':
-                                    value: {pets: [{shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Fluffy, gender: Female, birthDate: '2001-01-01', color: White, breed: Persian, category: Cat, activityNeeds: Low, levelOfGrooming: High, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Fluffy is a calm and friendly cat...', traits: [Affectionate, independent], adoptionFee: $100, images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: true}, {shelterName: 'Furry Adoption Center', microchipID: B123456789, name: Buddy, gender: Male, birthDate: '2001-01-01', color: Brown, breed: 'Labrador Retriever', category: Dog, activityNeeds: High, levelOfGrooming: Medium, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Buddy is a playful and energetic dog...', traits: [Friendly, loyal], adoptionFee: $150, images: ['https://example.com/images/buddy1.jpg', 'https://example.com/images/buddy2.jpg'], hasAdoptionRequest: false, isAdopted: false}], totalPages: 5, colors: [White, Black, Brown], breeds: [Persian, 'Labrador Retriever', 'Golden Retriever'], genders: [Male, Female], ages: [1, 2, 3, 4, 5]}
+                                    value: {pets: [{shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Fluffy, gender: Female, birthDate: '2001-01-01', color: White, breed: Persian, category: Cat, activityNeeds: Low, levelOfGrooming: High, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Fluffy is a calm and friendly cat...', traits: [Affectionate, independent], adoptionFee: '100 USD', images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: true}, {shelterName: 'Furry Adoption Center', microchipID: B123456789, name: Buddy, gender: Male, birthDate: '2001-01-01', color: Brown, breed: 'Labrador Retriever', category: Dog, activityNeeds: High, levelOfGrooming: Medium, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Buddy is a playful and energetic dog...', traits: [Friendly, loyal], adoptionFee: '150 USD', images: ['https://example.com/images/buddy1.jpg', 'https://example.com/images/buddy2.jpg'], hasAdoptionRequest: false, isAdopted: false}], totalPages: 5, colors: [White, Black, Brown], breeds: [Persian, 'Labrador Retriever', 'Golden Retriever'], genders: [Male, Female], ages: [1, 2, 3, 4, 5]}
             summary: 'Returns all pets'
             tags:
                 - Pet
@@ -1496,7 +1496,7 @@ paths:
                                 $ref: '#/components/schemas/ApplictionResponseForUser'
                             examples:
                                 'Example 1':
-                                    value: {shelterID: 6475e9630044288a2b4880b5, microchipID: A123456789, residenceType: ownHouse, hasRentPetPermission: true, hasChildren: true, childrenAges: '2,6', hasOtherPets: true, otherPetsInfo: 'Cat 1, Dog 2', petAloneTime: 6, hasPlayTimeParks: true, petActivities: 'Playing fetch, walking', handlePetIssues: 'I will buy new shoes', moveWithPet: 'I will take him with me', canAffordPetsNeeds: true, canAffordPetsMediacal: true, petTravelPlans: 'I will take him wherever I go', petOutlivePlans: 'My pet will inherit my property and my friend Alex will take care of him'}
+                                    value: {application: {id: 64b14bd7ba2fba2af4b5338d, status: 'Under Review', submissionDate: '2020-01-20', petImage: 'https://example.com/images/fluffy.jpg', petName: Fluffy, shelterName: 'Animal Haven Shelter', shelterID: 6475e9630044288a2b4880b5, microchipID: A123456789, residenceType: ownHouse, hasRentPetPermission: true, hasChildren: true, childrenAges: '2,6', hasOtherPets: true, otherPetsInfo: 'Cat 1, Dog 2', petAloneTime: 6, hasPlayTimeParks: true, petActivities: 'Playing fetch, walking', handlePetIssues: 'I will buy new shoes', moveWithPet: 'I will take him with me', canAffordPetsNeeds: true, canAffordPetsMedical: true, petTravelPlans: 'I will take him wherever I go', petOutlivePlans: 'My pet will inherit my property and my friend Alex will take care of him'}, canReview: true}
             summary: 'Accepts application info and creates application if all fields are valid'
             tags:
                 - Application
@@ -1519,14 +1519,23 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/ApplictionResponseForUser'
+                            examples:
+                                'Example 1':
+                                    value: {application: {id: 64b14bd7ba2fba2af4b5338d, status: 'Under Review', submissionDate: '2020-01-20', petImage: 'https://example.com/images/fluffy.jpg', petName: Fluffy, shelterName: 'Animal Haven Shelter', shelterID: 6475e9630044288a2b4880b5, microchipID: A123456789, residenceType: ownHouse, hasRentPetPermission: true, hasChildren: true, childrenAges: '2,6', hasOtherPets: true, otherPetsInfo: 'Cat 1, Dog 2', petAloneTime: 6, hasPlayTimeParks: true, petActivities: 'Playing fetch, walking', handlePetIssues: 'I will buy new shoes', moveWithPet: 'I will take him with me', canAffordPetsNeeds: true, canAffordPetsMedical: true, petTravelPlans: 'I will take him wherever I go', petOutlivePlans: 'My pet will inherit my property and my friend Alex will take care of him'}, canReview: true}
             summary: 'Returns an application''s details given id'
             tags:
                 - Application
             security:
                 -
                     bearerAuth: []
-            parameters: []
-    /application/applications:
+            parameters:
+                -
+                    in: query
+                    name: id
+                    required: true
+                    schema:
+                        type: string
+    /application/all:
         get:
             operationId: GetApplications
             responses:
@@ -1536,6 +1545,9 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/AllApplicationsResponse'
+                            examples:
+                                'Example 1':
+                                    value: {applications: [{id: 64b14bd7ba2fba2af4b5338d, status: 'Under Review', submissionDate: '2020-01-20', petImage: 'https://example.com/images/fluffy.jpg', petName: Fluffy, shelterName: 'Animal Haven Shelter', shelterID: 6475e9630044288a2b4880b5, microchipID: A123456789, residenceType: ownHouse, hasRentPetPermission: true, hasChildren: true, childrenAges: '2,6', hasOtherPets: true, otherPetsInfo: 'Cat 1, Dog 2', petAloneTime: 6, hasPlayTimeParks: true, petActivities: 'Playing fetch, walking', handlePetIssues: 'I will buy new shoes', moveWithPet: 'I will take him with me', canAffordPetsNeeds: true, canAffordPetsMedical: true, petTravelPlans: 'I will take him wherever I go', petOutlivePlans: 'My pet will inherit my property and my friend Alex will take care of him', applicantName: 'John Doe', homeVisitDate: '2023-08-19T06:00:00Z', shelterVisitDate: '2023-09-02T04:00:00Z', homeVisitEmailSentDate: '2023-08-15T10:51:48.510Z', shelterVisitEmailSentDate: '2023-08-31T10:51:48.510Z'}, {id: 64b14bd7ba2fba2af4b5338e, status: Approved, submissionDate: '2020-02-25', petImage: 'https://example.com/images/buddy.jpg', petName: Buddy, shelterName: 'Furry Friends Shelter', shelterID: 6475e9630044288a2b4880b6, microchipID: A987654321, residenceType: rentHouse, hasRentPetPermission: true, hasChildren: false, childrenAges: "", hasOtherPets: false, otherPetsInfo: "", petAloneTime: 4, hasPlayTimeParks: true, petActivities: 'Running, hiking', handlePetIssues: 'I will provide training', moveWithPet: 'I will take him with me', canAffordPetsNeeds: true, canAffordPetsMedical: true, petTravelPlans: 'I have a trusted pet sitter', petOutlivePlans: 'My sister will take care of him', applicantName: 'Jane Smith', homeVisitDate: '2023-08-19T06:00:00Z', shelterVisitDate: '2023-09-02T04:00:00Z', homeVisitEmailSentDate: '2023-08-15T10:51:48.510Z', shelterVisitEmailSentDate: '2023-08-31T10:51:48.510Z'}], totalPages: 10, applicationStatuses: ['Under Review', Approved, Rejected]}
             summary: 'Returns list of applications of a user'
             tags:
                 - Application
@@ -1579,13 +1591,40 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/TimeSlotsResponse'
+                            examples:
+                                'Example 1':
+                                    value: {availableTimeSlots: ['9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00']}
             summary: 'Returns time slots available to shcedule visit on a particular day'
             tags:
                 - Application
             security:
                 -
                     bearerAuth: []
-            parameters: []
+            parameters:
+                -
+                    in: query
+                    name: shelterID
+                    required: true
+                    schema:
+                        type: string
+                -
+                    in: query
+                    name: petID
+                    required: true
+                    schema:
+                        type: string
+                -
+                    in: query
+                    name: visitDate
+                    required: true
+                    schema:
+                        type: string
+                -
+                    in: query
+                    name: visitType
+                    required: true
+                    schema:
+                        type: string
     /application/scheduleHomeVisit:
         post:
             operationId: ScheduleHomeVisit
@@ -1602,9 +1641,6 @@ paths:
                                     - message
                                     - code
                                 type: object
-                            examples:
-                                'Example 1':
-                                    value: {id: 6475e9630044288a2b4880b5, visitDate: '2020-01-01T12:00:00'}
             summary: 'Accepts application id and date for home visit and sends email to applicant and shelter'
             tags:
                 - Application
@@ -1634,9 +1670,6 @@ paths:
                                     - message
                                     - code
                                 type: object
-                            examples:
-                                'Example 1':
-                                    value: {id: 6475e9630044288a2b4880b5, visitDate: '2020-01-01T12:00:00'}
             summary: 'Accepts application id and date for shelter visit and sends email to applicant and shelter'
             tags:
                 - Application
@@ -1666,9 +1699,6 @@ paths:
                                     - message
                                     - code
                                 type: object
-                            examples:
-                                'Example 1':
-                                    value: {id: 6475e9630044288a2b4880b5, status: 'Under Review'}
             summary: 'Updates an application''s status'
             tags:
                 - Application
@@ -1701,6 +1731,34 @@ paths:
             security:
                 -
                     bearerAuth: []
+            parameters:
+                -
+                    in: query
+                    name: id
+                    required: true
+                    schema:
+                        type: string
+    /shelter/all:
+        get:
+            operationId: GetShelters
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: '#/components/schemas/ShelterResponse'
+                                type: array
+                            examples:
+                                'Example 1':
+                                    value: {id: 60df5df17f4c6a01ac63491c, name: 'Furry Friends Sanctuary'}
+            summary: 'Returns ids and names of all shelters'
+            tags:
+                - Shelter
+            security:
+                -
+                    bearerAuth: []
             parameters: []
     /shelter/application:
         get:
@@ -1718,7 +1776,13 @@ paths:
             security:
                 -
                     bearerAuth: []
-            parameters: []
+            parameters:
+                -
+                    in: query
+                    name: id
+                    required: true
+                    schema:
+                        type: string
     /shelter/invite:
         post:
             operationId: InviteShelter
@@ -1768,7 +1832,13 @@ paths:
             tags:
                 - Shelter
             security: []
-            parameters: []
+            parameters:
+                -
+                    in: query
+                    name: invitationToken
+                    required: true
+                    schema:
+                        type: string
     /review:
         post:
             operationId: AddReview
