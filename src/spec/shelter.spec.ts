@@ -28,8 +28,10 @@ import {
   removeAllApplications
 } from './utils/generateApplication'
 import { Application } from '../models/Application'
+import { generateAccessToken } from '../utils/generateAccessToken'
+import { VisitType } from '../models/Visit'
 
-describe('review', () => {
+describe('shelter', () => {
   beforeAll(async () => {
     await mongooseSetUp()
   })
@@ -56,13 +58,21 @@ describe('review', () => {
     })
 
     it('should successfully fetch the shelter', async () => {
+      const pet = await generatePetData()
+      await generateApplication(
+        pet.shelterID.toString(),
+        pet.microchipID,
+        'test@gmail.com',
+        '2020-01-20T06:00:00Z',
+        VisitType.Shelter
+      )
       const response = await request(app)
-        .get(`/shelter?id=${shelters[0]._id}`)
+        .get(`/shelter?id=${pet.shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
       expect(response.body).toBeDefined()
-      // expect(response.body.canReview).toEqual(false)
+      expect(response.body.canReview).toEqual(true)
     })
 
     it('should successfully fetch the shelter and user cannot review it', async () => {
@@ -73,7 +83,7 @@ describe('review', () => {
         .expect(200)
 
       expect(response.body).toBeDefined()
-      // expect(response.body.canReview).toEqual(true)
+      expect(response.body.canReview).toEqual(false)
     })
 
     it('should respond with Bad request if id is missing', async () => {
@@ -83,6 +93,80 @@ describe('review', () => {
         .expect(400)
 
       expect(response.text).toEqual(`"id" is required`)
+    })
+  })
+
+  describe('get all shelters', () => {
+    let adminUser: Admin
+
+    beforeEach(async () => {
+      // Generate shelters
+      await generateShelters()
+
+      // Generate an admin user and tokens for testing
+      adminUser = await generateAdminandTokens(Role.Admin)
+    })
+
+    afterEach(async () => {
+      // Clean up any existing data
+      await removeAllShelters()
+    })
+
+    it('should throw an error if the user is not an admin', async () => {
+      const user = await generateUserandTokens()
+
+      const response = await request(app)
+        .get('/shelter/all')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(403)
+
+      expect(response.text).toEqual('Permission denied')
+      expect(response.body).toEqual({})
+    })
+
+    it('should get all shelters successfully if user is an admin', async () => {
+      const response = await request(app)
+        .get('/shelter/all')
+        .auth(adminUser.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(Array.isArray(response.body)).toBe(true)
+      expect(response.body.length).toBeGreaterThanOrEqual(1)
+
+      response.body.forEach((shelter: any) => {
+        expect(shelter).toHaveProperty('id')
+        expect(shelter).toHaveProperty('name')
+      })
+    })
+
+    it('should return empty list if there are no shelters', async () => {
+      // remove all shelters
+      await removeAllShelters()
+
+      const response = await request(app)
+        .get(`/shelter/all`)
+        .auth(adminUser.tokens.accessToken, { type: 'bearer' })
+        .expect(200)
+
+      expect(Array.isArray(response.body)).toBe(true)
+      expect(response.body.length).toEqual(0)
+    })
+
+    it('should throw unauthorized if user is not authenticated', async () => {
+      const response = await request(app).get(`/shelter/all`).expect(401)
+
+      expect(response.text).toEqual('Unauthorized')
+    })
+
+    it('should throw user not found if user is false admin', async () => {
+      const nonAdminToken = generateAccessToken('falseadmin@gmail.com', 'ADMIN')
+      const response = await request(app)
+        .get(`/shelter/all`)
+        .auth(nonAdminToken, { type: 'bearer' })
+        .expect(404)
+
+      expect(response.text).toEqual('User not found')
+      expect(response.body).toEqual({})
     })
   })
 

@@ -1,12 +1,24 @@
 import { Model, Schema, model } from 'mongoose'
 
 export interface ReactivationRequestResponse {
+  /**
+   * Reason for not scheduling visit
+   * @example "I had an unexpected personal commitment that consumed my attention during that time, and I missed the scheduling window."
+   */
   reasonNotScheduled: string
+  /**
+   * Reason for requesting to reactivate
+   * @example "The commitment has been addressed, and I am now fully available to proceed with the visit scheduling."
+   */
   reasonToReactivate: string
 }
 
 export interface ReactivationRequestPayload
   extends ReactivationRequestResponse {
+  /**
+   * ID of application
+   * @example "6523d393da718fbc64f5b628"
+   */
   applicationID: string
 }
 

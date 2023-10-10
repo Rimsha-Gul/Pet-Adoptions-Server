@@ -26,7 +26,7 @@ export interface Application {
   handlePetIssues: string
   moveWithPet: string
   canAffordPetsNeeds: boolean
-  canAffordPetsMediacal: boolean
+  canAffordPetsMedical: boolean
   petTravelPlans: string
   petOutlivePlans: string
 }
@@ -47,7 +47,7 @@ export const generateApplicationData = (
     handlePetIssues: 'buy new furniture',
     moveWithPet: 'move with him',
     canAffordPetsNeeds: true,
-    canAffordPetsMediacal: true,
+    canAffordPetsMedical: true,
     petTravelPlans: 'travel wiith him',
     petOutlivePlans: 'friend will take care of him'
   }
@@ -73,7 +73,7 @@ export const generateApplication = async (
     handlePetIssues: 'buy new furniture',
     moveWithPet: 'move with him',
     canAffordPetsNeeds: true,
-    canAffordPetsMediacal: true,
+    canAffordPetsMedical: true,
     petTravelPlans: 'travel wiith him',
     petOutlivePlans: 'friend will take care of him',
     status: Status.HomeVisitRequested,
@@ -89,7 +89,7 @@ export const generateApplication = async (
     applicantEmail: applicantEmail
   })
 
-  if (visitType && visitDate)
+  if (visitType && visitDate) {
     await generateVisit(
       savedApplication?._id,
       shelterID,
@@ -98,6 +98,7 @@ export const generateApplication = async (
       visitDate,
       visitType
     )
+  }
 }
 
 export const generateApplications = async () => {
@@ -120,7 +121,7 @@ export const generateApplications = async () => {
       handlePetIssues: 'buy new furniture',
       moveWithPet: 'move with him',
       canAffordPetsNeeds: true,
-      canAffordPetsMediacal: true,
+      canAffordPetsMedical: true,
       petTravelPlans: 'travel wiith him',
       petOutlivePlans: 'friend will take care of him',
       status: Status.UnderReview
@@ -138,7 +139,7 @@ export const generateApplications = async () => {
       handlePetIssues: 'buy new furniture',
       moveWithPet: 'move with him',
       canAffordPetsNeeds: true,
-      canAffordPetsMediacal: true,
+      canAffordPetsMedical: true,
       petTravelPlans: 'travel wiith him',
       petOutlivePlans: 'friend will take care of him',
       status: Status.HomeVisitRequested
@@ -156,7 +157,7 @@ export const generateApplications = async () => {
       handlePetIssues: 'buy new furniture',
       moveWithPet: 'move with him',
       canAffordPetsNeeds: true,
-      canAffordPetsMediacal: true,
+      canAffordPetsMedical: true,
       petTravelPlans: 'travel wiith him',
       petOutlivePlans: 'friend will take care of him',
       status: Status.HomeVisitScheduled
@@ -174,7 +175,7 @@ export const generateApplications = async () => {
       handlePetIssues: 'buy new furniture',
       moveWithPet: 'move with him',
       canAffordPetsNeeds: true,
-      canAffordPetsMediacal: true,
+      canAffordPetsMedical: true,
       petTravelPlans: 'travel wiith him',
       petOutlivePlans: 'friend will take care of him',
       status: Status.HomeApproved
@@ -192,7 +193,7 @@ export const generateApplications = async () => {
       handlePetIssues: 'buy new furniture',
       moveWithPet: 'move with him',
       canAffordPetsNeeds: true,
-      canAffordPetsMediacal: true,
+      canAffordPetsMedical: true,
       petTravelPlans: 'travel wiith him',
       petOutlivePlans: 'friend will take care of him',
       status: Status.HomeRejected
@@ -210,7 +211,7 @@ export const generateApplications = async () => {
       handlePetIssues: 'buy new furniture',
       moveWithPet: 'move with him',
       canAffordPetsNeeds: true,
-      canAffordPetsMediacal: true,
+      canAffordPetsMedical: true,
       petTravelPlans: 'travel wiith him',
       petOutlivePlans: 'friend will take care of him',
       status: Status.UserVisitScheduled
@@ -228,7 +229,7 @@ export const generateApplications = async () => {
       handlePetIssues: 'buy new furniture',
       moveWithPet: 'move with him',
       canAffordPetsNeeds: true,
-      canAffordPetsMediacal: true,
+      canAffordPetsMedical: true,
       petTravelPlans: 'travel wiith him',
       petOutlivePlans: 'friend will take care of him',
       status: Status.Approved
@@ -246,7 +247,7 @@ export const generateApplications = async () => {
       handlePetIssues: 'buy new furniture',
       moveWithPet: 'move with him',
       canAffordPetsNeeds: true,
-      canAffordPetsMediacal: true,
+      canAffordPetsMedical: true,
       petTravelPlans: 'travel wiith him',
       petOutlivePlans: 'friend will take care of him',
       status: Status.Rejected
@@ -264,7 +265,7 @@ export const generateApplications = async () => {
       handlePetIssues: 'buy new furniture',
       moveWithPet: 'move with him',
       canAffordPetsNeeds: true,
-      canAffordPetsMediacal: true,
+      canAffordPetsMedical: true,
       petTravelPlans: 'travel wiith him',
       petOutlivePlans: 'friend will take care of him',
       status: Status.Closed

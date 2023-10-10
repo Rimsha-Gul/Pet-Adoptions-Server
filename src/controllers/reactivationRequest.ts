@@ -5,11 +5,10 @@ import {
   ReactivationRequestPayload,
   ReactivationRequestResponse
 } from '../models/ReactivationRequest'
-import { Body, Example, Get, Post, Request, Route, Security, Tags } from 'tsoa'
+import { Body, Example, Get, Post, Query, Route, Security, Tags } from 'tsoa'
 import { Role, User } from '../models/User'
 import { getReactivationRequestEmail } from '../data/emailMessages'
 import { sendEmail } from '../middleware/sendEmail'
-import { UserRequest } from '../types/Request'
 
 @Route('reactivationRequest')
 @Tags('ReactivationRequest')
@@ -18,7 +17,6 @@ export class ReactivationRequestController {
    * @summary Accepts reactivation request and sends email to shelter
    *
    */
-  @Example<ReactivationRequestPayload>(reactivationRequestExample)
   @Security('bearerAuth')
   @Post('/')
   public async requestReactivation(@Body() body: ReactivationRequestPayload) {
@@ -29,12 +27,13 @@ export class ReactivationRequestController {
    * @summary Returns the reactivation request associated with given application ID
    *
    */
+  @Example<ReactivationRequestResponse>(reactivationRequestExample)
   @Security('bearerAuth')
   @Get('/')
   public async getReactivationRequest(
-    @Request() req: UserRequest
+    @Query() applicationID: string
   ): Promise<ReactivationRequestResponse> {
-    return getReactivationRequest(req)
+    return getReactivationRequest(applicationID)
   }
 }
 
@@ -83,12 +82,12 @@ const requestReactivation = async (body: ReactivationRequestPayload) => {
 }
 
 const getReactivationRequest = async (
-  req: UserRequest
+  applicationID: string
 ): Promise<ReactivationRequestResponse> => {
-  const application = await Application.findById(req.query.id)
+  const application = await Application.findById(applicationID)
   if (!application) throw { code: 404, message: 'Application not found' }
   const request = await ReactivationRequest.findOne({
-    applicationID: req.query.id
+    applicationID: applicationID
   })
 
   if (!request) throw { code: 404, message: 'Reactivation Request not found' }

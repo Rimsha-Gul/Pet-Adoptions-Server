@@ -163,6 +163,11 @@ export const idValidation = (data: any): Joi.ValidationResult =>
     id: objectIDSchema.required()
   }).validate(data)
 
+export const applicationIDValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    applicationID: objectIDSchema.required()
+  }).validate(data)
+
 export const updateApplicationStatusValidation = (
   data: any
 ): Joi.ValidationResult =>
@@ -181,7 +186,7 @@ export const getTimeSlotsValidation = (data: any): Joi.ValidationResult =>
 
 export const scheduleVisitValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    id: objectIDSchema.required(),
+    applicationID: objectIDSchema.required(),
     visitDate: Joi.date().greater(today).less(weekFromNow).required()
   }).validate(data)
 
@@ -194,7 +199,7 @@ export const addReviewValidation = (data: any): Joi.ValidationResult =>
 
 export const getAllReviewsValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    id: objectIDSchema.required(),
+    shelterID: objectIDSchema.required(),
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).default(6)
   }).validate(data)

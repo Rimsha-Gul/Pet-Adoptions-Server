@@ -149,7 +149,7 @@ const getApplicationDetails = async (
   id: string
 ): Promise<ApplictionResponseForShelter> => {
   const application = await Application.findOne({
-    id,
+    _id: id,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     shelterID: req.user!._id
   })

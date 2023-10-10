@@ -35,7 +35,7 @@ authRouter.post('/signup', async (req, res) => {
 })
 
 authRouter.post(
-  '/sendVerificationCode',
+  '/verificationCode',
   conditionalAuthenticateAccessToken,
   async (req, res) => {
     const { error } = sendVerificationCodeValidation(req.body)

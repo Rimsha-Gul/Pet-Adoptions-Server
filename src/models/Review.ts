@@ -1,8 +1,20 @@
 import { Model, Schema, model } from 'mongoose'
 
 export interface ReviewPayload {
+  /**
+   * ID of shelter
+   * @example "6475e9630044288a2b4880b5"
+   */
   shelterID: string
+  /**
+   * User's given rating of shelter
+   * @example "5"
+   */
   rating: number
+  /**
+   * User's given review text of shelter
+   * @example "Animal Haven Shelter provided an incredibly positive adoption experience. Highly recommended for anyone looking to adopt a pet."
+   */
   reviewText: string
 }
 

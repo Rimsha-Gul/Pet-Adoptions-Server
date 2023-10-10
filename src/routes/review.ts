@@ -25,11 +25,11 @@ reviewRouter.get('/all', authenticateAccessToken, async (req, res) => {
   const { error } = getAllReviewsValidation(req.query)
   if (error) return res.status(400).send(error.details[0].message)
   try {
-    const { page = '1', limit = '3' } = req.query
+    const { shelterID, page = '1', limit = '3' } = req.query
     const response = await controller.getReviews(
+      shelterID as string,
       parseInt(page as string),
-      parseInt(limit as string),
-      req
+      parseInt(limit as string)
     )
     return res.send(response)
   } catch (err: any) {

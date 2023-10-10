@@ -67,7 +67,7 @@ export class AuthController {
    * @summary Generates a 6-digit code and sends it
    *
    */
-  @Post('/sendVerificationCode')
+  @Post('/verificationCode')
   public async sendVerificationCode(
     @Body() body: SendCodePayload,
     @Request() req: UserRequest

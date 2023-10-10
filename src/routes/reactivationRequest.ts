@@ -3,7 +3,7 @@ import { ReactivationRequestController } from '../controllers/reactivationReques
 import { authenticateAccessToken } from '../middleware/authenticateToken'
 import { isUser } from '../middleware/isUser'
 import {
-  idValidation,
+  applicationIDValidation,
   requestReactivationValidation
 } from '../utils/validation'
 
@@ -30,10 +30,11 @@ reactivationRequestRouter.get(
   '/',
   authenticateAccessToken,
   async (req, res) => {
-    const { error } = idValidation(req.query)
+    const { error } = applicationIDValidation(req.query)
     if (error) return res.status(400).send(error.details[0].message)
     try {
-      const response = await controller.getReactivationRequest(req)
+      const applicationID = req.query.applicationID as string
+      const response = await controller.getReactivationRequest(applicationID)
       return res.send(response)
     } catch (err: any) {
       return res.status(err.code).send(err.message)

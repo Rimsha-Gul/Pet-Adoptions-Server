@@ -333,7 +333,7 @@ describe('reactivationRequest', () => {
 
     it('should successfully return details of the reactivation request', async () => {
       const response = await request(app)
-        .get(`/reactivationRequest?id=${applicationID}`)
+        .get(`/reactivationRequest?applicationID=${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -343,7 +343,7 @@ describe('reactivationRequest', () => {
     it('should throw error if reactivation request against that applicationID does not exist', async () => {
       await removeAllReactivationRequests()
       const response = await request(app)
-        .get(`/reactivationRequest?id=${applicationID}`)
+        .get(`/reactivationRequest?applicationID=${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(404)
 
@@ -353,7 +353,7 @@ describe('reactivationRequest', () => {
     it('should throw error if the corresponding applicationID does not exist', async () => {
       await removeAllApplications()
       const response = await request(app)
-        .get(`/reactivationRequest?id=${applicationID}`)
+        .get(`/reactivationRequest?applicationID=${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(404)
 
@@ -362,34 +362,40 @@ describe('reactivationRequest', () => {
 
     it('should throw Bad Request if applicationID length is less than 24 chaaracters', async () => {
       const response = await request(app)
-        .get(`/reactivationRequest?id=12345`)
+        .get(`/reactivationRequest?applicationID=12345`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
-      expect(response.text).toEqual('"id" length must be 24 characters long')
+      expect(response.text).toEqual(
+        '"applicationID" length must be 24 characters long'
+      )
     })
 
     it('should throw Bad Request if applicationID length is greater than 24 chaaracters', async () => {
       const response = await request(app)
-        .get(`/reactivationRequest?id=1234567890123456789012345`)
+        .get(`/reactivationRequest?applicationID=1234567890123456789012345`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
-      expect(response.text).toEqual('"id" length must be 24 characters long')
+      expect(response.text).toEqual(
+        '"applicationID" length must be 24 characters long'
+      )
     })
 
     it('should throw Bad Request if applicationID is missing', async () => {
       const response = await request(app)
-        .get(`/reactivationRequest?id=`)
+        .get(`/reactivationRequest?applicationID=`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
-      expect(response.text).toEqual('"id" is not allowed to be empty')
+      expect(response.text).toEqual(
+        '"applicationID" is not allowed to be empty'
+      )
     })
 
     it('should throw Unauthorized if token is missing', async () => {
       const response = await request(app)
-        .get(`/reactivationRequest?id=${applicationID}`)
+        .get(`/reactivationRequest?applicationID=${applicationID}`)
         .expect(401)
 
       expect(response.text).toEqual('Unauthorized')

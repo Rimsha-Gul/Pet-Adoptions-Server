@@ -275,7 +275,7 @@ describe('review', () => {
 
     it('should fetch the first page of reviews and return 200', async () => {
       const response = await request(app)
-        .get(`/review/all?id=${shelters[0]._id}`)
+        .get(`/review/all?shelterID=${shelters[0]._id}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -286,7 +286,7 @@ describe('review', () => {
 
     it('should fetch the second page of reviews and return 200', async () => {
       const response = await request(app)
-        .get(`/review/all?id=${shelters[0]._id}&page=2`)
+        .get(`/review/all?shelterID=${shelters[0]._id}&page=2`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -297,7 +297,7 @@ describe('review', () => {
 
     it('should fetch the first 4 reviews and return 200', async () => {
       const response = await request(app)
-        .get(`/review/all?id=${shelters[0]._id}&limit=4`)
+        .get(`/review/all?shelterID=${shelters[0]._id}&limit=4`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -308,7 +308,7 @@ describe('review', () => {
 
     it('should handle non-existing pages', async () => {
       const response = await request(app)
-        .get(`/review/all?id=${shelters[0]._id}&page=3`)
+        .get(`/review/all?shelterID=${shelters[0]._id}&page=3`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -323,13 +323,13 @@ describe('review', () => {
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
-      expect(response.text).toEqual('"id" is required')
+      expect(response.text).toEqual('"shelterID" is required')
     })
 
     it('should return an error for non-existent shelter', async () => {
       await removeAllShelters()
       const response = await request(app)
-        .get(`/review/all?id=${shelters[0]._id}`)
+        .get(`/review/all?shelterID=${shelters[0]._id}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(404)
 
@@ -346,7 +346,7 @@ describe('review', () => {
 
     it('should respond with Bad Request if limit value is invalid', async () => {
       const response = await request(app)
-        .get(`/review/all?id=${shelters[0]._id}&limit=-1`) // Invalid limit
+        .get(`/review/all?shelterID=${shelters[0]._id}&limit=-1`) // Invalid limit
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -357,7 +357,7 @@ describe('review', () => {
 
     it('should respond with Bad Request if page number is invalid', async () => {
       const response = await request(app)
-        .get(`/review/all?id=${shelters[0]._id}&page=-1`) // Invalid page
+        .get(`/review/all?shelterID=${shelters[0]._id}&page=-1`) // Invalid page
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -366,7 +366,7 @@ describe('review', () => {
 
     it('should respond with Bad Request if limit is a string', async () => {
       const response = await request(app)
-        .get(`/review/all?id=${shelters[0]._id}&limit=limit`)
+        .get(`/review/all?shelterID=${shelters[0]._id}&limit=limit`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -375,7 +375,7 @@ describe('review', () => {
 
     it('should respond with Bad Request if page is a string', async () => {
       const response = await request(app)
-        .get(`/review/all?id=${shelters[0]._id}&page=page`)
+        .get(`/review/all?shelterID=${shelters[0]._id}&page=page`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 

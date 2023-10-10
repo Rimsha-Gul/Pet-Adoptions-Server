@@ -7,6 +7,7 @@ import {
 } from '../models/Review'
 import {
   Body,
+  Example,
   Get,
   Post,
   Put,
@@ -17,6 +18,7 @@ import {
   Tags
 } from 'tsoa'
 import { User } from '../models/User'
+import { reviewsResponseExample } from '../examples/review'
 
 @Route('review')
 @Tags('Review')
@@ -38,14 +40,15 @@ export class ReviewController {
    * @summary Returns all reviews of a specific shelter
    *
    */
+  @Example<ReviewsResponse>(reviewsResponseExample)
   @Security('bearerAuth')
   @Get('/all')
   public async getReviews(
+    @Query() shelterID: string,
     @Query('page') page: number,
-    @Query('limit') limit: number,
-    @Request() req: UserRequest
+    @Query('limit') limit: number
   ): Promise<ReviewsResponse> {
-    return getReviews(page, limit, req)
+    return getReviews(shelterID, page, limit)
   }
 
   /**
@@ -108,12 +111,11 @@ const addReview = async (body: ReviewPayload, req: UserRequest) => {
 }
 
 const getReviews = async (
+  shelterID: string,
   page: number,
-  limit: number,
-  req: UserRequest
+  limit: number
 ): Promise<ReviewsResponse> => {
   const skip = (page - 1) * limit
-  const shelterID = req.query.id
 
   const shelter = await User.findOne({ _id: shelterID })
 

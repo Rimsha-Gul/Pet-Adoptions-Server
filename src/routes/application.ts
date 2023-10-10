@@ -94,7 +94,7 @@ applicationRouter.get(
 )
 
 applicationRouter.post(
-  '/scheduleHomeVisit',
+  '/homeVisit',
   authenticateAccessToken,
   isUser,
   async (req, res) => {
@@ -104,14 +104,13 @@ applicationRouter.post(
       const response = await controller.scheduleHomeVisit(req.body)
       return res.send(response)
     } catch (err: any) {
-      console.log(err)
       return res.status(err.code).send(err.message)
     }
   }
 )
 
 applicationRouter.post(
-  '/scheduleShelterVisit',
+  '/shelterVisit',
   authenticateAccessToken,
   isShelter,
   async (req, res) => {
@@ -127,7 +126,7 @@ applicationRouter.post(
 )
 
 applicationRouter.put(
-  '/updateStatus',
+  '/status',
   authenticateAccessToken,
   isShelter,
   async (req, res) => {

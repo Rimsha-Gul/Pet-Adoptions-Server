@@ -2,7 +2,6 @@ import {
   EmailChangeRequest,
   EmailPayload,
   ResetPasswordPayload,
-  Role,
   SendCodePayload,
   User as UserModel
 } from '../models/User'
@@ -10,9 +9,7 @@ import { generateAccessToken } from '../utils/generateAccessToken'
 import { generateRefreshToken } from '../utils/generateRefreshToken'
 import { app } from '../app'
 import {
-  Admin,
   User,
-  generateAdminandTokens,
   generateUserNotVerifiedandTokens,
   generateUserandTokens,
   removeAllUsers
@@ -23,7 +20,6 @@ import * as generateEmailModule from '../utils/generateVerificationCode'
 import * as sendEmailModule from '../middleware/sendEmail'
 import * as generateResetTokenModule from '../utils/generateResetToken'
 import sinon from 'sinon'
-import { generateShelters, removeAllShelters } from './utils/generateShelters'
 import tmp from 'tmp-promise'
 import multer from 'multer'
 import express from 'express'
@@ -433,7 +429,7 @@ describe('auth', () => {
     })
   })
 
-  describe('sendVerificationCode', () => {
+  describe('verificationCode', () => {
     let user: User
     let payload: SendCodePayload
     let generateVerificationCodeSpy: jest.SpyInstance
@@ -469,7 +465,7 @@ describe('auth', () => {
       const testUser = await generateUserNotVerifiedandTokens() // for sending first time (if veriificationCode.code does not exist)
       payload.email = testUser.email
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(payload)
         .expect(200)
 
@@ -485,7 +481,7 @@ describe('auth', () => {
 
     it('should throw error if user is already verified', async () => {
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(payload)
         .expect(422)
 
@@ -502,7 +498,7 @@ describe('auth', () => {
       payload.email = testUser.email
 
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(payload)
         .expect(500)
 
@@ -512,7 +508,7 @@ describe('auth', () => {
     it('should throw an error if user does not exist', async () => {
       payload.email = 'nonexistentuser@test.com' // Assign a non-existent email
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(payload)
         .expect(404)
 
@@ -525,7 +521,7 @@ describe('auth', () => {
 
       // Send the request without that header.
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(payload)
         .expect(401)
 
@@ -537,7 +533,7 @@ describe('auth', () => {
       payload.emailChangeRequest = EmailChangeRequest.newEmailStep
 
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(200)
@@ -557,7 +553,7 @@ describe('auth', () => {
     it('should respond with Bad Request if email is missing', async () => {
       const incompletePayload = {}
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(incompletePayload)
         .expect(400)
 
@@ -568,7 +564,7 @@ describe('auth', () => {
     it('should respond with Bad Request if email is empty', async () => {
       payload.email = ''
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(payload)
         .expect(400)
 
@@ -579,7 +575,7 @@ describe('auth', () => {
     it('should respond with Bad Request if emailChangeRequest is string', async () => {
       const incorrectPayload = { email: user.email, emailChangeRequest: 'test' }
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(incorrectPayload)
         .expect(400)
 
@@ -592,7 +588,7 @@ describe('auth', () => {
     it('should respond with Bad Request if emailChangeRequest is number', async () => {
       const incorrectPayload = { email: user.email, emailChangeRequest: 1 }
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(incorrectPayload)
         .expect(400)
 
@@ -606,7 +602,7 @@ describe('auth', () => {
       payload.email = 'test@gmailcom'
 
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(payload)
         .expect(400)
 
@@ -618,7 +614,7 @@ describe('auth', () => {
       const incorrectPayload = { email: 1 }
 
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(incorrectPayload)
         .expect(400)
 
@@ -1525,80 +1521,6 @@ describe('auth', () => {
       const response = await request(app)
         .delete(`/auth/logout`)
         .auth(invalidAccessToken, { type: 'bearer' })
-        .expect(404)
-
-      expect(response.text).toEqual('User not found')
-      expect(response.body).toEqual({})
-    })
-  })
-
-  describe('getShelters', () => {
-    let adminUser: Admin
-
-    beforeEach(async () => {
-      // Generate shelters
-      await generateShelters()
-
-      // Generate an admin user and tokens for testing
-      adminUser = await generateAdminandTokens(Role.Admin)
-    })
-
-    afterEach(async () => {
-      // Clean up any existing data
-      await removeAllShelters()
-    })
-
-    it('should throw an error if the user is not an admin', async () => {
-      const user = await generateUserandTokens()
-
-      const response = await request(app)
-        .get('/auth/shelters')
-        .auth(user.tokens.accessToken, { type: 'bearer' })
-        .expect(403)
-
-      expect(response.text).toEqual('Permission denied')
-      expect(response.body).toEqual({})
-    })
-
-    it('should get all shelters successfully if user is an admin', async () => {
-      const response = await request(app)
-        .get('/auth/shelters')
-        .auth(adminUser.tokens.accessToken, { type: 'bearer' })
-        .expect(200)
-
-      expect(Array.isArray(response.body)).toBe(true)
-      expect(response.body.length).toBeGreaterThanOrEqual(1)
-
-      response.body.forEach((shelter: any) => {
-        expect(shelter).toHaveProperty('id')
-        expect(shelter).toHaveProperty('name')
-      })
-    })
-
-    it('should return empty list if there are no shelters', async () => {
-      // remove all shelters
-      await removeAllShelters()
-
-      const response = await request(app)
-        .get(`/auth/shelters`)
-        .auth(adminUser.tokens.accessToken, { type: 'bearer' })
-        .expect(200)
-
-      expect(Array.isArray(response.body)).toBe(true)
-      expect(response.body.length).toEqual(0)
-    })
-
-    it('should throw unauthorized if user is not authenticated', async () => {
-      const response = await request(app).get(`/auth/shelters`).expect(401)
-
-      expect(response.text).toEqual('Unauthorized')
-    })
-
-    it('should throw user not found if user is false admin', async () => {
-      const nonAdminToken = generateAccessToken('falseadmin@gmail.com', 'ADMIN')
-      const response = await request(app)
-        .get(`/auth/shelters`)
-        .auth(nonAdminToken, { type: 'bearer' })
         .expect(404)
 
       expect(response.text).toEqual('User not found')

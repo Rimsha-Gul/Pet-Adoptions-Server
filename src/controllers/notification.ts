@@ -3,9 +3,20 @@ import Notification, {
   AllNotificationsResponse,
   NotificationPayload
 } from '../models/Notification'
-import { Body, Get, Put, Query, Request, Route, Security, Tags } from 'tsoa'
+import {
+  Body,
+  Example,
+  Get,
+  Put,
+  Query,
+  Request,
+  Route,
+  Security,
+  Tags
+} from 'tsoa'
 import { UserRequest } from '../types/Request'
 import { User } from '../models/User'
+import { notificationsResponseExample } from '../examples/notification'
 
 @Route('notification')
 @Security('bearerAuth')
@@ -15,6 +26,7 @@ export class NotificationController {
    * @summary Returns all notifications of the user
    *
    */
+  @Example<AllNotificationsResponse>(notificationsResponseExample)
   @Get('/')
   public async getallNotifications(
     @Query('page') page: number,

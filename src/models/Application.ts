@@ -76,7 +76,7 @@ export interface ScheduleHomeVisitPayload {
    * ID of application
    * @example "64b14bd7ba2fba2af4b5338d"
    */
-  id: string
+  applicationID: string
   /**
    * Date for visit
    * @example "2023-08-19T04:00:00Z"
