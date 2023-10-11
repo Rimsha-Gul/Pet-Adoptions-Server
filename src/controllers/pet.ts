@@ -10,6 +10,7 @@ import {
   Example,
   FormField,
   Get,
+  Path,
   Post,
   Query,
   Request,
@@ -91,15 +92,17 @@ export class PetController {
   /**
    * @summary Returns details of a pet given its id
    *
+   * @param petID ID of the pet
+   * @example petID "A123456789"
    */
   @Example<AddPetResponse>(petResponseExample)
   @Security('bearerAuth')
-  @Get('/')
+  @Get('/:petID')
   public async getPetDetails(
     @Request() req: ExpressRequest,
-    @Query() id: string
+    @Path() petID: string
   ): Promise<AddPetResponse> {
-    return getPetDetails(req, id)
+    return getPetDetails(req, petID)
   }
 
   /**
@@ -108,7 +111,7 @@ export class PetController {
    */
   @Example<AllPetsResponse>(petsResponseExample)
   @Security('bearerAuth')
-  @Get('/all')
+  @Get('/')
   public async getAllPets(
     @Query('page') page: number,
     @Query('limit') limit: number,
@@ -223,9 +226,8 @@ const addPet = async (
 
 const getPetDetails = async (
   req: UserRequest,
-  id: string
+  petID: string
 ): Promise<AddPetResponse> => {
-  const petID = id
   const pet = await Pet.findOne({ microchipID: petID })
   if (!pet) throw { code: 404, message: 'Pet not found' }
 

@@ -28,13 +28,14 @@ notificationRouter.get('/', authenticateAccessToken, async (req, res) => {
 })
 
 notificationRouter.put(
-  '/markAsRead',
+  '/:notificationID/read',
   authenticateAccessToken,
   async (req, res) => {
-    const { error } = idValidation(req.body)
+    const notificationID = req.params.notificationID as string
+    const { error } = idValidation({ id: notificationID })
     if (error) return res.status(400).send(error.details[0].message)
     try {
-      const response = await controller.markAsRead(req.body)
+      const response = await controller.markAsRead(notificationID)
       return res.send(response)
     } catch (err: any) {
       return res.status(err.code).send(err.message)

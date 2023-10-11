@@ -71,7 +71,7 @@ export const emailValidation = (data: any): Joi.ValidationResult =>
     email: emailSchema.required()
   }).validate(data)
 
-export const checkPasswordValidation = (data: any): Joi.ValidationResult =>
+export const passwordValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
     password: passwordSchema.required()
   }).validate(data)
@@ -102,7 +102,7 @@ export const addPetValidation = (data: any): Joi.ValidationResult =>
 
 export const getPetValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    id: Joi.string().length(10).required()
+    petID: Joi.string().length(10).required()
   }).validate(data)
 
 export const getAllPetsValidation = (data: any): Joi.ValidationResult =>

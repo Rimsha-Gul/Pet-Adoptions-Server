@@ -83,7 +83,7 @@ describe('application', () => {
 
     it('should successfully create an application for the pet by the user', async () => {
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(200)
@@ -106,7 +106,7 @@ describe('application', () => {
       application.otherPetsInfo = 'Cat 1'
 
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(200)
@@ -124,7 +124,7 @@ describe('application', () => {
       await PetModel.deleteOne({ microchipID: 'A123456789' })
 
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(404)
@@ -136,7 +136,7 @@ describe('application', () => {
       await UserModel.deleteOne({ email: 'shelter1@test.com' })
 
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(404)
@@ -150,7 +150,7 @@ describe('application', () => {
 
       // Try to make the same application again
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -160,7 +160,7 @@ describe('application', () => {
 
     it('should throw error if shelter tries to apply for a pet', async () => {
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(403)
@@ -170,7 +170,7 @@ describe('application', () => {
 
     it('should throw Unauthorized error if token is not provided', async () => {
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .send(application)
         .expect(401)
 
@@ -180,7 +180,7 @@ describe('application', () => {
     it('should respond with Bad Request if shelterID is missing', async () => {
       application.shelterID = undefined
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -191,7 +191,7 @@ describe('application', () => {
     it('should respond with Bad Request if microchipID is missing', async () => {
       application.microchipID = undefined
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -202,7 +202,7 @@ describe('application', () => {
     it('should respond with Bad Request if residenceType is missing', async () => {
       application.residenceType = undefined
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -213,7 +213,7 @@ describe('application', () => {
     it('should respond with Bad Request if hasChildren is missing', async () => {
       application.hasChildren = undefined
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -224,7 +224,7 @@ describe('application', () => {
     it('should respond with Bad Request if hasOtherPets is missing', async () => {
       application.hasOtherPets = undefined
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -235,7 +235,7 @@ describe('application', () => {
     it('should respond with Bad Request if petAloneTime is missing', async () => {
       application.petAloneTime = undefined
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -246,7 +246,7 @@ describe('application', () => {
     it('should respond with Bad Request if hasPlayTimeParks is missing', async () => {
       application.hasPlayTimeParks = undefined
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -257,7 +257,7 @@ describe('application', () => {
     it('should respond with Bad Request if petActivities is missing', async () => {
       application.petActivities = undefined
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -268,7 +268,7 @@ describe('application', () => {
     it('should respond with Bad Request if handlePetIssues is missing', async () => {
       application.handlePetIssues = undefined
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -279,7 +279,7 @@ describe('application', () => {
     it('should respond with Bad Request if moveWithPet is missing', async () => {
       application.moveWithPet = undefined
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -290,7 +290,7 @@ describe('application', () => {
     it('should respond with Bad Request if canAffordPetsNeeds is missing', async () => {
       application.canAffordPetsNeeds = undefined
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -301,7 +301,7 @@ describe('application', () => {
     it('should respond with Bad Request if canAffordPetsMedical is missing', async () => {
       application.canAffordPetsMedical = undefined
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -312,7 +312,7 @@ describe('application', () => {
     it('should respond with Bad Request if petTravelPlans is missing', async () => {
       application.petTravelPlans = undefined
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -323,7 +323,7 @@ describe('application', () => {
     it('should respond with Bad Request if petOutlivePlans is missing', async () => {
       application.petOutlivePlans = undefined
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -334,7 +334,7 @@ describe('application', () => {
     it('should respond with Bad Request if residenceType is rent and hasRentPetPermission is missing', async () => {
       application.residenceType = ResidenceType.Rent
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -345,7 +345,7 @@ describe('application', () => {
     it('should respond with Bad Request if hasChildren is true and childrenAges is missing', async () => {
       application.hasChildren = true
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -356,7 +356,7 @@ describe('application', () => {
     it('should respond with Bad Request if hasOtherPets is true and otherPetsInfo is missing', async () => {
       application.hasOtherPets = true
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -367,7 +367,7 @@ describe('application', () => {
     it('should respond with Bad Request if microchipID is empty', async () => {
       application.microchipID = ''
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -378,7 +378,7 @@ describe('application', () => {
     it('should respond with Bad Request if petActivities is empty', async () => {
       application.petActivities = ''
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -389,7 +389,7 @@ describe('application', () => {
     it('should respond with Bad Request if handlePetIssues is empty', async () => {
       application.handlePetIssues = ''
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -400,7 +400,7 @@ describe('application', () => {
     it('should respond with Bad Request if moveWithPet is empty', async () => {
       application.moveWithPet = ''
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -411,7 +411,7 @@ describe('application', () => {
     it('should respond with Bad Request if petTravelPlans is empty', async () => {
       application.petTravelPlans = ''
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -422,7 +422,7 @@ describe('application', () => {
     it('should respond with Bad Request if petOutlivePlans is empty', async () => {
       application.petOutlivePlans = ''
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -434,7 +434,7 @@ describe('application', () => {
       application.hasChildren = true
       application.childrenAges = ''
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -446,7 +446,7 @@ describe('application', () => {
       application.hasOtherPets = true
       application.otherPetsInfo = ''
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -457,7 +457,7 @@ describe('application', () => {
     it('should respond with Bad Request if shelterID is less than 24 characters', async () => {
       application.shelterID = '12345'
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -470,7 +470,7 @@ describe('application', () => {
     it('should respond with Bad Request if shelterID is greater than 24 characters long', async () => {
       application.shelterID = '1234567890123456789012345'
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -483,7 +483,7 @@ describe('application', () => {
     it('should respond with Bad Request if shelterID is a number', async () => {
       application.shelterID = 12345
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -494,7 +494,7 @@ describe('application', () => {
     it('should respond with Bad Request if microchipID is less than 10 characters long', async () => {
       application.microchipID = '12345'
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -507,7 +507,7 @@ describe('application', () => {
     it('should respond with Bad Request if microchipID is greater than 10 characters long', async () => {
       application.microchipID = 'A1234567890'
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -520,7 +520,7 @@ describe('application', () => {
     it('should respond with Bad Request if microchipID is a number', async () => {
       application.microchipID = 1234567890
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -531,7 +531,7 @@ describe('application', () => {
     it('should respond with Bad Request if residenceType is invalid', async () => {
       application.residenceType = 'PrivateIsland'
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -544,7 +544,7 @@ describe('application', () => {
     it('should respond with Bad Request if hasChildren is a number', async () => {
       application.hasChildren = 2
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -555,7 +555,7 @@ describe('application', () => {
     it('should respond with Bad Request if hasOtherPets is a number', async () => {
       application.hasOtherPets = 2
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -566,7 +566,7 @@ describe('application', () => {
     it('should respond with Bad Request if petAloneTime is a string', async () => {
       application.petAloneTime = 'abc'
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -577,7 +577,7 @@ describe('application', () => {
     it('should respond with Bad Request if petAloneTime is a negative number', async () => {
       application.petAloneTime = -1
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -590,7 +590,7 @@ describe('application', () => {
     it('should respond with Bad Request if petAloneTime is greater than 24', async () => {
       application.petAloneTime = 25
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -603,7 +603,7 @@ describe('application', () => {
     it('should respond with Bad Request if hasPlayTimeParks is a number', async () => {
       application.hasPlayTimeParks = 1
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -614,7 +614,7 @@ describe('application', () => {
     it('should respond with Bad Request if petActivities is a number', async () => {
       application.petActivities = 1
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -625,7 +625,7 @@ describe('application', () => {
     it('should respond with Bad Request if handlePetIssues is a number', async () => {
       application.handlePetIssues = 1
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -636,7 +636,7 @@ describe('application', () => {
     it('should respond with Bad Request if moveWithPet is a number', async () => {
       application.moveWithPet = 1
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -647,7 +647,7 @@ describe('application', () => {
     it('should respond with Bad Request if canAffordPetsNeeds is a number', async () => {
       application.canAffordPetsNeeds = 1
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -658,7 +658,7 @@ describe('application', () => {
     it('should respond with Bad Request if canAffordPetsMedical is a number', async () => {
       application.canAffordPetsMedical = 1
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -669,7 +669,7 @@ describe('application', () => {
     it('should respond with Bad Request if petTravelPlans is a number', async () => {
       application.petTravelPlans = 1
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -680,7 +680,7 @@ describe('application', () => {
     it('should respond with Bad Request if petOutlivePlans is a number', async () => {
       application.petOutlivePlans = 1
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -692,7 +692,7 @@ describe('application', () => {
       application.residenceType = ResidenceType.Rent
       application.hasRentPetPermission = 1
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -704,7 +704,7 @@ describe('application', () => {
       application.residenceType = ResidenceType.Own
       application.hasRentPetPermission = true
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -716,7 +716,7 @@ describe('application', () => {
       application.hasChildren = true
       application.childrenAges = 12
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -728,7 +728,7 @@ describe('application', () => {
       application.hasChildren = false
       application.childrenAges = '2,4'
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -740,7 +740,7 @@ describe('application', () => {
       application.hasOtherPets = true
       application.otherPetsInfo = 12
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -752,7 +752,7 @@ describe('application', () => {
       application.hasOtherPets = false
       application.otherPetsInfo = 'Cat 1'
       const response = await request(app)
-        .post('/application/')
+        .post('/applications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(application)
         .expect(400)
@@ -778,7 +778,7 @@ describe('application', () => {
 
     it('should successfully return the application details', async () => {
       const response = await request(app)
-        .get(`/application?id=${applicationID}`)
+        .get(`/applications/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -788,7 +788,7 @@ describe('application', () => {
     it('should throw not found if application does not exist', async () => {
       await removeAllApplications()
       const response = await request(app)
-        .get(`/application?id=${applicationID}`)
+        .get(`/applications/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(404)
 
@@ -799,7 +799,7 @@ describe('application', () => {
       await removePets()
 
       const response = await request(app)
-        .get(`/application?id=${applicationID}`)
+        .get(`/applications/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(404)
 
@@ -810,7 +810,7 @@ describe('application', () => {
       await removeAllShelters()
 
       const response = await request(app)
-        .get(`/application?id=${applicationID}`)
+        .get(`/applications/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(404)
 
@@ -819,7 +819,7 @@ describe('application', () => {
 
     it('should throw error if shelter tries to access it', async () => {
       const response = await request(app)
-        .get(`/application?id=${applicationID}`)
+        .get(`/applications/${applicationID}`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .expect(403)
 
@@ -829,21 +829,11 @@ describe('application', () => {
 
     it('should throw Bad Request if id is not valid', async () => {
       const response = await request(app)
-        .get(`/application?id=invalidID`)
+        .get(`/applications/invalidID`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
       expect(response.text).toEqual('"id" length must be 24 characters long')
-      expect(response.body).toEqual({})
-    })
-
-    it('should throw Bad Request if id is missing', async () => {
-      const response = await request(app)
-        .get(`/application`)
-        .auth(user.tokens.accessToken, { type: 'bearer' })
-        .expect(400)
-
-      expect(response.text).toEqual('"id" is required')
       expect(response.body).toEqual({})
     })
   })
@@ -867,7 +857,7 @@ describe('application', () => {
 
     it('should fetch the first page of applications and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all`)
+        .get(`/applications`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -878,7 +868,7 @@ describe('application', () => {
 
     it('should fetch the second page of applications and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all?page=2`)
+        .get(`/applications?page=2`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -889,7 +879,7 @@ describe('application', () => {
 
     it('should fetch the first 4 applications and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all?limit=4`)
+        .get(`/applications?limit=4`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -900,7 +890,7 @@ describe('application', () => {
 
     it('should fetch the 2 applications from page 2 and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all?page=2&limit=6`)
+        .get(`/applications?page=2&limit=6`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -911,7 +901,7 @@ describe('application', () => {
 
     it('should handle non-existing pages', async () => {
       const response = await request(app)
-        .get(`/application/all?page=3`)
+        .get(`/applications?page=3`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -922,7 +912,7 @@ describe('application', () => {
 
     it('should return an error when token is missing', async () => {
       const response = await request(app)
-        .get(`/application/all?page=1`)
+        .get(`/applications?page=1`)
         .expect(401)
 
       expect(response.text).toEqual('Unauthorized')
@@ -930,7 +920,7 @@ describe('application', () => {
 
     it('should respond with Bad Request if limit value is invalid', async () => {
       const response = await request(app)
-        .get(`/application/all?limit=-1`)
+        .get(`/applications?limit=-1`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -941,7 +931,7 @@ describe('application', () => {
 
     it('should respond with Bad Request if page number is invalid', async () => {
       const response = await request(app)
-        .get(`/application/all?page=-1`)
+        .get(`/applications?page=-1`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -950,7 +940,7 @@ describe('application', () => {
 
     it('should respond with Bad Request if limit value is 0', async () => {
       const response = await request(app)
-        .get(`/application/all?limit=0`)
+        .get(`/applications?limit=0`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -961,7 +951,7 @@ describe('application', () => {
 
     it('should respond with Bad Request if page number is 0', async () => {
       const response = await request(app)
-        .get(`/application/all?page=0`)
+        .get(`/applications?page=0`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -970,7 +960,7 @@ describe('application', () => {
 
     it('should respond with Bad Request if limit is a string', async () => {
       const response = await request(app)
-        .get(`/application/all?limit=-limit`)
+        .get(`/applications?limit=-limit`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -979,7 +969,7 @@ describe('application', () => {
 
     it('should respond with Bad Request if page is a string', async () => {
       const response = await request(app)
-        .get(`/application/all?page=-page`)
+        .get(`/applications?page=-page`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -988,7 +978,7 @@ describe('application', () => {
 
     it('should filter applications whose status is Under Review and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all?applicationStatusFilter=Under Review`)
+        .get(`/applications?applicationStatusFilter=Under Review`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -998,7 +988,7 @@ describe('application', () => {
 
     it('should filter applications whose status is Home Visit Requested and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all?applicationStatusFilter=Home Visit Requested`)
+        .get(`/applications?applicationStatusFilter=Home Visit Requested`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -1008,7 +998,7 @@ describe('application', () => {
 
     it('should filter applications whose status is Home Visit Scheduled and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all?applicationStatusFilter=Home Visit Scheduled`)
+        .get(`/applications?applicationStatusFilter=Home Visit Scheduled`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -1018,7 +1008,7 @@ describe('application', () => {
 
     it('should filter applications whose status is Home Approved and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all?applicationStatusFilter=Home Approved`)
+        .get(`/applications?applicationStatusFilter=Home Approved`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -1028,7 +1018,7 @@ describe('application', () => {
 
     it('should filter applications whose status is Home Rejected and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all?applicationStatusFilter=Home Rejected`)
+        .get(`/applications?applicationStatusFilter=Home Rejected`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -1038,7 +1028,7 @@ describe('application', () => {
 
     it('should filter applications whose status is User Visit Scheduled and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all?applicationStatusFilter=User Visit Scheduled`)
+        .get(`/applications?applicationStatusFilter=User Visit Scheduled`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -1048,7 +1038,7 @@ describe('application', () => {
 
     it('should filter applications whose status is Approved and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all?applicationStatusFilter=Approved`)
+        .get(`/applications?applicationStatusFilter=Approved`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -1058,7 +1048,7 @@ describe('application', () => {
 
     it('should filter applications whose status is Rejected and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all?applicationStatusFilter=Rejected`)
+        .get(`/applications?applicationStatusFilter=Rejected`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -1068,7 +1058,7 @@ describe('application', () => {
 
     it('should filter applications whose status is Closed and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all?applicationStatusFilter=Closed`)
+        .get(`/applications?applicationStatusFilter=Closed`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -1078,7 +1068,7 @@ describe('application', () => {
 
     it('should filter applications whose pets name has snow in it and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all?searchQuery=snow`)
+        .get(`/applications?searchQuery=snow`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -1088,7 +1078,7 @@ describe('application', () => {
 
     it('should handle case when pets name does not match any pets in applications', async () => {
       const response = await request(app)
-        .get(`/application/all?searchQuery=maxfield`)
+        .get(`/applications?searchQuery=maxfield`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -1098,7 +1088,7 @@ describe('application', () => {
 
     it('should filter applications whose shelter name has 1(Shelter 1) in it and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all?searchQuery=1`)
+        .get(`/applications?searchQuery=1`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -1108,7 +1098,7 @@ describe('application', () => {
 
     it('should filter applications whose shelter name has 2(Shelter 2) in it and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all?searchQuery=2`)
+        .get(`/applications?searchQuery=2`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -1118,7 +1108,7 @@ describe('application', () => {
 
     it('should filter applications whose pet name has max in it and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all?searchQuery=max`)
+        .get(`/applications?searchQuery=max`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -1128,7 +1118,7 @@ describe('application', () => {
 
     it('should filter applications whose applicant name has test(test@gmail.com) in it and return 200', async () => {
       const response = await request(app)
-        .get(`/application/all?searchQuery=test`)
+        .get(`/applications?searchQuery=test`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -1163,7 +1153,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Home`
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Home`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
@@ -1179,7 +1169,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Shelter`
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Shelter`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
@@ -1203,7 +1193,7 @@ describe('application', () => {
       )
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Home`
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Home`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
@@ -1227,7 +1217,7 @@ describe('application', () => {
       )
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Shelter`
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Shelter`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
@@ -1253,7 +1243,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Home`
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Home`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
@@ -1279,7 +1269,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Shelter`
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Shelter`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
@@ -1295,7 +1285,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=12345&petID=A123456789&visitDate=${visitDate}&visitType=Home`
+          `/applications/timeSlots?shelterID=12345&petID=A123456789&visitDate=${visitDate}&visitType=Home`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
@@ -1312,7 +1302,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=1234567890123456789012345&petID=A123456789&visitDate=${visitDate}&visitType=Home`
+          `/applications/timeSlots?shelterID=1234567890123456789012345&petID=A123456789&visitDate=${visitDate}&visitType=Home`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
@@ -1329,7 +1319,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&petID=A12345&visitDate=${visitDate}&visitType=Home`
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=A12345&visitDate=${visitDate}&visitType=Home`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
@@ -1344,7 +1334,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&petID=A1234567890&visitDate=${visitDate}&visitType=Home`
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=A1234567890&visitDate=${visitDate}&visitType=Home`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
@@ -1359,7 +1349,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&petID=A1234567890&visitDate=${pastDate}&visitType=Home`
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=A1234567890&visitDate=${pastDate}&visitType=Home`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
@@ -1387,7 +1377,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&petID=A1234567890&visitDate=${farFutureDate}&visitType=Home`
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=A1234567890&visitDate=${farFutureDate}&visitType=Home`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
@@ -1418,7 +1408,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Park`
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Park`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
@@ -1435,7 +1425,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=&petID=A123456789&visitDate=${visitDate}&visitType=Home`
+          `/applications/timeSlots?shelterID=&petID=A123456789&visitDate=${visitDate}&visitType=Home`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
@@ -1450,7 +1440,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&petID=&visitDate=${visitDate}&visitType=Home`
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=&visitDate=${visitDate}&visitType=Home`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
@@ -1461,7 +1451,7 @@ describe('application', () => {
     it('should throw Bad Request if visitDate is empty', async () => {
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=&visitType=Home`
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=&visitType=Home`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
@@ -1476,7 +1466,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=`
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
@@ -1493,7 +1483,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?&petID=A123456789&visitDate=${visitDate}&visitType=Home`
+          `/applications/timeSlots?&petID=A123456789&visitDate=${visitDate}&visitType=Home`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
@@ -1508,7 +1498,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&&visitDate=${visitDate}&visitType=Home`
+          `/applications/timeSlots?shelterID=${shelter._id}&&visitDate=${visitDate}&visitType=Home`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
@@ -1519,7 +1509,7 @@ describe('application', () => {
     it('should throw Bad Request if visitDate is missing', async () => {
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&petID=A123456789&&visitType=Home`
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=A123456789&&visitType=Home`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
@@ -1534,7 +1524,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}`
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}`
         )
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
@@ -1549,7 +1539,7 @@ describe('application', () => {
 
       const response = await request(app)
         .get(
-          `/application/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Home`
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Home`
         )
         .expect(401)
 
@@ -1610,7 +1600,7 @@ describe('application', () => {
     <p>Thank you for your hard work!</p>
   `
       const response = await request(app)
-        .post('/application/homeVisit') // adjust the route to your actual API endpoint
+        .post('/applications/homeVisit') // adjust the route to your actual API endpoint
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(200)
@@ -1640,7 +1630,7 @@ describe('application', () => {
       await removeAllApplications()
 
       const response = await request(app)
-        .post('/application/homeVisit')
+        .post('/applications/homeVisit')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(404)
@@ -1653,7 +1643,7 @@ describe('application', () => {
       await removeAllShelters()
 
       const response = await request(app)
-        .post('/application/homeVisit')
+        .post('/applications/homeVisit')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(404)
@@ -1668,7 +1658,7 @@ describe('application', () => {
       }
 
       const response = await request(app)
-        .post('/application/homeVisit')
+        .post('/applications/homeVisit')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(incompletePayload)
         .expect(400)
@@ -1682,7 +1672,7 @@ describe('application', () => {
       }
 
       const response = await request(app)
-        .post('/application/homeVisit')
+        .post('/applications/homeVisit')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(incompletePayload)
         .expect(400)
@@ -1694,7 +1684,7 @@ describe('application', () => {
       payload.applicationID = '123456'
 
       const response = await request(app)
-        .post('/application/homeVisit')
+        .post('/applications/homeVisit')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(400)
@@ -1708,7 +1698,7 @@ describe('application', () => {
       payload.applicationID = '1234567890123456789012345'
 
       const response = await request(app)
-        .post('/application/homeVisit')
+        .post('/applications/homeVisit')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(400)
@@ -1722,7 +1712,7 @@ describe('application', () => {
       const invalidPayload = { applicationID: 12345 }
 
       const response = await request(app)
-        .post('/application/homeVisit')
+        .post('/applications/homeVisit')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(invalidPayload)
         .expect(400)
@@ -1735,7 +1725,7 @@ describe('application', () => {
       payload.visitDate = pastDate
 
       const response = await request(app)
-        .post('/application/homeVisit')
+        .post('/applications/homeVisit')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(400)
@@ -1769,7 +1759,7 @@ describe('application', () => {
       payload.visitDate = farFutureDate
 
       const response = await request(app)
-        .post('/application/homeVisit')
+        .post('/applications/homeVisit')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(400)
@@ -1795,7 +1785,7 @@ describe('application', () => {
 
     it('should throw Unauthorized if token is missing', async () => {
       const response = await request(app)
-        .post('/application/homeVisit')
+        .post('/applications/homeVisit')
         .send(payload)
         .expect(401)
 
@@ -1804,7 +1794,7 @@ describe('application', () => {
 
     it('should throw error if shelter tries to schedule home visit', async () => {
       const response = await request(app)
-        .post('/application/homeVisit')
+        .post('/applications/homeVisit')
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(403)
@@ -1868,7 +1858,7 @@ describe('application', () => {
   `
 
       const response = await request(app)
-        .post('/application/shelterVisit')
+        .post('/applications/shelterVisit')
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(200)
@@ -1898,7 +1888,7 @@ describe('application', () => {
       await removeAllApplications()
 
       const response = await request(app)
-        .post('/application/shelterVisit')
+        .post('/applications/shelterVisit')
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(404)
@@ -1910,7 +1900,7 @@ describe('application', () => {
     it('should return an error if the associated applicant is not found', async () => {
       await removeAllUsers(Role.User)
       const response = await request(app)
-        .post('/application/shelterVisit')
+        .post('/applications/shelterVisit')
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(404)
@@ -1925,7 +1915,7 @@ describe('application', () => {
       }
 
       const response = await request(app)
-        .post('/application/shelterVisit')
+        .post('/applications/shelterVisit')
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(incompletePayload)
         .expect(400)
@@ -1939,7 +1929,7 @@ describe('application', () => {
       }
 
       const response = await request(app)
-        .post('/application/shelterVisit')
+        .post('/applications/shelterVisit')
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(incompletePayload)
         .expect(400)
@@ -1951,7 +1941,7 @@ describe('application', () => {
       payload.applicationID = '123456'
 
       const response = await request(app)
-        .post('/application/shelterVisit')
+        .post('/applications/shelterVisit')
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(400)
@@ -1965,7 +1955,7 @@ describe('application', () => {
       payload.applicationID = '1234567890123456789012345'
 
       const response = await request(app)
-        .post('/application/shelterVisit')
+        .post('/applications/shelterVisit')
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(400)
@@ -1979,7 +1969,7 @@ describe('application', () => {
       const invalidPayload = { applicationID: 12345 }
 
       const response = await request(app)
-        .post('/application/shelterVisit')
+        .post('/applications/shelterVisit')
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(invalidPayload)
         .expect(400)
@@ -1992,7 +1982,7 @@ describe('application', () => {
       payload.visitDate = pastDate
 
       const response = await request(app)
-        .post('/application/shelterVisit')
+        .post('/applications/shelterVisit')
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(400)
@@ -2026,7 +2016,7 @@ describe('application', () => {
       payload.visitDate = farFutureDate
 
       const response = await request(app)
-        .post('/application/shelterVisit')
+        .post('/applications/shelterVisit')
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(400)
@@ -2052,7 +2042,7 @@ describe('application', () => {
 
     it('should throw Unauthorized if token is missing', async () => {
       const response = await request(app)
-        .post('/application/shelterVisit')
+        .post('/applications/shelterVisit')
         .send(payload)
         .expect(401)
 
@@ -2061,7 +2051,7 @@ describe('application', () => {
 
     it('should throw error if user tries to schedule shelter visit', async () => {
       const response = await request(app)
-        .post('/application/shelterVisit')
+        .post('/applications/shelterVisit')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(403)
@@ -2106,7 +2096,7 @@ describe('application', () => {
     it('should throw error when application is not found', async () => {
       await removeAllApplications()
       const response = await request(app)
-        .put(`/application/status`)
+        .put(`/applications/status`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(404)
@@ -2118,7 +2108,7 @@ describe('application', () => {
     it('should throw error when pet is not found', async () => {
       await removePets()
       const response = await request(app)
-        .put(`/application/status`)
+        .put(`/applications/status`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(404)
@@ -2129,7 +2119,7 @@ describe('application', () => {
 
     it('should throw error when user tries to update application status', async () => {
       const response = await request(app)
-        .put(`/application/status`)
+        .put(`/applications/status`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(403)
@@ -2140,7 +2130,7 @@ describe('application', () => {
 
     it('should throw Unauthorized if token is missing', async () => {
       const response = await request(app)
-        .put(`/application/status`)
+        .put(`/applications/status`)
         .send(payload)
         .expect(401)
 
@@ -2153,7 +2143,7 @@ describe('application', () => {
         status: Status.UnderReview
       }
       const response = await request(app)
-        .put(`/application/status`)
+        .put(`/applications/status`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(incompletePayload)
         .expect(400)
@@ -2167,7 +2157,7 @@ describe('application', () => {
         id: applicationID
       }
       const response = await request(app)
-        .put(`/application/status`)
+        .put(`/applications/status`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(incompletePayload)
         .expect(400)
@@ -2182,7 +2172,7 @@ describe('application', () => {
         status: 'invalidStatus'
       }
       const response = await request(app)
-        .put(`/application/status`)
+        .put(`/applications/status`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(incompletePayload)
         .expect(400)
@@ -2214,7 +2204,7 @@ describe('application', () => {
   `
       payload.status = Status.HomeVisitRequested
       const response = await request(app)
-        .put(`/application/status`)
+        .put(`/applications/status`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(200)
@@ -2262,7 +2252,7 @@ describe('application', () => {
 
       payload.status = Status.HomeApproved
       const response = await request(app)
-        .put(`/application/status`)
+        .put(`/applications/status`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(200)
@@ -2321,7 +2311,7 @@ describe('application', () => {
 
       payload.status = Status.HomeRejected
       const response = await request(app)
-        .put(`/application/status`)
+        .put(`/applications/status`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(200)
@@ -2387,7 +2377,7 @@ describe('application', () => {
 
       payload.status = Status.Rejected
       const response = await request(app)
-        .put(`/application/status`)
+        .put(`/applications/status`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(200)
@@ -2473,7 +2463,7 @@ describe('application', () => {
       payload.status = Status.Approved
 
       const response = await request(app)
-        .put(`/application/status`)
+        .put(`/applications/status`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(200)
@@ -2550,7 +2540,7 @@ describe('application', () => {
   `
       payload.status = Status.ReactivationRequestApproved
       const response = await request(app)
-        .put(`/application/status`)
+        .put(`/applications/status`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(200)
@@ -2590,7 +2580,7 @@ describe('application', () => {
   `
       payload.status = Status.ReactivationRequestDeclined
       const response = await request(app)
-        .put(`/application/status`)
+        .put(`/applications/status`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(200)

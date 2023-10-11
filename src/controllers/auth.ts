@@ -7,7 +7,7 @@ import User, {
   VerificationPayload,
   SendCodePayload,
   EmailPayload,
-  CheckPasswordPayload,
+  PasswordPayload,
   UpdateProfilePayload,
   Role,
   EmailChangeRequest,
@@ -80,7 +80,7 @@ export class AuthController {
    *
    */
   @Example<VerificationResponse>(verificationResponseExample)
-  @Post('/verifyEmail')
+  @Post('/email/verification')
   public async verifyEmail(
     @Body() body: VerificationPayload
   ): Promise<VerificationResponse> {
@@ -101,7 +101,7 @@ export class AuthController {
    */
   @Example<TokenResponse>(tokenResponseExample)
   @Security('bearerAuth')
-  @Post('/refresh')
+  @Post('/token/refresh')
   public async refresh(@Request() req: UserRequest): Promise<TokenResponse> {
     return refresh(req)
   }
@@ -111,7 +111,7 @@ export class AuthController {
    */
   @Example<UpdateProfilePayload>(updateProfilePayloadExample)
   @Security('bearerAuth')
-  @Put('/updateProfile')
+  @Put('/profile')
   public async updateProfile(
     @Request() req: UserRequest,
     @FormField() name?: string,
@@ -126,7 +126,7 @@ export class AuthController {
    * @summary Checks if user's new email already has a linked account
    */
   @Security('bearerAuth')
-  @Get('/checkEmail')
+  @Get('/email/availability')
   public async checkEmail(
     @Request() req: UserRequest,
     /**
@@ -143,7 +143,7 @@ export class AuthController {
    */
   @Example<TokenResponse>(tokenResponseExample)
   @Security('bearerAuth')
-  @Put('/changeEmail')
+  @Put('/email')
   public async changeEmail(
     @Body() body: EmailPayload,
     @Request() req: UserRequest
@@ -155,21 +155,21 @@ export class AuthController {
    * @summary Checks if user's entered password is correct
    */
   @Security('bearerAuth')
-  @Post('/checkPassword')
-  public async checkPassword(
-    @Body() body: CheckPasswordPayload,
+  @Post('/password/verify')
+  public async verifyPassword(
+    @Body() body: PasswordPayload,
     @Request() req: UserRequest
   ) {
-    return checkPassword(body, req)
+    return verifyPassword(body, req)
   }
 
   /**
    * @summary Changes user's password
    */
   @Security('bearerAuth')
-  @Put('/changePassword')
+  @Put('/password')
   public async changePassword(
-    @Body() body: CheckPasswordPayload,
+    @Body() body: PasswordPayload,
     @Request() req: UserRequest
   ) {
     return changePassword(body, req)
@@ -187,7 +187,7 @@ export class AuthController {
   /**
    * @summary Checks if user's entered email has an associated account and create reset tokens
    */
-  @Post('/requestPasswordReset')
+  @Post('/password/reset/request')
   public async requestPasswordReset(@Body() body: EmailPayload) {
     return requestPasswordReset(body)
   }
@@ -196,7 +196,7 @@ export class AuthController {
    * @summary Verifies the reset password token for user
    *
    */
-  @Get('/verifyResetToken')
+  @Get('/password/reset/token/verify')
   public async VerifyResetToken(@Query() resetToken: string) {
     return VerifyResetToken(resetToken)
   }
@@ -204,7 +204,7 @@ export class AuthController {
   /**
    * @summary Changes user's password
    */
-  @Put('/resetPassword')
+  @Put('/password/reset')
   public async resetPassword(@Body() body: ResetPasswordPayload) {
     return resetPassword(body)
   }
@@ -213,7 +213,7 @@ export class AuthController {
    * @summary Sends email to user to provide alternate email to sign up as shelter
    */
   @Security('bearerAuth')
-  @Post('/getAlternateEmail')
+  @Post('/email/alternate')
   public async getAlternateEmail(@Body() body: EmailPayload) {
     return getAlternateEmail(body)
   }
@@ -457,7 +457,7 @@ const changeEmail = async (
   }
 }
 
-const checkPassword = async (body: CheckPasswordPayload, req: UserRequest) => {
+const verifyPassword = async (body: PasswordPayload, req: UserRequest) => {
   const user = await User.findOne({ email: req?.user?.email })
   if (!user) throw { code: 404, message: 'User not found' }
 
@@ -475,7 +475,7 @@ const checkPassword = async (body: CheckPasswordPayload, req: UserRequest) => {
   }
 }
 
-const changePassword = async (body: CheckPasswordPayload, req: UserRequest) => {
+const changePassword = async (body: PasswordPayload, req: UserRequest) => {
   const user = await User.findOne({ email: req?.user?.email })
   if (!user) throw { code: 404, message: 'User not found' }
 

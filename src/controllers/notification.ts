@@ -1,12 +1,9 @@
 import { emitReadNotification } from '../socket'
-import Notification, {
-  AllNotificationsResponse,
-  NotificationPayload
-} from '../models/Notification'
+import Notification, { AllNotificationsResponse } from '../models/Notification'
 import {
-  Body,
   Example,
   Get,
+  Path,
   Put,
   Query,
   Request,
@@ -38,10 +35,12 @@ export class NotificationController {
   /**
    * @summary Accepts notification ID and marks it as read
    *
+   * @param notificationID ID of the notification
+   * @example id "6523fdbb5f59f9eb98f3163b"
    */
-  @Put('/markAsRead')
-  public async markAsRead(@Body() body: NotificationPayload) {
-    return markAsRead(body)
+  @Put('/:notificationID/read')
+  public async markAsRead(@Path() notificationID: string) {
+    return markAsRead(notificationID)
   }
 }
 
@@ -83,10 +82,8 @@ const getallNotifications = async (
   }
 }
 
-const markAsRead = async (body: NotificationPayload) => {
-  const { id } = body
-
-  const notification = await Notification.findById(id)
+const markAsRead = async (notificationID: string) => {
+  const notification = await Notification.findById(notificationID)
 
   if (!notification) throw { code: 404, message: 'Notification not found' }
 

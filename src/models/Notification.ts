@@ -1,15 +1,8 @@
 import { Model, Schema, model } from 'mongoose'
 import { Status } from './Application'
 
-export interface NotificationPayload {
-  /**
-   * ID of notification
-   * @example "6523fdbb5f59f9eb98f3163b"
-   */
+export interface NotificationResponse {
   id: string
-}
-
-export interface NotificationResponse extends NotificationPayload {
   userEmail: string
   applicationID: string
   status: Status

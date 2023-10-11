@@ -13,12 +13,12 @@ const router = express.Router()
 
 router.use('/auth', authRouter)
 router.use('/session', sessionRouter)
-router.use('/pet', petRouter)
-router.use('/application', applicationRouter)
+router.use('/pets', petRouter)
+router.use('/applications', applicationRouter)
 router.use('/shelter', shelterRouter)
 router.use('/review', reviewRouter)
 router.use('/reactivationRequest', reactivationRequestRouter)
-router.use('/notification', notificationRouter)
+router.use('/notifications', notificationRouter)
 
 router.use(
   '/',

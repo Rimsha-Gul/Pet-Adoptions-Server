@@ -32,47 +32,6 @@ applicationRouter.post(
 )
 
 applicationRouter.get(
-  '/',
-  authenticateAccessToken,
-  isUser,
-  async (req, res) => {
-    const { error } = idValidation(req.query)
-    if (error) return res.status(400).send(error.details[0].message)
-    try {
-      const id = req.query.id as string
-      const response = await controller.getApplicationDetails(req, id)
-      return res.send(response)
-    } catch (err: any) {
-      return res.status(err.code).send(err.message)
-    }
-  }
-)
-
-applicationRouter.get('/all', authenticateAccessToken, async (req, res) => {
-  const { error } = getAllApplicationsValidation(req.query)
-  if (error) return res.status(400).send(error.details[0].message)
-  try {
-    const {
-      page = '1',
-      limit = '5',
-      searchQuery,
-      applicationStatusFilter
-    } = req.query
-
-    const response = await controller.getApplications(
-      parseInt(page as string),
-      parseInt(limit as string),
-      req,
-      searchQuery as string,
-      applicationStatusFilter as string
-    )
-    return res.send(response)
-  } catch (err: any) {
-    return res.status(err.code).send(err.message)
-  }
-})
-
-applicationRouter.get(
   '/timeSlots',
   authenticateAccessToken,
   async (req, res) => {
@@ -140,5 +99,49 @@ applicationRouter.put(
     }
   }
 )
+
+applicationRouter.get(
+  '/:applicationID',
+  authenticateAccessToken,
+  isUser,
+  async (req, res) => {
+    const applicationID = req.params.applicationID as string
+    const { error } = idValidation({ id: applicationID })
+    if (error) return res.status(400).send(error.details[0].message)
+    try {
+      const response = await controller.getApplicationDetails(
+        req,
+        applicationID
+      )
+      return res.send(response)
+    } catch (err: any) {
+      return res.status(err.code).send(err.message)
+    }
+  }
+)
+
+applicationRouter.get('/', authenticateAccessToken, async (req, res) => {
+  const { error } = getAllApplicationsValidation(req.query)
+  if (error) return res.status(400).send(error.details[0].message)
+  try {
+    const {
+      page = '1',
+      limit = '5',
+      searchQuery,
+      applicationStatusFilter
+    } = req.query
+
+    const response = await controller.getApplications(
+      parseInt(page as string),
+      parseInt(limit as string),
+      req,
+      searchQuery as string,
+      applicationStatusFilter as string
+    )
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
+  }
+})
 
 export default applicationRouter

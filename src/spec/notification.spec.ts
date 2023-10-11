@@ -1,4 +1,3 @@
-import { NotificationPayload } from 'src/models/Notification'
 import { app } from '../app'
 import { removeAllApplications } from './utils/generateApplication'
 import {
@@ -31,19 +30,12 @@ describe('notification', () => {
   })
 
   describe('mark notification as read', () => {
-    let user: User,
-      applicationID,
-      notificationID,
-      payload: NotificationPayload,
-      socketSpy: jest.SpyInstance
+    let user: User, applicationID, notificationID, socketSpy: jest.SpyInstance
 
     beforeEach(async () => {
       user = await generateUserandTokens()
       applicationID = await generatePetWithApplication(user.email)
       notificationID = await generateNotification(applicationID)
-      payload = {
-        id: notificationID
-      }
 
       socketSpy = jest.spyOn(socketModule, 'emitReadNotification')
       socketSpy.mockImplementation(() => Promise.resolve())
@@ -59,9 +51,8 @@ describe('notification', () => {
 
     it('should successfully add a review and update the shelter rating', async () => {
       const response = await request(app)
-        .put('/notification/markAsRead')
+        .put(`/notifications/${notificationID}/read`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
-        .send(payload)
         .expect(200)
 
       expect(response.body.message).toBe(
@@ -74,62 +65,34 @@ describe('notification', () => {
     it('should throw error when notification does not exist corresponding to the given ID', async () => {
       await removeAllNotifications()
       const response = await request(app)
-        .put('/notification/markAsRead')
+        .put(`/notifications/${notificationID}/read`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
-        .send(payload)
         .expect(404)
 
       expect(response.text).toBe('Notification not found')
     })
 
     it('should throw Bad Request if ID length is less than 24 characters', async () => {
-      payload.id = '12345'
       const response = await request(app)
-        .put('/notification/markAsRead')
+        .put(`/notifications/12345/read`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
-        .send(payload)
         .expect(400)
 
       expect(response.text).toBe('"id" length must be 24 characters long')
     })
 
     it('should throw Bad Request if ID length is greater than 24 characters', async () => {
-      payload.id = '1234567890123456789012345'
       const response = await request(app)
-        .put('/notification/markAsRead')
+        .put(`/notifications/1234567890123456789012345/read`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
-        .send(payload)
         .expect(400)
 
       expect(response.text).toBe('"id" length must be 24 characters long')
     })
 
-    it('should throw Bad Request if ID is empty', async () => {
-      payload.id = ''
-      const response = await request(app)
-        .put('/notification/markAsRead')
-        .auth(user.tokens.accessToken, { type: 'bearer' })
-        .send(payload)
-        .expect(400)
-
-      expect(response.text).toBe('"id" is not allowed to be empty')
-    })
-
-    it('should throw Bad Request if ID is missing', async () => {
-      const invalidPayload = {}
-      const response = await request(app)
-        .put('/notification/markAsRead')
-        .auth(user.tokens.accessToken, { type: 'bearer' })
-        .send(invalidPayload)
-        .expect(400)
-
-      expect(response.text).toBe('"id" is required')
-    })
-
     it('should throw Unauthotized if token is missing', async () => {
       const response = await request(app)
-        .put('/notification/markAsRead')
-        .send(payload)
+        .put(`/notifications/${notificationID}/read`)
         .expect(401)
 
       expect(response.text).toBe('Unauthorized')
@@ -155,7 +118,7 @@ describe('notification', () => {
 
     it('should successfully return all notifications for the specified user', async () => {
       const response = await request(app)
-        .get('/notification/')
+        .get('/notifications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -166,7 +129,7 @@ describe('notification', () => {
     it('should return zero notifications for the specified user', async () => {
       await removeAllNotifications()
       const response = await request(app)
-        .get('/notification/')
+        .get('/notifications/')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -180,7 +143,7 @@ describe('notification', () => {
         'USER'
       )
       const response = await request(app)
-        .get('/notification/')
+        .get('/notifications/')
         .auth(nonExistentEmailToken, { type: 'bearer' })
         .expect(404)
 
@@ -189,7 +152,7 @@ describe('notification', () => {
     })
 
     it('should return error if token is missing', async () => {
-      const response = await request(app).get('/notification/').expect(401)
+      const response = await request(app).get('/notifications/').expect(401)
 
       expect(response.text).toBe('Unauthorized')
       expect(response.body).toEqual({})

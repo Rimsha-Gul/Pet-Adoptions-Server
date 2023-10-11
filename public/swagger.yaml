@@ -136,7 +136,7 @@ components:
                 - email
             type: object
             additionalProperties: false
-        CheckPasswordPayload:
+        PasswordPayload:
             properties:
                 password:
                     type: string
@@ -825,8 +825,6 @@ components:
             properties:
                 id:
                     type: string
-                    description: 'ID of notification'
-                    example: 6523fdbb5f59f9eb98f3163b
                 userEmail:
                     type: string
                 applicationID:
@@ -867,16 +865,6 @@ components:
             required:
                 - notifications
                 - totalPages
-            type: object
-            additionalProperties: false
-        NotificationPayload:
-            properties:
-                id:
-                    type: string
-                    description: 'ID of notification'
-                    example: 6523fdbb5f59f9eb98f3163b
-            required:
-                - id
             type: object
             additionalProperties: false
     securitySchemes:
@@ -943,7 +931,7 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/SendCodePayload'
-    /auth/verifyEmail:
+    /auth/email/verification:
         post:
             operationId: VerifyEmail
             responses:
@@ -991,7 +979,7 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/LoginPayload'
-    /auth/refresh:
+    /auth/token/refresh:
         post:
             operationId: Refresh
             responses:
@@ -1011,7 +999,7 @@ paths:
                 -
                     bearerAuth: []
             parameters: []
-    /auth/updateProfile:
+    /auth/profile:
         put:
             operationId: UpdateProfile
             responses:
@@ -1053,7 +1041,7 @@ paths:
                                 profilePhoto:
                                     type: string
                                     format: binary
-    /auth/checkEmail:
+    /auth/email/availability:
         get:
             operationId: CheckEmail
             responses:
@@ -1083,7 +1071,7 @@ paths:
                     required: true
                     schema:
                         type: string
-    /auth/changeEmail:
+    /auth/email:
         put:
             operationId: ChangeEmail
             responses:
@@ -1109,9 +1097,9 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/EmailPayload'
-    /auth/checkPassword:
+    /auth/password/verify:
         post:
-            operationId: CheckPassword
+            operationId: VerifyPassword
             responses:
                 '200':
                     description: Ok
@@ -1137,8 +1125,8 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: '#/components/schemas/CheckPasswordPayload'
-    /auth/changePassword:
+                            $ref: '#/components/schemas/PasswordPayload'
+    /auth/password:
         put:
             operationId: ChangePassword
             responses:
@@ -1166,7 +1154,7 @@ paths:
                 content:
                     application/json:
                         schema:
-                            $ref: '#/components/schemas/CheckPasswordPayload'
+                            $ref: '#/components/schemas/PasswordPayload'
     /auth/logout:
         delete:
             operationId: Logout
@@ -1190,7 +1178,7 @@ paths:
                 -
                     bearerAuth: []
             parameters: []
-    /auth/requestPasswordReset:
+    /auth/password/reset/request:
         post:
             operationId: RequestPasswordReset
             responses:
@@ -1217,7 +1205,7 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/EmailPayload'
-    /auth/verifyResetToken:
+    /auth/password/reset/token/verify:
         get:
             operationId: VerifyResetToken
             responses:
@@ -1242,7 +1230,7 @@ paths:
                     required: true
                     schema:
                         type: string
-    /auth/resetPassword:
+    /auth/password/reset:
         put:
             operationId: ResetPassword
             responses:
@@ -1269,7 +1257,7 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/ResetPasswordPayload'
-    /auth/getAlternateEmail:
+    /auth/email/alternate:
         post:
             operationId: GetAlternateEmail
             responses:
@@ -1410,32 +1398,6 @@ paths:
                                 - adoptionFee
                                 - images
         get:
-            operationId: GetPetDetails
-            responses:
-                '200':
-                    description: Ok
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/AddPetResponse'
-                            examples:
-                                'Example 1':
-                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: Male, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: Cat, activityNeeds: Low, levelOfGrooming: High, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: '300 USD', images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false, shelterRating: 4.8}}
-            summary: 'Returns details of a pet given its id'
-            tags:
-                - Pet
-            security:
-                -
-                    bearerAuth: []
-            parameters:
-                -
-                    in: query
-                    name: id
-                    required: true
-                    schema:
-                        type: string
-    /pet/all:
-        get:
             operationId: GetAllPets
             responses:
                 '200':
@@ -1504,6 +1466,34 @@ paths:
                     required: false
                     schema:
                         type: string
+    '/pet/{petID}':
+        get:
+            operationId: GetPetDetails
+            responses:
+                '200':
+                    description: Ok
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AddPetResponse'
+                            examples:
+                                'Example 1':
+                                    value: {pet: {shelterName: 'Purrfect Adoption Center', microchipID: A123456789, name: Snowball, gender: Male, birthDate: '2001-01-01', color: white, breed: 'Mini Lop', category: Cat, activityNeeds: Low, levelOfGrooming: High, isHouseTrained: true, healthInfo: {healthCheck: true, allergiesTreated: true, wormed: true, heartwormTreated: true, vaccinated: true, deSexed: true}, bio: 'Meredith is a playful and friendly cat. She loves chasing laser pointers and enjoys cuddling on the couch.', traits: [Affectionate, independent], adoptionFee: '300 USD', images: ['https://example.com/images/fluffy1.jpg', 'https://example.com/images/fluffy2.jpg'], hasAdoptionRequest: false, isAdopted: false, shelterRating: 4.8}}
+            summary: 'Returns details of a pet given its id'
+            tags:
+                - Pet
+            security:
+                -
+                    bearerAuth: []
+            parameters:
+                -
+                    description: 'ID of the pet'
+                    in: path
+                    name: petID
+                    required: true
+                    schema:
+                        type: string
+                    example: A123456789
     /application:
         post:
             operationId: ApplyForAPet
@@ -2045,7 +2035,7 @@ paths:
                     schema:
                         format: double
                         type: number
-    /notification/markAsRead:
+    '/notification/{id}/read':
         put:
             operationId: MarkAsRead
             responses:
@@ -2067,13 +2057,15 @@ paths:
             security:
                 -
                     bearerAuth: []
-            parameters: []
-            requestBody:
-                required: true
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/NotificationPayload'
+            parameters:
+                -
+                    description: 'ID of the notification'
+                    in: path
+                    name: id
+                    required: true
+                    schema:
+                        type: string
+                    example: 6523fdbb5f59f9eb98f3163b
 servers:
     -
         url: /

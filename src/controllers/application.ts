@@ -18,6 +18,7 @@ import {
   Body,
   Example,
   Get,
+  Path,
   Post,
   Put,
   Query,
@@ -71,16 +72,17 @@ export class ApplicationController {
 
   /**
    * @summary Returns an application's details given id
-   *
+   * @param applicationID ID of the application
+   * @example applicationID "64b14bd7ba2fba2af4b5338d"
    */
   @Example<ApplictionResponseForUser>(applicationExample)
   @Security('bearerAuth')
-  @Get('/')
+  @Get('/:applicationID')
   public async getApplicationDetails(
     @Request() req: UserRequest,
-    @Query() id: string
+    @Path() applicationID: string
   ): Promise<ApplictionResponseForUser> {
-    return getApplicationDetails(req, id)
+    return getApplicationDetails(req, applicationID)
   }
 
   /**
@@ -89,7 +91,7 @@ export class ApplicationController {
    */
   @Example<AllApplicationsResponse>(allApplicationsExample)
   @Security('bearerAuth')
-  @Get('/all')
+  @Get('/')
   public async getApplications(
     @Query('page') page: number,
     @Query('limit') limit: number,
@@ -237,10 +239,10 @@ const applyForAPet = async (
 
 const getApplicationDetails = async (
   req: UserRequest,
-  id: string
+  applicationID: string
 ): Promise<ApplictionResponseForUser> => {
   const application = await Application.findOne({
-    _id: id,
+    _id: applicationID,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     applicantEmail: req.user!.email
   })

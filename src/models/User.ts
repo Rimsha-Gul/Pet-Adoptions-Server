@@ -95,7 +95,7 @@ export interface EmailPayload {
   email: string
 }
 
-export interface CheckPasswordPayload {
+export interface PasswordPayload {
   /**
    * Password for user
    * @example "123456"

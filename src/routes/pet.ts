@@ -85,13 +85,13 @@ petRouter.post(
   }
 )
 
-petRouter.get('/', authenticateAccessToken, async (req, res) => {
-  const { error } = getPetValidation(req.query)
+petRouter.get('/:petID', authenticateAccessToken, async (req, res) => {
+  const { error } = getPetValidation(req.params)
   if (error) {
     return res.status(400).send(error.details[0].message)
   }
   try {
-    const petID = req.query.id as string
+    const petID = req.params.petID as string
     const response = await petController.getPetDetails(req, petID)
     return res.send(response)
   } catch (err: any) {
@@ -99,12 +99,11 @@ petRouter.get('/', authenticateAccessToken, async (req, res) => {
   }
 })
 
-petRouter.get('/all', authenticateAccessToken, async (req, res) => {
+petRouter.get('/', authenticateAccessToken, async (req, res) => {
   try {
     const { error } = getAllPetsValidation(req.query)
-    if (error) {
-      return res.status(400).send(error.details[0].message)
-    }
+    if (error) return res.status(400).send(error.details[0].message)
+
     const {
       page = '1',
       limit = '3',
