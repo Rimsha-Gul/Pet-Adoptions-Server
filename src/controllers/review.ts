@@ -9,6 +9,7 @@ import {
   Body,
   Example,
   Get,
+  Path,
   Post,
   Put,
   Query,
@@ -25,26 +26,29 @@ import { reviewsResponseExample } from '../examples/review'
 export class ReviewController {
   /**
    * @summary Accepts rating and review and adds the review in the database
-   *
+   * @param shelterID ID of the shelter
+   * @example shelterID "6475e9630044288a2b4880b5"
    */
   @Security('bearerAuth')
-  @Post('/')
+  @Post('/:shelterID')
   public async addReview(
+    @Path() shelterID: string,
     @Body() body: ReviewPayload,
     @Request() req: UserRequest
   ) {
-    return addReview(body, req)
+    return addReview(shelterID, body, req)
   }
 
   /**
    * @summary Returns all reviews of a specific shelter
-   *
+   * @param shelterID ID of the shelter
+   * @example shelterID "6475e9630044288a2b4880b5"
    */
   @Example<ReviewsResponse>(reviewsResponseExample)
   @Security('bearerAuth')
-  @Get('/all')
+  @Get('/:shelterID')
   public async getReviews(
-    @Query() shelterID: string,
+    @Path() shelterID: string,
     @Query('page') page: number,
     @Query('limit') limit: number
   ): Promise<ReviewsResponse> {
@@ -53,21 +57,27 @@ export class ReviewController {
 
   /**
    * @summary Updates review
-   *
+   * @param shelterID ID of the shelter
+   * @example shelterID "6475e9630044288a2b4880b5"
    */
   @Security('bearerAuth')
-  @Put('/update')
+  @Put('/:shelterID')
   public async updateReview(
+    @Path() shelterID: string,
     @Body() body: ReviewPayload,
     @Request() req: UserRequest
   ) {
-    return updateReview(body, req)
+    return updateReview(shelterID, body, req)
   }
 }
 
-const addReview = async (body: ReviewPayload, req: UserRequest) => {
+const addReview = async (
+  shelterID: string,
+  body: ReviewPayload,
+  req: UserRequest
+) => {
   // Check if a review already exists from this user for this shelter
-  const { shelterID, rating, reviewText } = body
+  const { rating, reviewText } = body
   const existingReview = await Review.findOne({
     shelterID: shelterID,
     applicantEmail: req.user?.email
@@ -81,7 +91,7 @@ const addReview = async (body: ReviewPayload, req: UserRequest) => {
   if (!user) throw { code: 404, message: 'User not found' }
 
   const newReview = new Review({
-    shelterID: body.shelterID,
+    shelterID: shelterID,
     applicantEmail: req.user?.email,
     applicantName: user.name,
     rating: rating,
@@ -145,9 +155,13 @@ const getReviews = async (
   }
 }
 
-const updateReview = async (body: ReviewPayload, req: UserRequest) => {
+const updateReview = async (
+  shelterID: string,
+  body: ReviewPayload,
+  req: UserRequest
+) => {
   // Check if the review to be updated exists
-  const { shelterID, rating, reviewText } = body
+  const { rating, reviewText } = body
 
   const existingReview = await Review.findOne({
     shelterID: shelterID,

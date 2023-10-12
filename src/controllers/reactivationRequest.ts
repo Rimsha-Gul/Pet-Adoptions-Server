@@ -2,10 +2,9 @@ import { Application, Status } from '../models/Application'
 import { reactivationRequestExample } from '../examples/reactivationRequest'
 import {
   ReactivationRequest,
-  ReactivationRequestPayload,
-  ReactivationRequestResponse
+  ReactivationRequestPayload
 } from '../models/ReactivationRequest'
-import { Body, Example, Get, Post, Query, Route, Security, Tags } from 'tsoa'
+import { Body, Example, Get, Path, Post, Route, Security, Tags } from 'tsoa'
 import { Role, User } from '../models/User'
 import { getReactivationRequestEmail } from '../data/emailMessages'
 import { sendEmail } from '../middleware/sendEmail'
@@ -15,30 +14,38 @@ import { sendEmail } from '../middleware/sendEmail'
 export class ReactivationRequestController {
   /**
    * @summary Accepts reactivation request and sends email to shelter
-   *
+   * @param applicationID ID of the application
+   * @example applicationID "64b14bd7ba2fba2af4b5338d"
    */
   @Security('bearerAuth')
-  @Post('/')
-  public async requestReactivation(@Body() body: ReactivationRequestPayload) {
-    return requestReactivation(body)
+  @Post('/:applicationID')
+  public async requestReactivation(
+    @Path() applicationID: string,
+    @Body() body: ReactivationRequestPayload
+  ) {
+    return requestReactivation(applicationID, body)
   }
 
   /**
    * @summary Returns the reactivation request associated with given application ID
-   *
+   * @param applicationID ID of the application
+   * @example applicationID "64b14bd7ba2fba2af4b5338d"
    */
-  @Example<ReactivationRequestResponse>(reactivationRequestExample)
+  @Example<ReactivationRequestPayload>(reactivationRequestExample)
   @Security('bearerAuth')
-  @Get('/')
+  @Get('/:applicationID')
   public async getReactivationRequest(
-    @Query() applicationID: string
-  ): Promise<ReactivationRequestResponse> {
+    @Path() applicationID: string
+  ): Promise<ReactivationRequestPayload> {
     return getReactivationRequest(applicationID)
   }
 }
 
-const requestReactivation = async (body: ReactivationRequestPayload) => {
-  const { applicationID, reasonNotScheduled, reasonToReactivate } = body
+const requestReactivation = async (
+  applicationID: string,
+  body: ReactivationRequestPayload
+) => {
+  const { reasonNotScheduled, reasonToReactivate } = body
 
   // Find the application by ID
   const application = await Application.findById(applicationID)
@@ -83,7 +90,7 @@ const requestReactivation = async (body: ReactivationRequestPayload) => {
 
 const getReactivationRequest = async (
   applicationID: string
-): Promise<ReactivationRequestResponse> => {
+): Promise<ReactivationRequestPayload> => {
   const application = await Application.findById(applicationID)
   if (!application) throw { code: 404, message: 'Application not found' }
   const request = await ReactivationRequest.findOne({

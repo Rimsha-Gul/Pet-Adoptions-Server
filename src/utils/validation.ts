@@ -168,11 +168,13 @@ export const applicationIDValidation = (data: any): Joi.ValidationResult =>
     applicationID: objectIDSchema.required()
   }).validate(data)
 
-export const updateApplicationStatusValidation = (
-  data: any
-): Joi.ValidationResult =>
+export const shelterIDValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    id: objectIDSchema.required(),
+    shelterID: objectIDSchema.required()
+  }).validate(data)
+
+export const statusValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
     status: statusSchema.required()
   }).validate(data)
 
@@ -186,20 +188,17 @@ export const getTimeSlotsValidation = (data: any): Joi.ValidationResult =>
 
 export const scheduleVisitValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    applicationID: objectIDSchema.required(),
     visitDate: Joi.date().greater(today).less(weekFromNow).required()
   }).validate(data)
 
 export const addReviewValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    shelterID: objectIDSchema.required(),
     rating: Joi.number().integer().min(1).max(5).required(),
     reviewText: Joi.string().required()
   }).validate(data)
 
 export const getAllReviewsValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    shelterID: objectIDSchema.required(),
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).default(6)
   }).validate(data)
@@ -226,7 +225,6 @@ export const requestReactivationValidation = (
   data: any
 ): Joi.ValidationResult =>
   Joi.object({
-    applicationID: objectIDSchema.required(),
     reasonNotScheduled: Joi.string().required(),
     reasonToReactivate: Joi.string().required()
   }).validate(data)

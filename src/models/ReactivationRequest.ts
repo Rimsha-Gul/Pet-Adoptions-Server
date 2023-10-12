@@ -1,6 +1,6 @@
 import { Model, Schema, model } from 'mongoose'
 
-export interface ReactivationRequestResponse {
+export interface ReactivationRequestPayload {
   /**
    * Reason for not scheduling visit
    * @example "I had an unexpected personal commitment that consumed my attention during that time, and I missed the scheduling window."
@@ -13,17 +13,8 @@ export interface ReactivationRequestResponse {
   reasonToReactivate: string
 }
 
-export interface ReactivationRequestPayload
-  extends ReactivationRequestResponse {
-  /**
-   * ID of application
-   * @example "6523d393da718fbc64f5b628"
-   */
-  applicationID: string
-}
-
 export interface ReactivationRequestDocument
-  extends Omit<ReactivationRequestPayload, 'applicationID'>,
+  extends ReactivationRequestPayload,
     Document {
   applicationID: Schema.Types.ObjectId
   reasonNotScheduled: string

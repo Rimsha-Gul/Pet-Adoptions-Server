@@ -1,12 +1,12 @@
 import express from 'express'
 import { ApplicationController } from '../controllers/application'
 import {
+  applicationIDValidation,
   applyForPetValidation,
   getAllApplicationsValidation,
   getTimeSlotsValidation,
-  idValidation,
   scheduleVisitValidation,
-  updateApplicationStatusValidation
+  statusValidation
 } from '../utils/validation'
 import { authenticateAccessToken } from '../middleware/authenticateToken'
 import { isUser } from '../middleware/isUser'
@@ -53,14 +53,26 @@ applicationRouter.get(
 )
 
 applicationRouter.post(
-  '/homeVisit',
+  '/:applicationID/homeVisit',
   authenticateAccessToken,
   isUser,
   async (req, res) => {
-    const { error } = scheduleVisitValidation(req.body)
-    if (error) return res.status(400).send(error.details[0].message)
+    const idError = applicationIDValidation(req.params).error
+    const visitError = scheduleVisitValidation(req.body).error
+
+    if (idError || visitError) {
+      return res
+        .status(400)
+        .send(
+          idError ? idError.details[0].message : visitError?.details[0].message
+        )
+    }
     try {
-      const response = await controller.scheduleHomeVisit(req.body)
+      const applicationID = req.params.applicationID as string
+      const response = await controller.scheduleHomeVisit(
+        applicationID,
+        req.body
+      )
       return res.send(response)
     } catch (err: any) {
       return res.status(err.code).send(err.message)
@@ -69,14 +81,26 @@ applicationRouter.post(
 )
 
 applicationRouter.post(
-  '/shelterVisit',
+  '/:applicationID/shelterVisit',
   authenticateAccessToken,
   isShelter,
   async (req, res) => {
-    const { error } = scheduleVisitValidation(req.body)
-    if (error) return res.status(400).send(error.details[0].message)
+    const idError = applicationIDValidation(req.params).error
+    const visitError = scheduleVisitValidation(req.body).error
+
+    if (idError || visitError) {
+      return res
+        .status(400)
+        .send(
+          idError ? idError.details[0].message : visitError?.details[0].message
+        )
+    }
     try {
-      const response = await controller.scheduleShelterVisit(req.body)
+      const applicationID = req.params.applicationID as string
+      const response = await controller.scheduleShelterVisit(
+        applicationID,
+        req.body
+      )
       return res.send(response)
     } catch (err: any) {
       return res.status(err.code).send(err.message)
@@ -85,14 +109,26 @@ applicationRouter.post(
 )
 
 applicationRouter.put(
-  '/status',
+  '/:applicationID/status',
   authenticateAccessToken,
   isShelter,
   async (req, res) => {
-    const { error } = updateApplicationStatusValidation(req.body)
-    if (error) return res.status(400).send(error.details[0].message)
+    const idError = applicationIDValidation(req.params).error
+    const statusError = statusValidation(req.body).error
+
+    if (idError || statusError) {
+      return res
+        .status(400)
+        .send(
+          idError ? idError.details[0].message : statusError?.details[0].message
+        )
+    }
     try {
-      const response = await controller.updateApplicationStatus(req.body)
+      const applicationID = req.params.applicationID as string
+      const response = await controller.updateApplicationStatus(
+        applicationID,
+        req.body
+      )
       return res.send(response)
     } catch (err: any) {
       return res.status(err.code).send(err.message)
@@ -105,10 +141,10 @@ applicationRouter.get(
   authenticateAccessToken,
   isUser,
   async (req, res) => {
-    const applicationID = req.params.applicationID as string
-    const { error } = idValidation({ id: applicationID })
+    const { error } = applicationIDValidation(req.params)
     if (error) return res.status(400).send(error.details[0].message)
     try {
+      const applicationID = req.params.applicationID as string
       const response = await controller.getApplicationDetails(
         req,
         applicationID

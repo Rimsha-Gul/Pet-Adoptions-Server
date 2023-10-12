@@ -2,11 +2,6 @@ import { Model, Schema, model } from 'mongoose'
 
 export interface ReviewPayload {
   /**
-   * ID of shelter
-   * @example "6475e9630044288a2b4880b5"
-   */
-  shelterID: string
-  /**
    * User's given rating of shelter
    * @example "5"
    */

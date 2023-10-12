@@ -8,7 +8,7 @@ import Application, {
   AllApplicationsResponse,
   ApplicationPayload,
   ApplictionResponseForUser,
-  ScheduleHomeVisitPayload,
+  ScheduleVisitPayload,
   Status,
   TimeSlotsResponse,
   UpdateApplicationPayload
@@ -126,32 +126,44 @@ export class ApplicationController {
 
   /**
    * @summary Accepts application id and date for home visit and sends email to applicant and shelter
-   *
+   * @param applicationID ID of the application
+   * @example applicationID "64b14bd7ba2fba2af4b5338d"
    */
   @Security('bearerAuth')
-  @Post('/homeVisit')
-  public async scheduleHomeVisit(@Body() body: ScheduleHomeVisitPayload) {
-    return scheduleHomeVisit(body)
+  @Post('/:applicationID/homeVisit')
+  public async scheduleHomeVisit(
+    @Path() applicationID: string,
+    @Body() body: ScheduleVisitPayload
+  ) {
+    return scheduleHomeVisit(applicationID, body)
   }
 
   /**
    * @summary Accepts application id and date for shelter visit and sends email to applicant and shelter
-   *
+   * @param applicationID ID of the application
+   * @example applicationID "64b14bd7ba2fba2af4b5338d"
    */
   @Security('bearerAuth')
-  @Post('/shelterVisit')
-  public async scheduleShelterVisit(@Body() body: ScheduleHomeVisitPayload) {
-    return scheduleShelterVisit(body)
+  @Post('/:applicationID/shelterVisit')
+  public async scheduleShelterVisit(
+    @Path() applicationID: string,
+    @Body() body: ScheduleVisitPayload
+  ) {
+    return scheduleShelterVisit(applicationID, body)
   }
 
   /**
    * @summary Updates an application's status
-   *
+   * @param applicationID ID of the application
+   * @example applicationID "64b14bd7ba2fba2af4b5338d"
    */
   @Security('bearerAuth')
-  @Put('/status')
-  public async updateApplicationStatus(@Body() body: UpdateApplicationPayload) {
-    return updateApplicationStatus(body)
+  @Put('/:applicationID/status')
+  public async updateApplicationStatus(
+    @Path() applicationID: string,
+    @Body() body: UpdateApplicationPayload
+  ) {
+    return updateApplicationStatus(applicationID, body)
   }
 }
 
@@ -574,8 +586,11 @@ const getTimeSlots = async (
   return { availableTimeSlots: availableTimeSlots }
 }
 
-const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
-  const { applicationID, visitDate } = body
+const scheduleHomeVisit = async (
+  applicationID: string,
+  body: ScheduleVisitPayload
+) => {
+  const { visitDate } = body
   const application = await Application.findById(applicationID)
   if (!application) throw { code: 404, message: 'Application not found' }
 
@@ -650,8 +665,11 @@ const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
   return { code: 200, message: 'Home Visit has been scheduled' }
 }
 
-const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
-  const { applicationID, visitDate } = body
+const scheduleShelterVisit = async (
+  applicationID: string,
+  body: ScheduleVisitPayload
+) => {
+  const { visitDate } = body
   const application = await Application.findById(applicationID)
   if (!application) throw { code: 404, message: 'Application not found' }
 
@@ -732,11 +750,14 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
   return { code: 200, message: 'Shelter Visit has been scheduled' }
 }
 
-const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
-  const { id, status } = body
+const updateApplicationStatus = async (
+  applicationID: string,
+  body: UpdateApplicationPayload
+) => {
+  const { status } = body
   let responseMessage = 'Application status updated successfully'
 
-  const application = await Application.findById(id)
+  const application = await Application.findById(applicationID)
   if (!application) throw { code: 404, message: 'Application not found' }
 
   const shelter = await User.findOne({
@@ -882,10 +903,10 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
 
     const notification = new Notification({
       userEmail: application.applicantEmail,
-      applicationID: id,
+      applicationID: applicationID,
       status: status,
       petImage: getImageURL(pet.images[0]),
-      actionUrl: `/view/application/${id}`,
+      actionUrl: `/view/application/${applicationID}`,
       date: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]')
     })
 

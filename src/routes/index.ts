@@ -16,7 +16,7 @@ router.use('/session', sessionRouter)
 router.use('/pets', petRouter)
 router.use('/applications', applicationRouter)
 router.use('/shelter', shelterRouter)
-router.use('/review', reviewRouter)
+router.use('/reviews', reviewRouter)
 router.use('/reactivationRequest', reactivationRequestRouter)
 router.use('/notifications', notificationRouter)
 

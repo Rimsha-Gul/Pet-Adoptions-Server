@@ -15,6 +15,7 @@ import {
   removeAllReviews
 } from './utils/generateReview'
 import { generateAccessToken } from '../utils/generateAccessToken'
+import { ReviewPayload } from 'src/models/Review'
 
 describe('review', () => {
   beforeAll(async () => {
@@ -30,14 +31,14 @@ describe('review', () => {
   })
 
   describe('add review', () => {
-    let user: User, shelters, body
+    let user: User, shelters, shelterID, body: ReviewPayload
 
     beforeEach(async () => {
       user = await generateUserandTokens()
       await generateShelters()
       shelters = await UserModel.find({ role: 'SHELTER' })
+      shelterID = shelters[0]._id
       body = {
-        shelterID: shelters[0]._id.toString(),
         rating: 5,
         reviewText: 'Great shelter!'
       }
@@ -52,7 +53,7 @@ describe('review', () => {
       const originalShelter = shelters[0]
 
       const response = await request(app)
-        .post('/review/')
+        .post(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(200)
@@ -72,10 +73,10 @@ describe('review', () => {
     })
 
     it('should throw an error if a review already exists for this user and shelter', async () => {
-      await generateReview(body.shelterID)
+      await generateReview(shelterID)
 
       const response = await request(app)
-        .post('/review/')
+        .post(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(400)
@@ -89,10 +90,10 @@ describe('review', () => {
         'nonexistent@gmail.com',
         'USER'
       )
-      body.shelterID = 'someShelterId'
+      shelterID = 'someShelterId'
 
       const response = await request(app)
-        .post('/review/')
+        .post(`/reviews/${shelterID}`)
         .auth(nonExistentEmailToken, { type: 'bearer' })
         .send(body)
         .expect(404)
@@ -105,7 +106,7 @@ describe('review', () => {
       const shelter = await generateAdminandTokens(Role.Shelter)
 
       const response = await request(app)
-        .post('/review/')
+        .post(`/reviews/${shelterID}`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(403)
@@ -118,41 +119,12 @@ describe('review', () => {
       const admin = await generateAdminandTokens(Role.Admin)
 
       const response = await request(app)
-        .post('/review/')
+        .post(`/reviews/${shelterID}`)
         .auth(admin.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(403)
 
       expect(response.text).toBe('Permission denied')
-      expect(response.body).toEqual({})
-    })
-
-    it('should throw an error if shelter ID is empty', async () => {
-      body.shelterID = ''
-
-      const response = await request(app)
-        .post('/review/')
-        .auth(user.tokens.accessToken, { type: 'bearer' })
-        .send(body)
-        .expect(400)
-
-      expect(response.text).toBe('"shelterID" is not allowed to be empty')
-      expect(response.body).toEqual({})
-    })
-
-    it('should throw an error if shelter ID is missing', async () => {
-      const incompleteBody = {
-        rating: 5,
-        reviewText: 'Great shelter!'
-      }
-
-      const response = await request(app)
-        .post('/review/')
-        .auth(user.tokens.accessToken, { type: 'bearer' })
-        .send(incompleteBody)
-        .expect(400)
-
-      expect(response.text).toBe('"shelterID" is required')
       expect(response.body).toEqual({})
     })
 
@@ -163,7 +135,7 @@ describe('review', () => {
       }
 
       const response = await request(app)
-        .post('/review/')
+        .post(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(incompleteBody)
         .expect(400)
@@ -179,7 +151,7 @@ describe('review', () => {
       }
 
       const response = await request(app)
-        .post('/review/')
+        .post(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(incompleteBody)
         .expect(400)
@@ -192,7 +164,7 @@ describe('review', () => {
       body.reviewText = ''
 
       const response = await request(app)
-        .post('/review/')
+        .post(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(400)
@@ -202,10 +174,10 @@ describe('review', () => {
     })
 
     it('should throw an error if shelter ID is less than 24 characters long', async () => {
-      body.shelterID = '123456'
+      shelterID = '123456'
 
       const response = await request(app)
-        .post('/review/')
+        .post(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(400)
@@ -217,10 +189,10 @@ describe('review', () => {
     })
 
     it('should throw an error if shelter ID is greater than 24 characters long', async () => {
-      body.shelterID = '1234567890123456789012345'
+      shelterID = '1234567890123456789012345'
 
       const response = await request(app)
-        .post('/review/')
+        .post(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(400)
@@ -235,7 +207,7 @@ describe('review', () => {
       body.rating = 0
 
       const response = await request(app)
-        .post('/review/')
+        .post(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(400)
@@ -248,7 +220,7 @@ describe('review', () => {
       body.rating = 6
 
       const response = await request(app)
-        .post('/review/')
+        .post(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(400)
@@ -275,7 +247,7 @@ describe('review', () => {
 
     it('should fetch the first page of reviews and return 200', async () => {
       const response = await request(app)
-        .get(`/review/all?shelterID=${shelters[0]._id}`)
+        .get(`/reviews/${shelters[0]._id}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -286,7 +258,7 @@ describe('review', () => {
 
     it('should fetch the second page of reviews and return 200', async () => {
       const response = await request(app)
-        .get(`/review/all?shelterID=${shelters[0]._id}&page=2`)
+        .get(`/reviews/${shelters[0]._id}?page=2`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -297,7 +269,7 @@ describe('review', () => {
 
     it('should fetch the first 4 reviews and return 200', async () => {
       const response = await request(app)
-        .get(`/review/all?shelterID=${shelters[0]._id}&limit=4`)
+        .get(`/reviews/${shelters[0]._id}?limit=4`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -308,7 +280,7 @@ describe('review', () => {
 
     it('should handle non-existing pages', async () => {
       const response = await request(app)
-        .get(`/review/all?shelterID=${shelters[0]._id}&page=3`)
+        .get(`/reviews/${shelters[0]._id}?page=3`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -317,19 +289,10 @@ describe('review', () => {
       expect(response.body.totalPages).toEqual(2)
     })
 
-    it('should return an error when shelter ID is not provided', async () => {
-      const response = await request(app)
-        .get(`/review/all`)
-        .auth(user.tokens.accessToken, { type: 'bearer' })
-        .expect(400)
-
-      expect(response.text).toEqual('"shelterID" is required')
-    })
-
     it('should return an error for non-existent shelter', async () => {
       await removeAllShelters()
       const response = await request(app)
-        .get(`/review/all?shelterID=${shelters[0]._id}`)
+        .get(`/reviews/${shelters[0]._id}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(404)
 
@@ -338,7 +301,7 @@ describe('review', () => {
 
     it('should return an error when not authenticated', async () => {
       const response = await request(app)
-        .get(`/review/all?id=${shelters[0]._id}`)
+        .get(`/reviews/${shelters[0]._id}`)
         .expect(401)
 
       expect(response.text).toEqual('Unauthorized')
@@ -346,7 +309,7 @@ describe('review', () => {
 
     it('should respond with Bad Request if limit value is invalid', async () => {
       const response = await request(app)
-        .get(`/review/all?shelterID=${shelters[0]._id}&limit=-1`) // Invalid limit
+        .get(`/reviews/${shelters[0]._id}?limit=-1`) // Invalid limit
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -357,7 +320,7 @@ describe('review', () => {
 
     it('should respond with Bad Request if page number is invalid', async () => {
       const response = await request(app)
-        .get(`/review/all?shelterID=${shelters[0]._id}&page=-1`) // Invalid page
+        .get(`/reviews/${shelters[0]._id}?page=-1`) // Invalid page
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -366,7 +329,7 @@ describe('review', () => {
 
     it('should respond with Bad Request if limit is a string', async () => {
       const response = await request(app)
-        .get(`/review/all?shelterID=${shelters[0]._id}&limit=limit`)
+        .get(`/reviews/${shelters[0]._id}?limit=limit`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -375,7 +338,7 @@ describe('review', () => {
 
     it('should respond with Bad Request if page is a string', async () => {
       const response = await request(app)
-        .get(`/review/all?shelterID=${shelters[0]._id}&page=page`)
+        .get(`/reviews/${shelters[0]._id}?page=page`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -384,15 +347,15 @@ describe('review', () => {
   })
 
   describe('update review', () => {
-    let user: User, shelters, body
+    let user: User, shelters, shelterID, body: ReviewPayload
 
     beforeEach(async () => {
       user = await generateUserandTokens()
       await generateShelters()
       shelters = await UserModel.find({ role: 'SHELTER' })
-      await generateReview(shelters[0]._id)
+      shelterID = shelters[0]._id
+      await generateReview(shelterID)
       body = {
-        shelterID: shelters[0]._id.toString(),
         rating: 4,
         reviewText: 'Good shelter!'
       }
@@ -408,7 +371,7 @@ describe('review', () => {
       if (!originalShelter) throw { code: 404, message: 'Shelter not found' }
 
       const response = await request(app)
-        .put('/review/update')
+        .put(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(200)
@@ -432,7 +395,7 @@ describe('review', () => {
       await removeAllReviews()
 
       const response = await request(app)
-        .put('/review/update')
+        .put(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(404)
@@ -448,7 +411,7 @@ describe('review', () => {
       )
 
       const response = await request(app)
-        .put('/review/update')
+        .put(`/reviews/${shelterID}`)
         .auth(nonExistentEmailToken, { type: 'bearer' })
         .send(body)
         .expect(404)
@@ -461,7 +424,7 @@ describe('review', () => {
       const shelter = await generateAdminandTokens(Role.Shelter)
 
       const response = await request(app)
-        .put('/review/update')
+        .put(`/reviews/${shelterID}`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(403)
@@ -474,41 +437,12 @@ describe('review', () => {
       const admin = await generateAdminandTokens(Role.Admin)
 
       const response = await request(app)
-        .put('/review/update')
+        .put(`/reviews/${shelterID}`)
         .auth(admin.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(403)
 
       expect(response.text).toBe('Permission denied')
-      expect(response.body).toEqual({})
-    })
-
-    it('should throw an error if shelter ID is empty', async () => {
-      body.shelterID = ''
-
-      const response = await request(app)
-        .put('/review/update')
-        .auth(user.tokens.accessToken, { type: 'bearer' })
-        .send(body)
-        .expect(400)
-
-      expect(response.text).toBe('"shelterID" is not allowed to be empty')
-      expect(response.body).toEqual({})
-    })
-
-    it('should throw an error if shelter ID is missing', async () => {
-      const incompleteBody = {
-        rating: 5,
-        reviewText: 'Great shelter!'
-      }
-
-      const response = await request(app)
-        .put('/review/update')
-        .auth(user.tokens.accessToken, { type: 'bearer' })
-        .send(incompleteBody)
-        .expect(400)
-
-      expect(response.text).toBe('"shelterID" is required')
       expect(response.body).toEqual({})
     })
 
@@ -519,7 +453,7 @@ describe('review', () => {
       }
 
       const response = await request(app)
-        .put('/review/update')
+        .put(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(incompleteBody)
         .expect(400)
@@ -535,7 +469,7 @@ describe('review', () => {
       }
 
       const response = await request(app)
-        .put('/review/update')
+        .put(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(incompleteBody)
         .expect(400)
@@ -548,7 +482,7 @@ describe('review', () => {
       body.reviewText = ''
 
       const response = await request(app)
-        .put('/review/update')
+        .put(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(400)
@@ -558,10 +492,10 @@ describe('review', () => {
     })
 
     it('should throw an error if shelter ID is less than 24 characters long', async () => {
-      body.shelterID = '123456'
+      shelterID = '123456'
 
       const response = await request(app)
-        .put('/review/update')
+        .put(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(400)
@@ -573,10 +507,10 @@ describe('review', () => {
     })
 
     it('should throw an error if shelter ID is greater than 24 characters long', async () => {
-      body.shelterID = '1234567890123456789012345'
+      shelterID = '1234567890123456789012345'
 
       const response = await request(app)
-        .put('/review/update')
+        .put(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(400)
@@ -591,7 +525,7 @@ describe('review', () => {
       body.rating = 0
 
       const response = await request(app)
-        .put('/review/update')
+        .put(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(400)
@@ -604,7 +538,7 @@ describe('review', () => {
       body.rating = 6
 
       const response = await request(app)
-        .put('/review/update')
+        .put(`/reviews/${shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(body)
         .expect(400)
@@ -615,7 +549,7 @@ describe('review', () => {
 
     it('should throw Unauthorized if token is missing', async () => {
       const response = await request(app)
-        .put('/review/update')
+        .put(`/reviews/${shelterID}`)
         .send(body)
         .expect(401)
 

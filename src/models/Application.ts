@@ -22,11 +22,6 @@ export enum Status {
 }
 
 export interface UpdateApplicationPayload {
-  /**
-   * ID of application
-   * @example "64b14bd7ba2fba2af4b5338d"
-   */
-  id: string
   status: Status
 }
 
@@ -71,12 +66,7 @@ export interface ApplicationPayload {
   petOutlivePlans: string
 }
 
-export interface ScheduleHomeVisitPayload {
-  /**
-   * ID of application
-   * @example "64b14bd7ba2fba2af4b5338d"
-   */
-  applicationID: string
+export interface ScheduleVisitPayload {
   /**
    * Date for visit
    * @example "2023-08-19T04:00:00Z"
