@@ -6,6 +6,7 @@ import {
   Body,
   Example,
   Get,
+  Path,
   Post,
   Query,
   Request,
@@ -40,16 +41,17 @@ import jwt from 'jsonwebtoken'
 export class ShelterController {
   /**
    * @summary Returns a shelter's details given id
-   *
+   * @param shelterID ID of the shelter
+   * @example shelterID "6475e9630044288a2b4880b5"
    */
   @Security('bearerAuth')
-  @Get('/')
+  @Get('/:shelterID')
   @Example<ShelterProfileResponse>(shelterProfileResponseExample)
   public async getShelter(
     @Request() req: UserRequest,
-    @Query() id: string
+    @Path() shelterID: string
   ): Promise<ShelterProfileResponse> {
-    return getShelter(req, id)
+    return getShelter(req, shelterID)
   }
 
   /**
@@ -58,7 +60,7 @@ export class ShelterController {
    */
   @Example<ShelterResponse>(shelterResponseExample)
   @Security('bearerAuth')
-  @Get('/all')
+  @Get('/')
   public async getShelters(
     @Request() req: UserRequest
   ): Promise<ShelterResponse[]> {
@@ -67,15 +69,16 @@ export class ShelterController {
 
   /**
    * @summary Returns an application's details given id
-   *
+   * @param applicationID ID of the application
+   * @example applicationID "64b14bd7ba2fba2af4b5338d"
    */
   @Security('bearerAuth')
-  @Get('/application')
+  @Get('/applications/:applicationID')
   public async getApplicationDetails(
     @Request() req: UserRequest,
-    @Query() id: string
+    @Path() applicationID: string
   ): Promise<ApplictionResponseForShelter> {
-    return getApplicationDetails(req, id)
+    return getApplicationDetails(req, applicationID)
   }
 
   /**
@@ -83,7 +86,7 @@ export class ShelterController {
    *
    */
   @Security('bearerAuth')
-  @Post('/invite')
+  @Post('/invitations')
   @Example<EmailPayload>(emailPayloadExample)
   public async inviteShelter(@Body() body: EmailPayload) {
     return inviteShelter(body)
@@ -93,7 +96,7 @@ export class ShelterController {
    * @summary Verifies the invitation token for shelter
    *
    */
-  @Get('/verifyInvitationToken')
+  @Get('/invitations/token/verification')
   @Example<VerifyInvitationResponse>(verifyInvitationResponseExample)
   public async verifyInvitationToken(
     @Query() invitationToken: string
@@ -104,9 +107,9 @@ export class ShelterController {
 
 const getShelter = async (
   req: UserRequest,
-  id: string
+  shelterID: string
 ): Promise<ShelterProfileResponse> => {
-  const shelter = await User.findById(id)
+  const shelter = await User.findById(shelterID)
   if (!shelter) throw { code: 404, message: 'Shelter not found' }
 
   let profilePhotoUrl
@@ -146,10 +149,10 @@ const getShelters = async (_req: UserRequest): Promise<ShelterResponse[]> => {
 
 const getApplicationDetails = async (
   req: UserRequest,
-  id: string
+  applicationID: string
 ): Promise<ApplictionResponseForShelter> => {
   const application = await Application.findOne({
-    _id: id,
+    _id: applicationID,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     shelterID: req.user!._id
   })

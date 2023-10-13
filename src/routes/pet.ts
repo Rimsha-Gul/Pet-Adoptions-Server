@@ -80,6 +80,7 @@ petRouter.post(
       )
       return res.send(response)
     } catch (err: any) {
+      console.log(err)
       return res.status(err.code).send(err.message)
     }
   }

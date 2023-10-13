@@ -2,8 +2,9 @@ import express from 'express'
 import { ShelterController } from '../controllers/shelter'
 import { authenticateAccessToken } from '../middleware/authenticateToken'
 import {
+  applicationIDValidation,
   emailValidation,
-  idValidation,
+  shelterIDValidation,
   verifyInvitationTokenValidation
 } from '../utils/validation'
 import { isShelter } from '../middleware/isShelter'
@@ -12,12 +13,9 @@ import { isAdmin } from '../middleware/isAdmin'
 const shelterRouter = express.Router()
 const controller = new ShelterController()
 
-shelterRouter.get('/', authenticateAccessToken, async (req, res) => {
-  const { error } = idValidation(req.query)
-  if (error) return res.status(400).send(error.details[0].message)
+shelterRouter.get('/', authenticateAccessToken, isAdmin, async (req, res) => {
   try {
-    const id = req.query.id as string
-    const response = await controller.getShelter(req, id)
+    const response = await controller.getShelters(req)
     return res.send(response)
   } catch (err: any) {
     return res.status(err.code).send(err.message)
@@ -25,29 +23,18 @@ shelterRouter.get('/', authenticateAccessToken, async (req, res) => {
 })
 
 shelterRouter.get(
-  '/all',
-  authenticateAccessToken,
-  isAdmin,
-  async (req, res) => {
-    try {
-      const response = await controller.getShelters(req)
-      return res.send(response)
-    } catch (err: any) {
-      return res.status(err.code).send(err.message)
-    }
-  }
-)
-
-shelterRouter.get(
-  '/application',
+  '/applications/:applicationID',
   authenticateAccessToken,
   isShelter,
   async (req, res) => {
-    const { error } = idValidation(req.query)
+    const { error } = applicationIDValidation(req.params)
     if (error) return res.status(400).send(error.details[0].message)
     try {
-      const id = req.query.id as string
-      const response = await controller.getApplicationDetails(req, id)
+      const applicationID = req.params.applicationID as string
+      const response = await controller.getApplicationDetails(
+        req,
+        applicationID
+      )
       return res.send(response)
     } catch (err: any) {
       return res.status(err.code).send(err.message)
@@ -56,7 +43,7 @@ shelterRouter.get(
 )
 
 shelterRouter.post(
-  '/invite',
+  '/invitations',
   authenticateAccessToken,
   isAdmin,
   async (req, res) => {
@@ -71,7 +58,7 @@ shelterRouter.post(
   }
 )
 
-shelterRouter.get('/verifyInvitationToken', async (req, res) => {
+shelterRouter.get('/invitations/token/verification', async (req, res) => {
   const { error } = verifyInvitationTokenValidation(req.query)
   if (error) return res.status(400).send(error.details[0].message)
   try {
@@ -80,6 +67,18 @@ shelterRouter.get('/verifyInvitationToken', async (req, res) => {
     return res.send(response)
   } catch (err: any) {
     return res.status(err.code).send(err)
+  }
+})
+
+shelterRouter.get('/:shelterID', authenticateAccessToken, async (req, res) => {
+  const { error } = shelterIDValidation(req.params)
+  if (error) return res.status(400).send(error.details[0].message)
+  try {
+    const shelterID = req.params.shelterID as string
+    const response = await controller.getShelter(req, shelterID)
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
   }
 })
 

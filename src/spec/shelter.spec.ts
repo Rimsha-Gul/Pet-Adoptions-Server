@@ -67,7 +67,7 @@ describe('shelter', () => {
         VisitType.Shelter
       )
       const response = await request(app)
-        .get(`/shelter?id=${pet.shelterID}`)
+        .get(`/shelters/${pet.shelterID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -78,7 +78,7 @@ describe('shelter', () => {
     it('should successfully fetch the shelter and user cannot review it', async () => {
       await generateReview(shelters[0]._id)
       const response = await request(app)
-        .get(`/shelter?id=${shelters[0]._id}`)
+        .get(`/shelters/${shelters[0]._id}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -86,13 +86,14 @@ describe('shelter', () => {
       expect(response.body.canReview).toEqual(false)
     })
 
-    it('should respond with Bad request if id is missing', async () => {
+    it('should respond with error if shelter does not exist', async () => {
+      await removeAllShelters()
       const response = await request(app)
-        .get(`/shelter`)
+        .get(`/shelters/${shelters[0]._id}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
-        .expect(400)
+        .expect(404)
 
-      expect(response.text).toEqual(`"id" is required`)
+      expect(response.text).toEqual('Shelter not found')
     })
   })
 
@@ -116,7 +117,7 @@ describe('shelter', () => {
       const user = await generateUserandTokens()
 
       const response = await request(app)
-        .get('/shelter/all')
+        .get('/shelters')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(403)
 
@@ -126,7 +127,7 @@ describe('shelter', () => {
 
     it('should get all shelters successfully if user is an admin', async () => {
       const response = await request(app)
-        .get('/shelter/all')
+        .get('/shelters')
         .auth(adminUser.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -144,7 +145,7 @@ describe('shelter', () => {
       await removeAllShelters()
 
       const response = await request(app)
-        .get(`/shelter/all`)
+        .get('/shelters')
         .auth(adminUser.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -153,7 +154,7 @@ describe('shelter', () => {
     })
 
     it('should throw unauthorized if user is not authenticated', async () => {
-      const response = await request(app).get(`/shelter/all`).expect(401)
+      const response = await request(app).get(`/shelters`).expect(401)
 
       expect(response.text).toEqual('Unauthorized')
     })
@@ -161,7 +162,7 @@ describe('shelter', () => {
     it('should throw user not found if user is false admin', async () => {
       const nonAdminToken = generateAccessToken('falseadmin@gmail.com', 'ADMIN')
       const response = await request(app)
-        .get(`/shelter/all`)
+        .get('/shelters')
         .auth(nonAdminToken, { type: 'bearer' })
         .expect(404)
 
@@ -214,7 +215,7 @@ describe('shelter', () => {
 
     it('should successfully invite the shelter', async () => {
       const response = await request(app)
-        .post('/shelter/invite')
+        .post('/shelters/invitations')
         .auth(admin.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(200)
@@ -233,7 +234,7 @@ describe('shelter', () => {
       const user = await generateUserandTokens()
 
       const response = await request(app)
-        .post('/shelter/invite')
+        .post('/shelters/invitations')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(403)
@@ -247,7 +248,7 @@ describe('shelter', () => {
       const shelter = await generateAdminandTokens(Role.Shelter)
 
       const response = await request(app)
-        .post('/shelter/invite')
+        .post('/shelters/invitations')
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(403)
@@ -261,7 +262,7 @@ describe('shelter', () => {
         email: shelters[0].email
       }
       const response = await request(app)
-        .post('/shelter/invite')
+        .post('/shelters/invitations')
         .auth(admin.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(409)
@@ -276,7 +277,7 @@ describe('shelter', () => {
         email: 'test@gmail.com'
       }
       const response = await request(app)
-        .post('/shelter/invite')
+        .post('/shelters/invitations')
         .auth(admin.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(409)
@@ -294,7 +295,7 @@ describe('shelter', () => {
         email: 'shelter1@test.com'
       }
       const response = await request(app)
-        .post('/shelter/invite')
+        .post('/shelters/invitations')
         .auth(admin.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(409)
@@ -305,7 +306,7 @@ describe('shelter', () => {
 
     it('should respond with Bad Request if shelter email is missing', async () => {
       const response = await request(app)
-        .post('/shelter/invite')
+        .post('/shelters/invitations')
         .auth(admin.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -335,7 +336,7 @@ describe('shelter', () => {
 
       const response = await request(app)
         .get(
-          `/shelter/verifyInvitationToken?invitationToken=${invitationToken}`
+          `/shelters/invitations/token/verification?invitationToken=${invitationToken}`
         )
         .expect(200)
 
@@ -348,7 +349,7 @@ describe('shelter', () => {
 
       const response = await request(app)
         .get(
-          `/shelter/verifyInvitationToken?invitationToken=${invitationToken}`
+          `/shelters/invitations/token/verification?invitationToken=${invitationToken}`
         )
         .expect(409)
 
@@ -360,7 +361,7 @@ describe('shelter', () => {
 
       const response = await request(app)
         .get(
-          `/shelter/verifyInvitationToken?invitationToken=${invitationToken}`
+          `/shelters/invitations/token/verification?invitationToken=${invitationToken}`
         )
         .expect(409)
 
@@ -374,7 +375,7 @@ describe('shelter', () => {
 
       const response = await request(app)
         .get(
-          `/shelter/verifyInvitationToken?invitationToken=${invitationToken}`
+          `/shelters/invitations/token/verification?invitationToken=${invitationToken}`
         )
         .expect(409)
 
@@ -385,7 +386,9 @@ describe('shelter', () => {
 
     it('should respond with Bad Request if token is invalid', async () => {
       const response = await request(app)
-        .get('/shelter/verifyInvitationToken?invitationToken=invalidToken')
+        .get(
+          '/shelters/invitations/token/verification?invitationToken=invalidToken'
+        )
         .expect(400)
 
       expect(response.body.message).toEqual('Invalid invitation token')
@@ -398,7 +401,7 @@ describe('shelter', () => {
 
       const response = await request(app)
         .get(
-          `/shelter/verifyInvitationToken?invitationToken=${expiredInvitationToken}`
+          `/shelters/invitations/token/verification?invitationToken=${expiredInvitationToken}`
         )
         .expect(400)
 
@@ -412,7 +415,7 @@ describe('shelter', () => {
 
       const response = await request(app)
         .get(
-          `/shelter/verifyInvitationToken?invitationToken=${acceptedInvitationToken}`
+          `/shelters/invitations/token/verification?invitationToken=${acceptedInvitationToken}`
         )
         .expect(400)
 
@@ -427,7 +430,7 @@ describe('shelter', () => {
 
       const response = await request(app)
         .get(
-          `/shelter/verifyInvitationToken?invitationToken=${invitationToken}`
+          `/shelters/invitations/token/verification?invitationToken=${invitationToken}`
         )
         .expect(400)
 
@@ -436,7 +439,7 @@ describe('shelter', () => {
 
     it('should respond with Bad Request if token is missing', async () => {
       const response = await request(app)
-        .get(`/shelter/verifyInvitationToken`)
+        .get(`/shelters/invitations/token/verification`)
         .expect(400)
 
       expect(response.text).toEqual(`"invitationToken" is required`)
@@ -463,7 +466,7 @@ describe('shelter', () => {
 
     it('should successfully return the application details', async () => {
       const response = await request(app)
-        .get(`/shelter/application?id=${applicationID}`)
+        .get(`/shelters/applications/${applicationID}`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -473,7 +476,7 @@ describe('shelter', () => {
     it('should throw not found if application does not exist', async () => {
       await removeAllApplications()
       const response = await request(app)
-        .get(`/shelter/application?id=${applicationID}`)
+        .get(`/shelters/applications/${applicationID}`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .expect(404)
 
@@ -494,7 +497,7 @@ describe('shelter', () => {
         microchipID: pet.microchipID
       })
       const response = await request(app)
-        .get(`/shelter/application?id=${application?._id}`)
+        .get(`/shelters/applications/${application?._id}`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .expect(404)
 
@@ -510,7 +513,7 @@ describe('shelter', () => {
         microchipID: 'B123456789'
       })
       const response = await request(app)
-        .get(`/shelter/application?id=${application?._id}`)
+        .get(`/shelters/applications/${application?._id}`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .expect(404)
 
@@ -519,7 +522,7 @@ describe('shelter', () => {
 
     it('should throw error if user tries to access it', async () => {
       const response = await request(app)
-        .get(`/shelter/application?id=${applicationID}`)
+        .get(`/shelters/applications/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(403)
 
@@ -529,21 +532,13 @@ describe('shelter', () => {
 
     it('should throw Bad Request if id is not valid', async () => {
       const response = await request(app)
-        .get(`/shelter/application?id=invalidID`)
+        .get(`/shelters/applications/invalidID`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
-      expect(response.text).toEqual('"id" length must be 24 characters long')
-      expect(response.body).toEqual({})
-    })
-
-    it('should throw Bad Request if id is missing', async () => {
-      const response = await request(app)
-        .get(`/shelter/application`)
-        .auth(shelter.tokens.accessToken, { type: 'bearer' })
-        .expect(400)
-
-      expect(response.text).toEqual('"id" is required')
+      expect(response.text).toEqual(
+        '"applicationID" length must be 24 characters long'
+      )
       expect(response.body).toEqual({})
     })
   })

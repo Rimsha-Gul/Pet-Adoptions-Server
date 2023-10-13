@@ -1713,7 +1713,7 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/UpdateApplicationPayload'
-    /shelter:
+    '/shelter/{shelterID}':
         get:
             operationId: GetShelter
             responses:
@@ -1734,12 +1734,14 @@ paths:
                     bearerAuth: []
             parameters:
                 -
-                    in: query
-                    name: id
+                    description: 'ID of the shelter'
+                    in: path
+                    name: shelterID
                     required: true
                     schema:
                         type: string
-    /shelter/all:
+                    example: 6475e9630044288a2b4880b5
+    /shelter:
         get:
             operationId: GetShelters
             responses:
@@ -1761,7 +1763,7 @@ paths:
                 -
                     bearerAuth: []
             parameters: []
-    /shelter/application:
+    '/shelter/applications/{applicationID}':
         get:
             operationId: GetApplicationDetails
             responses:
@@ -1779,12 +1781,14 @@ paths:
                     bearerAuth: []
             parameters:
                 -
-                    in: query
-                    name: id
+                    description: 'ID of the application'
+                    in: path
+                    name: applicationID
                     required: true
                     schema:
                         type: string
-    /shelter/invite:
+                    example: 64b14bd7ba2fba2af4b5338d
+    /shelter/invitations:
         post:
             operationId: InviteShelter
             responses:
@@ -1816,7 +1820,7 @@ paths:
                     application/json:
                         schema:
                             $ref: '#/components/schemas/EmailPayload'
-    /shelter/verifyInvitationToken:
+    /shelter/invitations/token/verification:
         get:
             operationId: VerifyInvitationToken
             responses:
