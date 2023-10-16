@@ -182,7 +182,7 @@ describe('shelter', () => {
     <p>Greetings,</p>
     <p>We are thrilled to extend an invitation to join our growing network of dedicated shelters on Purrfect Adoptions.</p>
     <p>We have built a platform that brings together shelters and potential pet adopters, with a mission to find loving and suitable homes for as many pets as possible.</p>
-    <p>To accept this invitation and begin the registration process, please click <a href="http://127.0.0.1:5173/shelter/invitation/invite123/">here</a></p>
+    <p>To accept this invitation and begin the registration process, please click <a href="http://localhost:5173/shelter/invitation/invite123/">here</a></p>
     <p>Please note that this invitation is valid for one week. If the invitation has expired, please contact us to receive a new one.</p>
     <p>If you have any questions or need further assistance, please do not hesitate to reply to this email. We look forward to partnering with you in our endeavor to make a positive impact on the lives of pets and adopters alike.</p>
     <p>Thank you,</p>

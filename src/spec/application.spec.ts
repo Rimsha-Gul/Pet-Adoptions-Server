@@ -2109,7 +2109,7 @@ describe('application', () => {
     <p>As part of our process, we ask that you schedule this visit within the next week, by <strong>${formattedNextWeekDate}</strong>. This visit is an important step in ensuring that the pet will be comfortable and secure in their potential new home.</p>
     <p><strong>Note:</strong> If you'd like to schedule your visit, please do so at least one day in advance to allow the shelter time for preparations.</p>
     <p><strong>Important:</strong> If you do not schedule your visit by the aforementioned date, your application will be marked as "expired." Should this happen, you'll need to request to reactivate your application to proceed further.</p>
-    <p>Please click <a href="http://127.0.0.1:5173/${applicationID}/scheduleHomeVisit">here</a> to schedule your home visit.</p>
+    <p>Please click <a href="http://localhost:5173/${applicationID}/scheduleHomeVisit">here</a> to schedule your home visit.</p>
     <p>If you have any questions or require any assistance, please feel free to respond to this email.</p>
     <p>Thank you for your cooperation and your interest in adopting.</p>
     <p>Best,</p>
