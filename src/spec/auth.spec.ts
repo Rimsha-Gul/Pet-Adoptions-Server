@@ -30,7 +30,11 @@ import { AuthController } from '../controllers/auth'
 import { authenticateAccessToken } from '../middleware/authenticateToken'
 import { generateInvitation } from './utils/generateInvitation'
 import { generateResetToken } from '../utils/generateResetToken'
-import { generateExpiredToken } from './utils/generateExpiredToken'
+import {
+  generateExpiredAccessToken,
+  generateExpiredRefreshToken,
+  generateExpiredToken
+} from './utils/generateExpiredToken'
 
 describe('auth', () => {
   beforeAll(async () => {
@@ -340,6 +344,23 @@ describe('auth', () => {
         .expect(400)
 
       expect(response.text).toEqual('Invalid invitation')
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if user tries to signup as admin', async () => {
+      await generateAdminandTokens(Role.Admin)
+      const signupData = {
+        name: user.name,
+        email: user.email,
+        password: '123456',
+        role: 'ADMIN'
+      }
+      const response = await request(app)
+        .post('/auth/signup')
+        .send(signupData)
+        .expect(409)
+
+      expect(response.text).toEqual('Admin user already exists')
       expect(response.body).toEqual({})
     })
   })
@@ -852,6 +873,18 @@ describe('auth', () => {
         .expect(401)
 
       expect(response.text).toEqual(`Unauthorized`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Unauthorized if refresh token has expired', async () => {
+      const invalidAccessToken = generateExpiredRefreshToken('test1@gmail.com')
+
+      const response = await request(app)
+        .post('/auth/token/refresh')
+        .auth(invalidAccessToken, { type: 'bearer' })
+        .expect(401)
+
+      expect(response.text).toEqual('Refresh token has expired')
       expect(response.body).toEqual({})
     })
   })
@@ -1658,6 +1691,18 @@ describe('auth', () => {
       expect(response.text).toEqual('User not found')
       expect(response.body).toEqual({})
     })
+
+    it('should respond with Unauthorized if access token has expired', async () => {
+      const invalidAccessToken = generateExpiredAccessToken('test1@gmail.com')
+
+      const response = await request(app)
+        .delete(`/auth/logout`)
+        .auth(invalidAccessToken, { type: 'bearer' })
+        .expect(401)
+
+      expect(response.text).toEqual('Access token has expired')
+      expect(response.body).toEqual({})
+    })
   })
 
   describe('updateProfile', () => {
@@ -1993,8 +2038,20 @@ describe('auth', () => {
       expect(response.body.email).toEqual(user.email)
     })
 
+    it('should fail to verify if reset token for that user does not exist', async () => {
+      const shelter = await generateAdminandTokens(Role.Shelter)
+      const shelterResetToken = generateResetToken(shelter.email)
+
+      const response = await request(app)
+        .get(
+          `/auth/password/reset/token/verify?resetToken=${shelterResetToken}`
+        )
+        .expect(400)
+
+      expect(response.text).toEqual('Invalid or expired reset token')
+    })
+
     it('should fail to verify with expired token', async () => {
-      // replace this with your function to generate an expired token
       const expiredToken = generateExpiredToken(user.email)
 
       const response = await request(app)

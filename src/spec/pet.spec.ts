@@ -21,10 +21,12 @@ import { authenticateAccessToken } from '../middleware/authenticateToken'
 import express from 'express'
 import { Pet as PetModel } from '../models/Pet'
 import { isShelter } from '../middleware/isShelter'
-import { Role } from '../models/User'
+import { Role, User as UserModel } from '../models/User'
 import { Category } from '../models/Pet'
 import { calculateAgeFromBirthdate } from '../utils/calculateAgeFromBirthdate'
 import { generateAccessToken } from '../utils/generateAccessToken'
+import { generateShelters, removeAllShelters } from './utils/generateShelters'
+import { generateApplication } from './utils/generateApplication'
 
 describe('pet', () => {
   beforeAll(async () => {
@@ -2139,11 +2141,11 @@ describe('pet', () => {
   })
 
   describe('get a pet', () => {
-    let user: Admin,
-      petID = 'A123456799'
+    let user: Admin, petID: string
 
     beforeEach(async () => {
-      user = await generateAdminandTokens(Role.Shelter)
+      petID = 'A123456799'
+      user = await generateUserandTokens()
       await generatePets()
     })
     afterEach(async () => {
@@ -2172,6 +2174,17 @@ describe('pet', () => {
       expect(response.body).toEqual({})
     })
 
+    it('should respond with bad request if shelter does not exist', async () => {
+      await removeAllShelters()
+      const response = await request(app)
+        .get(`/pets/${petID}`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(404)
+
+      expect(response.text).toEqual('Shelter not found')
+      expect(response.body).toEqual({})
+    })
+
     it('should successfully fetch the pet with application ID if there is an application for that pet from that user', async () => {
       petID = 'A123456789'
       await generatePetWithApplication(user.email)
@@ -2186,11 +2199,18 @@ describe('pet', () => {
   })
 
   describe('get pets', () => {
-    let user: Admin
+    let user: Admin, shelters
 
     beforeEach(async () => {
       user = await generateAdminandTokens(Role.Shelter)
       await generatePets()
+      await generateShelters()
+      shelters = await UserModel.find({ role: 'SHELTER' })
+      await generateApplication(
+        shelters[0]._id.toString(),
+        'A123456799',
+        user.email
+      )
     })
     afterEach(async () => {
       await removeAllUsers()

@@ -52,13 +52,12 @@ const authenticateToken = async (
     }
   } catch (error: any) {
     if (error instanceof jwt.JsonWebTokenError) {
-      res.status(401).send({
-        code: 401,
-        message:
-          key === process.env.ACCESS_TOKEN_SECRET
-            ? 'Access token has expired'
-            : 'Refresh token has expired'
-      })
+      const errorMessage =
+        key === process.env.ACCESS_TOKEN_SECRET
+          ? 'Access token has expired'
+          : 'Refresh token has expired'
+
+      res.status(401).send(errorMessage)
     } else {
       res.status(error.code || 401).send(error.message)
     }

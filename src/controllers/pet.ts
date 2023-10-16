@@ -178,8 +178,6 @@ const addPet = async (
   )
 
   if (!shelter) throw { code: 404, message: 'Shelter not found' }
-  else if (shelter.role !== 'SHELTER')
-    throw { code: 400, message: 'User is not a shelter' }
 
   const petImages: string[] = images
   const parsedBirthDate: Date = new Date(birthDate)

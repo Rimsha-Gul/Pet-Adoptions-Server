@@ -102,6 +102,18 @@ describe('review', () => {
       expect(response.body).toEqual({})
     })
 
+    it('should throw an error if shelter is not found', async () => {
+      await removeAllShelters()
+      const response = await request(app)
+        .post(`/reviews/${shelterID}`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(404)
+
+      expect(response.text).toBe('Shelter not found')
+      expect(response.body).toEqual({})
+    })
+
     it('should throw an error if shelter tries to add a review', async () => {
       const shelter = await generateAdminandTokens(Role.Shelter)
 
@@ -130,7 +142,6 @@ describe('review', () => {
 
     it('should throw an error if rating is missing', async () => {
       const incompleteBody = {
-        shelterID: shelters[0]._id.toString(),
         reviewText: 'Great shelter!'
       }
 
@@ -146,7 +157,6 @@ describe('review', () => {
 
     it('should throw an error if review text is missing', async () => {
       const incompleteBody = {
-        shelterID: shelters[0]._id.toString(),
         rating: 5
       }
 

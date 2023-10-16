@@ -54,7 +54,7 @@ const getallNotifications = async (
     user = await User.findOne({ email: req.user.email })
   }
   if (!user) throw { code: 404, message: 'User not found' }
-  // // Calculate total number of notifications for the user
+  // Calculate total number of notifications for the user
   const totalNotifications = await Notification.countDocuments({
     userEmail: user.email
   })

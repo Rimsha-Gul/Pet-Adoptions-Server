@@ -182,9 +182,9 @@ const inviteShelter = async (body: EmailPayload) => {
   const { email } = body
   const existingUser = await User.findOne({ email })
   if (existingUser && existingUser?.role === Role.Shelter)
-    throw { code: 409, message: 'Shelter already  exists' }
+    throw { code: 409, message: 'Shelter already exists' }
   if (existingUser && existingUser?.role === Role.User)
-    throw { code: 409, message: 'User already  exists, which is not a shelter' }
+    throw { code: 409, message: 'User already exists, which is not a shelter' }
   const existingInvitation = await Invitation.findOne({ shelterEmail: email })
   if (existingInvitation) throw { code: 409, message: 'Invite already sent' }
 
@@ -237,7 +237,7 @@ const verifyInvitationToken = async (
     if (existingUser && existingUser.role === Role.User)
       throw {
         code: 409,
-        message: 'User already  exists, which is not a shelter'
+        message: 'User already exists, which is not a shelter'
       }
 
     // Verify the invitation status

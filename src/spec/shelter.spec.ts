@@ -267,7 +267,7 @@ describe('shelter', () => {
         .send(payload)
         .expect(409)
 
-      expect(response.text).toEqual('Shelter already  exists')
+      expect(response.text).toEqual('Shelter already exists')
       expect(response.body).toEqual({})
     })
 
@@ -283,7 +283,7 @@ describe('shelter', () => {
         .expect(409)
 
       expect(response.text).toEqual(
-        'User already  exists, which is not a shelter'
+        'User already exists, which is not a shelter'
       )
       expect(response.body).toEqual({})
     })
@@ -380,7 +380,7 @@ describe('shelter', () => {
         .expect(409)
 
       expect(response.body.message).toEqual(
-        'User already  exists, which is not a shelter'
+        'User already exists, which is not a shelter'
       )
     })
 

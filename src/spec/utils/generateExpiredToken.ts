@@ -15,3 +15,19 @@ export const generateExpiredInvitationToken = (email: string) => {
     { expiresIn: '-10s' } // This creates a JWT that expired 10 seconds ago
   )
 }
+
+export const generateExpiredAccessToken = (email: string) => {
+  return jwt.sign(
+    { email: email, role: 'USER' },
+    process.env.ACCESS_TOKEN_SECRET || 'default-secret',
+    { expiresIn: '-10s' } // This creates a JWT that expired 1h seconds ago
+  )
+}
+
+export const generateExpiredRefreshToken = (email: string) => {
+  return jwt.sign(
+    { email: email, role: 'USER' },
+    process.env.REFRESH_TOKEN_SECRET || 'default-secret',
+    { expiresIn: '-10s' } // This creates a JWT that expired 1h seconds ago
+  )
+}
