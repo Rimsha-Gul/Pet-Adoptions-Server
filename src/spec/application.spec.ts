@@ -1128,6 +1128,20 @@ describe('application', () => {
       expect(response.body.applications.length).toEqual(1)
       expect(response.body.totalPages).toEqual(1)
     })
+
+    it('should return 500 when there is an internal server error', async () => {
+      jest.spyOn(ApplicationModel, 'aggregate').mockImplementation(() => {
+        throw new Error('Test generic error')
+      })
+
+      const response = await request(app)
+        .get(`/applications`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(500)
+
+      expect(response.text).toEqual('Failed to fetch applications')
+      expect(response.body).toEqual({})
+    })
   })
 
   describe('get time slots', () => {
@@ -2519,6 +2533,22 @@ describe('application', () => {
       // Perform checks on individual fields
       expect(emailArg).toEqual('test@gmail.com')
       expect(notificationArg.status).toEqual(Status.ReactivationRequestDeclined)
+    })
+
+    it('should return 500 when there is an internal server error', async () => {
+      ApplicationModel.prototype.save = jest.fn().mockImplementation(() => {
+        throw new Error('Test generic error')
+      })
+
+      payload.status = Status.HomeVisitRequested
+      const response = await request(app)
+        .put(`/applications/${applicationID}/status`)
+        .auth(shelter.tokens.accessToken, { type: 'bearer' })
+        .send(payload)
+        .expect(500)
+
+      expect(response.text).toEqual('Error updating application status')
+      expect(response.body).toEqual({})
     })
   })
 })

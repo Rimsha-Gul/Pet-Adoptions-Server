@@ -139,12 +139,16 @@ const getShelter = async (
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getShelters = async (_req: UserRequest): Promise<ShelterResponse[]> => {
-  const shelters = await User.find({ role: 'SHELTER' }, '_id name')
-  const shelterResponses: ShelterResponse[] = shelters.map((shelter) => ({
-    id: shelter._id.toString(),
-    name: shelter.name
-  }))
-  return shelterResponses
+  try {
+    const shelters = await User.find({ role: 'SHELTER' }, '_id name')
+    const shelterResponses: ShelterResponse[] = shelters.map((shelter) => ({
+      id: shelter._id.toString(),
+      name: shelter.name
+    }))
+    return shelterResponses
+  } catch (error) {
+    throw { code: 500, message: 'Error sending signup email' }
+  }
 }
 
 const getApplicationDetails = async (

@@ -18,11 +18,11 @@ export const generateReview = async (shelterID: string) => {
   await review.save()
 
   const shelter = await User.findOne({ _id: shelterID })
-  if (!shelter) throw { code: 404, message: 'Shelter not found' }
-
-  shelter.numberOfReviews = 1
-  shelter.rating = 5
-  await shelter.save()
+  if (shelter) {
+    shelter.numberOfReviews = 1
+    shelter.rating = 5
+    await shelter.save()
+  }
 }
 
 export const generateReviews = async (shelterID: string) => {

@@ -920,6 +920,6 @@ const updateApplicationStatus = async (
 
     return { code: 200, message: responseMessage }
   } catch (error) {
-    throw { code: 500, message: 'Error updating application status: ' }
+    throw { code: 500, message: 'Error updating application status' }
   }
 }
