@@ -2019,6 +2019,20 @@ describe('auth', () => {
       expect(response.text).toEqual(`"bio" must be a string`)
       expect(response.body).toEqual({})
     })
+
+    it('should return 500 when there is an internal server error', async () => {
+      jest.spyOn(UserModel, 'findOne').mockImplementationOnce(() => {
+        throw { code: 500, message: 'Failed to update profile' }
+      })
+
+      const response = await request(app)
+        .put(`/auth/profile`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send({ name: newName, address: newAddress, bio: newBio })
+        .expect(500)
+
+      expect(response.text).toEqual('Failed to update profile')
+    })
   })
 
   describe('VerifyResetToken', () => {

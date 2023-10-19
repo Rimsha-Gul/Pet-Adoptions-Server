@@ -49,36 +49,39 @@ const getallNotifications = async (
   limit: number,
   req: UserRequest
 ): Promise<AllNotificationsResponse> => {
-  let user
-  if (req.user) {
-    user = await User.findOne({ email: req.user.email })
-  }
-  if (!user) throw { code: 404, message: 'User not found' }
-  // Calculate total number of notifications for the user
-  const totalNotifications = await Notification.countDocuments({
-    userEmail: user.email
-  })
-  const totalPages = Math.ceil(totalNotifications / limit)
+  try {
+    let user
+    if (req.user) {
+      user = await User.findOne({ email: req.user.email })
+    }
+    // Calculate total number of notifications for the user
+    const totalNotifications = await Notification.countDocuments({
+      userEmail: user.email
+    })
+    const totalPages = Math.ceil(totalNotifications / limit)
 
-  // Adjust the query to use skip and limit for pagination
-  const notifications = await Notification.find({ userEmail: user.email })
-    .sort({ date: -1 })
-    .skip((page - 1) * limit)
-    .limit(limit)
+    // Adjust the query to use skip and limit for pagination
+    const notifications = await Notification.find({ userEmail: user.email })
+      .sort({ date: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
 
-  return {
-    notifications: notifications.map((notification) => ({
-      id: notification._id.toString(),
-      userEmail: notification.userEmail,
-      applicationID: notification.applicationID.toString(),
-      status: notification.status,
-      petImage: notification.petImage,
-      isSeen: notification.isSeen,
-      isRead: notification.isRead,
-      actionUrl: notification.actionUrl,
-      date: notification.date
-    })),
-    totalPages: totalPages
+    return {
+      notifications: notifications.map((notification) => ({
+        id: notification._id.toString(),
+        userEmail: notification.userEmail,
+        applicationID: notification.applicationID.toString(),
+        status: notification.status,
+        petImage: notification.petImage,
+        isSeen: notification.isSeen,
+        isRead: notification.isRead,
+        actionUrl: notification.actionUrl,
+        date: notification.date
+      })),
+      totalPages: totalPages
+    }
+  } catch (error: any) {
+    throw { code: 500, message: 'Failed to fetch notifications' }
   }
 }
 

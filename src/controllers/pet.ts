@@ -238,7 +238,7 @@ const getPetDetails = async (
   const imageUrls = await Promise.all(images.map((image) => getImageURL(image)))
 
   const petApplication = await Application.findOne({
-    applicantEmail: req.user?.email,
+    applicantEmail: req.user!.email,
     microchipID: pet.microchipID
   })
   const petHasAdoptionRequest = !!petApplication
@@ -447,7 +447,7 @@ const getAllPets = async (
         )
 
         const petApplication = await Application.findOne({
-          applicantEmail: req.user?.email,
+          applicantEmail: req.user!.email,
           microchipID: pet.microchipID
         })
         const petHasAdoptionRequest = !!petApplication

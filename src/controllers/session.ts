@@ -21,9 +21,8 @@ export class SessionController {
 
 const session = async (req: UserRequest) => {
   const email = (req.user as RequestUser).email
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const user = (await User.findOne({ email }))!
-  let profilePhotoUrl
+  let profilePhotoUrl = ''
   if (user.profilePhoto.length > 0) {
     profilePhotoUrl = getImageURL(user.profilePhoto[0])
   }

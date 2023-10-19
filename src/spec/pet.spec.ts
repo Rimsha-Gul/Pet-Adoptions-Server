@@ -2185,6 +2185,17 @@ describe('pet', () => {
       expect(response.body).toEqual({})
     })
 
+    it('should respond with bad request if petID is invalid', async () => {
+      petID = '12345'
+      const response = await request(app)
+        .get(`/pets/${petID}`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(`"petID" length must be 10 characters long`)
+      expect(response.body).toEqual({})
+    })
+
     it('should successfully fetch the pet with application ID if there is an application for that pet from that user', async () => {
       petID = 'A123456789'
       await generatePetWithApplication(user.email)

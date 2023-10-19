@@ -255,7 +255,6 @@ const getApplicationDetails = async (
 ): Promise<ApplictionResponseForUser> => {
   const application = await Application.findOne({
     _id: applicationID,
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     applicantEmail: req.user!.email
   })
 
@@ -270,7 +269,6 @@ const getApplicationDetails = async (
   if (!pet) throw { code: 404, message: 'Pet not found' }
   if (!shelter) throw { code: 404, message: 'Shelter not found' }
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const canUserReview = await canReview(shelter.id.toString(), req.user!.email)
 
   const applicationResponse: ApplictionResponseForUser = {
@@ -540,50 +538,54 @@ const getTimeSlots = async (
   visitDate: string,
   visitType: string
 ): Promise<TimeSlotsResponse> => {
-  // Generate all possible time slots for the day
-  const allTimeSlots = generateTimeSlots()
+  try {
+    // Generate all possible time slots for the day
+    const allTimeSlots = generateTimeSlots()
 
-  // Convert the visitDate from the request into a Date object for comparison
-  const startOfVisitDate = new Date(visitDate + 'T00:00:00Z')
-  const startOfNextDate = new Date(
-    startOfVisitDate.getTime() + 24 * 60 * 60 * 1000
-  )
-
-  // Define a query object
-  const query: any = {
-    visitType: visitType,
-    visitDate: {
-      $gte: startOfVisitDate.toISOString(),
-      $lt: startOfNextDate.toISOString()
-    },
-    shelterID: shelterID
-  }
-
-  // Conditionally add petID to the query if the visitType is 'Shelter'
-  if (visitType === VisitType.Shelter) {
-    query.petID = petID
-  }
-
-  const bookedVisits = await Visit.find(query)
-
-  const timezoneOffsetHours = 5 // Offset between local time and UTC in hours
-
-  const bookedTimeSlots = bookedVisits.map((visit) => {
-    const visitDateObj = new Date(visit.visitDate)
-    // Convert UTC time from database to local time
-    visitDateObj.setHours(visitDateObj.getUTCHours() + timezoneOffsetHours)
-    return (
-      visitDateObj.getHours() +
-      ':' +
-      String(visitDateObj.getMinutes()).padStart(2, '0')
+    // Convert the visitDate from the request into a Date object for comparison
+    const startOfVisitDate = new Date(visitDate + 'T00:00:00Z')
+    const startOfNextDate = new Date(
+      startOfVisitDate.getTime() + 24 * 60 * 60 * 1000
     )
-  })
 
-  // Filter the time slots that are still available
-  const availableTimeSlots: string[] = allTimeSlots.filter(
-    (slot) => !bookedTimeSlots.includes(slot)
-  )
-  return { availableTimeSlots: availableTimeSlots }
+    // Define a query object
+    const query: any = {
+      visitType: visitType,
+      visitDate: {
+        $gte: startOfVisitDate.toISOString(),
+        $lt: startOfNextDate.toISOString()
+      },
+      shelterID: shelterID
+    }
+
+    // Conditionally add petID to the query if the visitType is 'Shelter'
+    if (visitType === VisitType.Shelter) {
+      query.petID = petID
+    }
+
+    const bookedVisits = await Visit.find(query)
+
+    const timezoneOffsetHours = 5 // Offset between local time and UTC in hours
+
+    const bookedTimeSlots = bookedVisits.map((visit) => {
+      const visitDateObj = new Date(visit.visitDate)
+      // Convert UTC time from database to local time
+      visitDateObj.setHours(visitDateObj.getUTCHours() + timezoneOffsetHours)
+      return (
+        visitDateObj.getHours() +
+        ':' +
+        String(visitDateObj.getMinutes()).padStart(2, '0')
+      )
+    })
+
+    // Filter the time slots that are still available
+    const availableTimeSlots: string[] = allTimeSlots.filter(
+      (slot) => !bookedTimeSlots.includes(slot)
+    )
+    return { availableTimeSlots: availableTimeSlots }
+  } catch (error: any) {
+    throw { code: 500, message: 'Failed to fetch time slots' }
+  }
 }
 
 const scheduleHomeVisit = async (

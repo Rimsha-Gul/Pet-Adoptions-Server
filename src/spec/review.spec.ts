@@ -430,6 +430,18 @@ describe('review', () => {
       expect(response.body).toEqual({})
     })
 
+    it('should throw an error if shelter is not found', async () => {
+      await removeAllShelters()
+      const response = await request(app)
+        .put(`/reviews/${shelterID}`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(body)
+        .expect(404)
+
+      expect(response.text).toBe('Shelter not found')
+      expect(response.body).toEqual({})
+    })
+
     it('should throw an error if shelter tries to update a review', async () => {
       const shelter = await generateAdminandTokens(Role.Shelter)
 

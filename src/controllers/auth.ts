@@ -374,8 +374,7 @@ const login = async (body: LoginPayload): Promise<TokenResponse> => {
 }
 
 const refresh = async (req: UserRequest): Promise<TokenResponse> => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const user = (await User.findOne({ email: req.user?.email }))!
+  const user = (await User.findOne({ email: req.user!.email }))!
 
   if (!user.isVerified) {
     throw { code: 403, message: 'User not verified' }
@@ -400,25 +399,27 @@ const updateProfile = async (
   bio?: string,
   profilePhoto?: string[]
 ) => {
-  const userEmail = req?.user?.email
+  try {
+    const userEmail = req.user!.email
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const user = (await User.findOne({ email: userEmail }))!
+    const user = await User.findOne({ email: userEmail })
 
-  if (name) user.name = name
-  if (address) user.address = address
-  if (bio) user.bio = bio
-  if (profilePhoto) {
-    user.profilePhoto = profilePhoto
+    if (name) user!.name = name
+    if (address) user!.address = address
+    if (bio) user!.bio = bio
+    if (profilePhoto) {
+      user!.profilePhoto = profilePhoto
+    }
+
+    await user!.save()
+    return { code: 200, message: 'Profile updated successfully' }
+  } catch (error: any) {
+    throw { code: 500, message: 'Failed to update profile' }
   }
-
-  await user.save()
-  return { code: 200, message: 'Profile updated successfully' }
 }
 
 const checkEmail = async (req: UserRequest, email: string) => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const user = (await User.findOne({ email: req.user?.email }))!
+  const user = (await User.findOne({ email: req.user!.email }))!
 
   if (!user.isVerified) {
     throw { code: 403, message: 'User not verified' }
@@ -436,8 +437,7 @@ const changeEmail = async (
   body: EmailPayload,
   req: UserRequest
 ): Promise<TokenResponse> => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const user = (await User.findOne({ email: req?.user?.email }))!
+  const user = (await User.findOne({ email: req.user!.email }))!
 
   if (!user.isVerified) {
     throw { code: 403, message: 'User not verified' }
@@ -550,10 +550,7 @@ const VerifyResetToken = async (resetToken: string) => {
     if (err.name === 'JsonWebTokenError') {
       throw { code: 400, message: 'Invalid reset token' }
     }
-    if (err.code) {
-      throw err
-    }
-    throw { code: 500, message: 'Internal server error' }
+    throw { code: err.code, message: err.message }
   }
 }
 
@@ -585,11 +582,8 @@ const resetPassword = async (body: ResetPasswordPayload) => {
     await user.save()
 
     return { code: 200, message: 'Password reset successfully' }
-  } catch (err) {
-    if (err.code) {
-      throw err
-    }
-    throw { code: 500, message: 'Internal server error' }
+  } catch (err: any) {
+    throw { code: err.code, message: err.message }
   }
 }
 

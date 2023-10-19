@@ -22,7 +22,7 @@ import {
   generateApplicationData,
   removeAllApplications
 } from './utils/generateApplication'
-import { VisitType } from '../models/Visit'
+import Visit, { VisitType } from '../models/Visit'
 import {
   generateAllVisitsForDate,
   removeAllVisits
@@ -67,12 +67,7 @@ describe('application', () => {
       await generateAdminandTokens(Role.Shelter)
       pet = await PetModel.findOne({ microchipID: 'A123456789' })
       shelter = await UserModel.findOne({ email: 'shelter1@test.com' })
-      application = generateApplicationData(
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        shelter!._id,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        pet!.microchipID
-      )
+      application = generateApplicationData(shelter!._id, pet!.microchipID)
     })
 
     afterEach(async () => {
@@ -1561,6 +1556,25 @@ describe('application', () => {
         .expect(401)
 
       expect(response.text).toEqual('Unauthorized')
+    })
+
+    it('should return 500 when there is an internal server error', async () => {
+      jest.spyOn(Visit, 'find').mockImplementationOnce(() => {
+        throw new Error('Database error')
+      })
+
+      const currentDate = new Date()
+      currentDate.setDate(currentDate.getDate() + 1)
+      const visitDate = currentDate.toISOString().split('T')[0]
+
+      const response = await request(app)
+        .get(
+          `/applications/timeSlots?shelterID=${shelter._id}&petID=A123456789&visitDate=${visitDate}&visitType=Home`
+        )
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(500)
+
+      expect(response.text).toEqual('Failed to fetch time slots')
     })
   })
 

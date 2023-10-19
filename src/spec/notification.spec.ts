@@ -15,6 +15,7 @@ import { dropCollections, dropDatabase, mongooseSetUp } from './utils/setup'
 import request from 'supertest'
 import * as socketModule from '../socket'
 import { generateAccessToken } from '../utils/generateAccessToken'
+import Notification from '../models/Notification'
 
 describe('notification', () => {
   beforeAll(async () => {
@@ -118,7 +119,7 @@ describe('notification', () => {
 
     it('should successfully return all notifications for the specified user', async () => {
       const response = await request(app)
-        .get('/notifications/')
+        .get('/notifications')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -129,12 +130,21 @@ describe('notification', () => {
     it('should return zero notifications for the specified user', async () => {
       await removeAllNotifications()
       const response = await request(app)
-        .get('/notifications/')
+        .get('/notifications')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
       expect(response.body.notifications).toBeInstanceOf(Array)
       expect(response.body.notifications).toHaveLength(0)
+    })
+
+    it('should return Bad Request if page is a string', async () => {
+      const response = await request(app)
+        .get('/notifications?page=-page')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual('"page" must be a number')
     })
 
     it('should return error if user is not found', async () => {
@@ -143,7 +153,7 @@ describe('notification', () => {
         'USER'
       )
       const response = await request(app)
-        .get('/notifications/')
+        .get('/notifications')
         .auth(nonExistentEmailToken, { type: 'bearer' })
         .expect(404)
 
@@ -152,10 +162,23 @@ describe('notification', () => {
     })
 
     it('should return error if token is missing', async () => {
-      const response = await request(app).get('/notifications/').expect(401)
+      const response = await request(app).get('/notifications').expect(401)
 
       expect(response.text).toBe('Unauthorized')
       expect(response.body).toEqual({})
+    })
+
+    it('should return 500 when there is an internal server error', async () => {
+      jest.spyOn(Notification, 'find').mockImplementationOnce(() => {
+        throw new Error('Database error')
+      })
+
+      const response = await request(app)
+        .get('/notifications')
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(500)
+
+      expect(response.text).toEqual('Failed to fetch notifications')
     })
   })
 })

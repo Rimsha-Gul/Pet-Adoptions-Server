@@ -80,7 +80,6 @@ petRouter.post(
       )
       return res.send(response)
     } catch (err: any) {
-      console.log(err)
       return res.status(err.code).send(err.message)
     }
   }
@@ -88,9 +87,8 @@ petRouter.post(
 
 petRouter.get('/:petID', authenticateAccessToken, async (req, res) => {
   const { error } = getPetValidation(req.params)
-  if (error) {
-    return res.status(400).send(error.details[0].message)
-  }
+  if (error) return res.status(400).send(error.details[0].message)
+
   try {
     const petID = req.params.petID as string
     const response = await petController.getPetDetails(req, petID)

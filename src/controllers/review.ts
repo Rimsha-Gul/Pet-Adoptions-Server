@@ -80,20 +80,19 @@ const addReview = async (
   const { rating, reviewText } = body
   const existingReview = await Review.findOne({
     shelterID: shelterID,
-    applicantEmail: req.user?.email
+    applicantEmail: req.user!.email
   })
 
   if (existingReview) {
     throw { code: 400, message: 'Review already exists' }
   }
 
-  const user = await User.findOne({ email: req.user?.email })
-  if (!user) throw { code: 404, message: 'User not found' }
+  const user = await User.findOne({ email: req.user!.email })
 
   const newReview = new Review({
     shelterID: shelterID,
-    applicantEmail: req.user?.email,
-    applicantName: user.name,
+    applicantEmail: req.user!.email,
+    applicantName: user!.name,
     rating: rating,
     reviewText: reviewText
   })
@@ -165,13 +164,10 @@ const updateReview = async (
 
   const existingReview = await Review.findOne({
     shelterID: shelterID,
-    applicantEmail: req.user?.email
+    applicantEmail: req.user!.email
   })
 
   if (!existingReview) throw { code: 404, message: 'Review not found' }
-
-  const user = await User.findOne({ email: req.user?.email })
-  if (!user) throw { code: 404, message: 'User not found' }
 
   const oldRating = existingReview.rating // Store the old rating before updating
 

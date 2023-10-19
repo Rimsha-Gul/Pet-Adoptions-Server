@@ -111,6 +111,7 @@ describe('shelter', () => {
     afterEach(async () => {
       // Clean up any existing data
       await removeAllShelters()
+      jest.clearAllMocks()
     })
 
     it('should throw an error if the user is not an admin', async () => {
@@ -168,6 +169,19 @@ describe('shelter', () => {
 
       expect(response.text).toEqual('User not found')
       expect(response.body).toEqual({})
+    })
+
+    it('should return 500 when there is an internal server error', async () => {
+      jest.spyOn(UserModel, 'find').mockImplementationOnce(() => {
+        throw new Error('Database error')
+      })
+
+      const response = await request(app)
+        .get('/shelters')
+        .auth(adminUser.tokens.accessToken, { type: 'bearer' })
+        .expect(500)
+
+      expect(response.text).toEqual('Error fetching shelters')
     })
   })
 

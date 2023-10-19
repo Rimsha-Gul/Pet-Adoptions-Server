@@ -12,9 +12,8 @@ const controller = new NotificationController()
 notificationRouter.get('/', authenticateAccessToken, async (req, res) => {
   try {
     const { error } = getAllNotificationsValidation(req.query)
-    if (error) {
-      return res.status(400).send(error.details[0].message)
-    }
+    if (error) return res.status(400).send(error.details[0].message)
+
     const { page = '1', limit = '8' } = req.query
     const response = await controller.getallNotifications(
       parseInt(page as string),

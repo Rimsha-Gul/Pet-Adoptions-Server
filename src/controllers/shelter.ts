@@ -117,11 +117,7 @@ const getShelter = async (
     profilePhotoUrl = getImageURL(shelter.profilePhoto[0])
   }
 
-  const canUserReview = await canReview(
-    shelter.id.toString(),
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    req.user!.email
-  )
+  const canUserReview = await canReview(shelter.id.toString(), req.user!.email)
 
   const shelterResponse = {
     profilePhoto: profilePhotoUrl,
@@ -147,7 +143,7 @@ const getShelters = async (_req: UserRequest): Promise<ShelterResponse[]> => {
     }))
     return shelterResponses
   } catch (error) {
-    throw { code: 500, message: 'Error sending signup email' }
+    throw { code: 500, message: 'Error fetching shelters' }
   }
 }
 
@@ -157,7 +153,6 @@ const getApplicationDetails = async (
 ): Promise<ApplictionResponseForShelter> => {
   const application = await Application.findOne({
     _id: applicationID,
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     shelterID: req.user!._id
   })
   if (!application) throw { code: 404, message: 'Application not found' }
@@ -185,9 +180,9 @@ const getApplicationDetails = async (
 const inviteShelter = async (body: EmailPayload) => {
   const { email } = body
   const existingUser = await User.findOne({ email })
-  if (existingUser && existingUser?.role === Role.Shelter)
+  if (existingUser && existingUser!.role === Role.Shelter)
     throw { code: 409, message: 'Shelter already exists' }
-  if (existingUser && existingUser?.role === Role.User)
+  if (existingUser && existingUser!.role === Role.User)
     throw { code: 409, message: 'User already exists, which is not a shelter' }
   const existingInvitation = await Invitation.findOne({ shelterEmail: email })
   if (existingInvitation) throw { code: 409, message: 'Invite already sent' }
