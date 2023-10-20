@@ -24,14 +24,24 @@ app.use('/', router)
 
 let dbPromise: Promise<void> | null = null
 
+let uri: string
+
 if (process.env.NODE_ENV !== 'test') {
+  if (process.env.NODE_ENV === 'cypress_test') {
+    uri = `${process.env.MONGO_URI_TEST}`
+  } else {
+    uri = `${process.env.MONGO_URI_DEV}`
+  }
+
   dbPromise = mongoose
-    .connect(`${process.env.MONGO_URI}`, {
+    .connect(uri, {
       useNewUrlParser: true,
       useUnifiedTopology: true
     } as ConnectOptions)
     .then(() => {
-      Cron()
+      if (process.env.NODE_ENV !== 'test') {
+        Cron()
+      }
       console.log('MongoDB Connected')
     })
     .catch((err) => {

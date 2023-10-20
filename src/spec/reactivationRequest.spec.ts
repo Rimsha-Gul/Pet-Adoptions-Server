@@ -43,7 +43,6 @@ describe('reactivationRequest', () => {
       user = await generateUserandTokens()
       applicationID = await generatePetWithApplication(user.email)
       payload = {
-        applicationID: applicationID,
         reasonNotScheduled:
           'I had an unexpected personal commitment that consumed my attention during that time, and I missed the scheduling window.',
         reasonToReactivate:
@@ -69,14 +68,14 @@ describe('reactivationRequest', () => {
     <p>Dear Shelter 1,</p>
     <p>We have received a request to reactivate the application with ID: <strong>${applicationID}</strong>.</p>
     <p>The applicant has provided reasons for their previous inability to proceed and expressed a desire to reactivate the application process.</p>
-    <p>To review the details and take appropriate actions, please <a href="http://127.0.0.1:5173/view/application/${applicationID}/">click here</a>.</p>
+    <p>To review the details and take appropriate actions, please <a href="http://localhost:5173/view/application/${applicationID}/">click here</a>.</p>
     <p>Thank you for your attention to this matter.</p>
     <p>Best Regards,</p>
     <p>The Purrfect Adoptions Team</p>
   `
 
       const response = await request(app)
-        .post('/reactivationRequest/')
+        .post(`/reactivationRequest/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(200)
@@ -103,7 +102,7 @@ describe('reactivationRequest', () => {
     it('should throw error if associated application does not exist', async () => {
       await removeAllApplications()
       const response = await request(app)
-        .post('/reactivationRequest/')
+        .post(`/reactivationRequest/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(404)
@@ -114,7 +113,7 @@ describe('reactivationRequest', () => {
     it('should throw error if shelter of associated application does not exist', async () => {
       await removeAllShelters()
       const response = await request(app)
-        .post('/reactivationRequest/')
+        .post(`/reactivationRequest/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(404)
@@ -125,7 +124,7 @@ describe('reactivationRequest', () => {
     it('should throw error if reactivation request for that application already exists', async () => {
       await generateReactivationRequest(applicationID)
       const response = await request(app)
-        .post('/reactivationRequest/')
+        .post(`/reactivationRequest/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(409)
@@ -134,9 +133,9 @@ describe('reactivationRequest', () => {
     })
 
     it('should throw Bad Request if application ID is less than 24 charcaters long', async () => {
-      payload.applicationID = '123456'
+      applicationID = '123456'
       const response = await request(app)
-        .post('/reactivationRequest/')
+        .post(`/reactivationRequest/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(400)
@@ -147,9 +146,9 @@ describe('reactivationRequest', () => {
     })
 
     it('should throw Bad Request if application ID is greater than 24 charcaters long', async () => {
-      payload.applicationID = '1234567890123456789012345'
+      applicationID = '1234567890123456789012345'
       const response = await request(app)
-        .post('/reactivationRequest/')
+        .post(`/reactivationRequest/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(400)
@@ -159,32 +158,10 @@ describe('reactivationRequest', () => {
       )
     })
 
-    it('should throw Bad Request if application ID is empty', async () => {
-      payload.applicationID = ''
-      const response = await request(app)
-        .post('/reactivationRequest/')
-        .auth(user.tokens.accessToken, { type: 'bearer' })
-        .send(payload)
-        .expect(400)
-
-      expect(response.text).toBe('"applicationID" is not allowed to be empty')
-    })
-
-    it('should throw Bad Request if application ID is a number', async () => {
-      const invalidPayload = { applicationID: 12345 }
-      const response = await request(app)
-        .post('/reactivationRequest/')
-        .auth(user.tokens.accessToken, { type: 'bearer' })
-        .send(invalidPayload)
-        .expect(400)
-
-      expect(response.text).toBe('"applicationID" must be a string')
-    })
-
     it('should throw Bad Request if reasonNotScheduled is empty', async () => {
       payload.reasonNotScheduled = ''
       const response = await request(app)
-        .post('/reactivationRequest/')
+        .post(`/reactivationRequest/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(400)
@@ -196,11 +173,10 @@ describe('reactivationRequest', () => {
 
     it('should throw Bad Request if reasonNotScheduled is a number', async () => {
       const invalidPayload = {
-        applicationID: applicationID,
         reasonNotScheduled: 12345
       }
       const response = await request(app)
-        .post('/reactivationRequest/')
+        .post(`/reactivationRequest/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(invalidPayload)
         .expect(400)
@@ -211,7 +187,7 @@ describe('reactivationRequest', () => {
     it('should throw Bad Request if reasonToReactivate is empty', async () => {
       payload.reasonToReactivate = ''
       const response = await request(app)
-        .post('/reactivationRequest/')
+        .post(`/reactivationRequest/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(400)
@@ -223,13 +199,12 @@ describe('reactivationRequest', () => {
 
     it('should throw Bad Request if reasonToReactivate is a number', async () => {
       const invalidPayload = {
-        applicationID: applicationID,
         reasonNotScheduled:
           'I had an unexpected personal commitment that consumed my attention during that time, and I missed the scheduling window.',
         reasonToReactivate: 12345
       }
       const response = await request(app)
-        .post('/reactivationRequest/')
+        .post(`/reactivationRequest/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(invalidPayload)
         .expect(400)
@@ -237,30 +212,13 @@ describe('reactivationRequest', () => {
       expect(response.text).toBe('"reasonToReactivate" must be a string')
     })
 
-    it('should throw Bad Request if applicationID is missing', async () => {
-      const invalidPayload = {
-        reasonNotScheduled:
-          'I had an unexpected personal commitment that consumed my attention during that time, and I missed the scheduling window.',
-        reasonToReactivate:
-          'The commitment has been addressed, and I am now fully available to proceed with the visit scheduling.'
-      }
-      const response = await request(app)
-        .post('/reactivationRequest/')
-        .auth(user.tokens.accessToken, { type: 'bearer' })
-        .send(invalidPayload)
-        .expect(400)
-
-      expect(response.text).toBe('"applicationID" is required')
-    })
-
     it('should throw Bad Request if reasonNotScheduled is missing', async () => {
       const invalidPayload = {
-        applicationID: applicationID,
         reasonToReactivate:
           'The commitment has been addressed, and I am now fully available to proceed with the visit scheduling.'
       }
       const response = await request(app)
-        .post('/reactivationRequest/')
+        .post(`/reactivationRequest/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(invalidPayload)
         .expect(400)
@@ -270,12 +228,11 @@ describe('reactivationRequest', () => {
 
     it('should throw Bad Request if reasonToReactivate is missing', async () => {
       const invalidPayload = {
-        applicationID: applicationID,
         reasonNotScheduled:
           'I had an unexpected personal commitment that consumed my attention during that time, and I missed the scheduling window.'
       }
       const response = await request(app)
-        .post('/reactivationRequest/')
+        .post(`/reactivationRequest/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(invalidPayload)
         .expect(400)
@@ -285,7 +242,7 @@ describe('reactivationRequest', () => {
 
     it('should throw Unauthorized if token is missing', async () => {
       const response = await request(app)
-        .post('/reactivationRequest/')
+        .post(`/reactivationRequest/${applicationID}`)
         .send(payload)
         .expect(401)
 
@@ -295,7 +252,7 @@ describe('reactivationRequest', () => {
     it('should throw error if shelter tries to create reactivation request', async () => {
       const shelter = await generateAdminandTokens(Role.Shelter)
       const response = await request(app)
-        .post('/reactivationRequest/')
+        .post(`/reactivationRequest/${applicationID}`)
         .auth(shelter.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(403)
@@ -306,7 +263,7 @@ describe('reactivationRequest', () => {
     it('should throw error if admin tries to create reactivation request', async () => {
       const admin = await generateAdminandTokens(Role.Shelter)
       const response = await request(app)
-        .post('/reactivationRequest/')
+        .post(`/reactivationRequest/${applicationID}`)
         .auth(admin.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(403)
@@ -333,7 +290,7 @@ describe('reactivationRequest', () => {
 
     it('should successfully return details of the reactivation request', async () => {
       const response = await request(app)
-        .get(`/reactivationRequest?id=${applicationID}`)
+        .get(`/reactivationRequest/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -343,7 +300,7 @@ describe('reactivationRequest', () => {
     it('should throw error if reactivation request against that applicationID does not exist', async () => {
       await removeAllReactivationRequests()
       const response = await request(app)
-        .get(`/reactivationRequest?id=${applicationID}`)
+        .get(`/reactivationRequest/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(404)
 
@@ -353,7 +310,7 @@ describe('reactivationRequest', () => {
     it('should throw error if the corresponding applicationID does not exist', async () => {
       await removeAllApplications()
       const response = await request(app)
-        .get(`/reactivationRequest?id=${applicationID}`)
+        .get(`/reactivationRequest/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(404)
 
@@ -361,35 +318,32 @@ describe('reactivationRequest', () => {
     })
 
     it('should throw Bad Request if applicationID length is less than 24 chaaracters', async () => {
+      applicationID = '12345'
       const response = await request(app)
-        .get(`/reactivationRequest?id=12345`)
+        .get(`/reactivationRequest/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
-      expect(response.text).toEqual('"id" length must be 24 characters long')
+      expect(response.text).toEqual(
+        '"applicationID" length must be 24 characters long'
+      )
     })
 
     it('should throw Bad Request if applicationID length is greater than 24 chaaracters', async () => {
+      applicationID = '1234567890123456789012345'
       const response = await request(app)
-        .get(`/reactivationRequest?id=1234567890123456789012345`)
+        .get(`/reactivationRequest/${applicationID}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
-      expect(response.text).toEqual('"id" length must be 24 characters long')
-    })
-
-    it('should throw Bad Request if applicationID is missing', async () => {
-      const response = await request(app)
-        .get(`/reactivationRequest?id=`)
-        .auth(user.tokens.accessToken, { type: 'bearer' })
-        .expect(400)
-
-      expect(response.text).toEqual('"id" is not allowed to be empty')
+      expect(response.text).toEqual(
+        '"applicationID" length must be 24 characters long'
+      )
     })
 
     it('should throw Unauthorized if token is missing', async () => {
       const response = await request(app)
-        .get(`/reactivationRequest?id=${applicationID}`)
+        .get(`/reactivationRequest/${applicationID}`)
         .expect(401)
 
       expect(response.text).toEqual('Unauthorized')

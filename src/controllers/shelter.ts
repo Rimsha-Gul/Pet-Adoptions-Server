@@ -2,17 +2,29 @@ import Application, {
   ApplictionResponseForShelter
 } from '../models/Application'
 import { UserRequest } from '../types/Request'
-import { Body, Example, Get, Post, Request, Route, Security, Tags } from 'tsoa'
+import {
+  Body,
+  Example,
+  Get,
+  Path,
+  Post,
+  Query,
+  Request,
+  Route,
+  Security,
+  Tags
+} from 'tsoa'
 import { Pet } from '../models/Pet'
 import {
   EmailPayload,
   Role,
   ShelterProfileResponse,
+  ShelterResponse,
   User,
   VerifyInvitationResponse
 } from '../models/User'
 import { getImageURL } from '../utils/getImageURL'
-import { emailPayloadExample } from '../examples/auth'
+import { emailPayloadExample, shelterResponseExample } from '../examples/auth'
 import { generateInvitationToken } from '../utils/generateInvitationToken'
 import Invitation, { InvitationStatus } from '../models/Invitation'
 import { getShelterInvitationEmail } from '../data/emailMessages'
@@ -29,27 +41,44 @@ import jwt from 'jsonwebtoken'
 export class ShelterController {
   /**
    * @summary Returns a shelter's details given id
-   *
+   * @param shelterID ID of the shelter
+   * @example shelterID "6475e9630044288a2b4880b5"
    */
   @Security('bearerAuth')
-  @Get('/')
+  @Get('/:shelterID')
   @Example<ShelterProfileResponse>(shelterProfileResponseExample)
   public async getShelter(
-    @Request() req: UserRequest
+    @Request() req: UserRequest,
+    @Path() shelterID: string
   ): Promise<ShelterProfileResponse> {
-    return getShelter(req)
+    return getShelter(req, shelterID)
+  }
+
+  /**
+   * @summary Returns ids and names of all shelters
+   *
+   */
+  @Example<ShelterResponse>(shelterResponseExample)
+  @Security('bearerAuth')
+  @Get('/')
+  public async getShelters(
+    @Request() req: UserRequest
+  ): Promise<ShelterResponse[]> {
+    return getShelters(req)
   }
 
   /**
    * @summary Returns an application's details given id
-   *
+   * @param applicationID ID of the application
+   * @example applicationID "64b14bd7ba2fba2af4b5338d"
    */
   @Security('bearerAuth')
-  @Get('/application')
+  @Get('/applications/:applicationID')
   public async getApplicationDetails(
-    @Request() req: UserRequest
+    @Request() req: UserRequest,
+    @Path() applicationID: string
   ): Promise<ApplictionResponseForShelter> {
-    return getApplicationDetails(req)
+    return getApplicationDetails(req, applicationID)
   }
 
   /**
@@ -57,7 +86,7 @@ export class ShelterController {
    *
    */
   @Security('bearerAuth')
-  @Post('/invite')
+  @Post('/invitations')
   @Example<EmailPayload>(emailPayloadExample)
   public async inviteShelter(@Body() body: EmailPayload) {
     return inviteShelter(body)
@@ -67,19 +96,20 @@ export class ShelterController {
    * @summary Verifies the invitation token for shelter
    *
    */
-  @Get('/verifyInvitationToken')
+  @Get('/invitations/token/verification')
   @Example<VerifyInvitationResponse>(verifyInvitationResponseExample)
   public async verifyInvitationToken(
-    @Request() req: UserRequest
+    @Query() invitationToken: string
   ): Promise<VerifyInvitationResponse> {
-    return verifyInvitationToken(req)
+    return verifyInvitationToken(invitationToken)
   }
 }
 
 const getShelter = async (
-  req: UserRequest
+  req: UserRequest,
+  shelterID: string
 ): Promise<ShelterProfileResponse> => {
-  const shelter = await User.findById(req.query.id)
+  const shelter = await User.findById(shelterID)
   if (!shelter) throw { code: 404, message: 'Shelter not found' }
 
   let profilePhotoUrl
@@ -87,11 +117,7 @@ const getShelter = async (
     profilePhotoUrl = getImageURL(shelter.profilePhoto[0])
   }
 
-  const canUserReview = await canReview(
-    shelter.id.toString(),
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    req.user!.email
-  )
+  const canUserReview = await canReview(shelter.id.toString(), req.user!.email)
 
   const shelterResponse = {
     profilePhoto: profilePhotoUrl,
@@ -107,10 +133,28 @@ const getShelter = async (
   return shelterResponse
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const getShelters = async (_req: UserRequest): Promise<ShelterResponse[]> => {
+  try {
+    const shelters = await User.find({ role: 'SHELTER' }, '_id name')
+    const shelterResponses: ShelterResponse[] = shelters.map((shelter) => ({
+      id: shelter._id.toString(),
+      name: shelter.name
+    }))
+    return shelterResponses
+  } catch (error) {
+    throw { code: 500, message: 'Error fetching shelters' }
+  }
+}
+
 const getApplicationDetails = async (
-  req: UserRequest
+  req: UserRequest,
+  applicationID: string
 ): Promise<ApplictionResponseForShelter> => {
-  const application = await Application.findById(req.query.id)
+  const application = await Application.findOne({
+    _id: applicationID,
+    shelterID: req.user!._id
+  })
   if (!application) throw { code: 404, message: 'Application not found' }
   const applicant = await User.findOne({
     email: application.applicantEmail
@@ -136,10 +180,10 @@ const getApplicationDetails = async (
 const inviteShelter = async (body: EmailPayload) => {
   const { email } = body
   const existingUser = await User.findOne({ email })
-  if (existingUser && existingUser?.role === Role.Shelter)
-    throw { code: 409, message: 'Shelter already  exists' }
-  if (existingUser && existingUser?.role === Role.User)
-    throw { code: 409, message: 'User already  exists, which is not a shelter' }
+  if (existingUser && existingUser!.role === Role.Shelter)
+    throw { code: 409, message: 'Shelter already exists' }
+  if (existingUser && existingUser!.role === Role.User)
+    throw { code: 409, message: 'User already exists, which is not a shelter' }
   const existingInvitation = await Invitation.findOne({ shelterEmail: email })
   if (existingInvitation) throw { code: 409, message: 'Invite already sent' }
 
@@ -160,10 +204,8 @@ const inviteShelter = async (body: EmailPayload) => {
 }
 
 const verifyInvitationToken = async (
-  req: UserRequest
+  invitationToken: string
 ): Promise<VerifyInvitationResponse> => {
-  const { invitationToken } = req.query
-
   try {
     // decode and verify the token synchronously
     const decoded: any = jwt.verify(
@@ -194,7 +236,7 @@ const verifyInvitationToken = async (
     if (existingUser && existingUser.role === Role.User)
       throw {
         code: 409,
-        message: 'User already  exists, which is not a shelter'
+        message: 'User already exists, which is not a shelter'
       }
 
     // Verify the invitation status
@@ -208,10 +250,10 @@ const verifyInvitationToken = async (
     return { email, role }
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
-      throw { code: 400, message: 'Expired reset token' }
+      throw { code: 400, message: 'Expired invitation token' }
     }
     if (err.name === 'JsonWebTokenError') {
-      throw { code: 400, message: 'Invalid reset token' }
+      throw { code: 400, message: 'Invalid invitation token' }
     }
     throw err
   }

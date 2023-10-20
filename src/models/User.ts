@@ -1,17 +1,25 @@
 import { model, Document, Model, Schema } from 'mongoose'
 import bcrypt from 'bcrypt'
 
-//import mongooseSequence from "mongoose-sequence";
-
-//const AutoIncrement = mongooseSequence(mongoose);
-
-//const AutoIncrement = AutoIncrementFactory(mongoose);
-
 export enum Role {
   Admin = 'ADMIN',
   Shelter = 'SHELTER',
   User = 'USER'
 }
+
+export enum EmailChangeRequest {
+  currentEmailStep = 'currentEmailStep',
+  newEmailStep = 'newEmailStep'
+}
+
+/**
+ * @example {
+ *  "name": "Jack Doe",
+ *  "email": "johndoe@example.com",
+ *  "password": "123456",
+ *  "role": "USER"
+ * }
+ */
 
 export interface UserPayload {
   name: string
@@ -21,17 +29,37 @@ export interface UserPayload {
 }
 
 export interface LoginPayload {
+  /**
+   * Email of user
+   * @example "johndoe@example.com"
+   */
   email: string
+  /**
+   * Password for user
+   * @example "123456"
+   */
   password: string
 }
 
 export interface SendCodePayload {
+  /**
+   * Email of user
+   * @example "johndoe@example.com"
+   */
   email: string
-  emailChangeRequest?: boolean
+  emailChangeRequest?: EmailChangeRequest
 }
 
 export interface VerificationPayload {
+  /**
+   * Email of user
+   * @example "johndoe@example.com"
+   */
   email: string
+  /**
+   * Verification code of user
+   * @example "654321"
+   */
   verificationCode: string
 }
 
@@ -60,10 +88,18 @@ export interface VerificationResponse extends TokenResponse {
 }
 
 export interface EmailPayload {
+  /**
+   * Email of user
+   * @example "johndoe@example.com"
+   */
   email: string
 }
 
-export interface CheckPasswordPayload {
+export interface PasswordPayload {
+  /**
+   * Password for user
+   * @example "123456"
+   */
   password: string
 }
 
@@ -136,7 +172,15 @@ export interface VerifyInvitationResponse {
 }
 
 export interface ResetPasswordPayload {
+  /**
+   * Email of user
+   * @example "johndoe@example.com"
+   */
   email: string
+  /**
+   * Password for user
+   * @example "123456"
+   */
   newPassword: string
 }
 
@@ -177,8 +221,6 @@ UserSchema.method('comparePassword', function (password: string): boolean {
   if (bcrypt.compareSync(password, this.password)) return true
   return false
 })
-
-//UserSchema.plugin(AutoIncrement, { inc_field: "id" });
 
 export const User: IUserModel = model<IUser, IUserModel>('User', UserSchema)
 

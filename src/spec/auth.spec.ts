@@ -1,4 +1,5 @@
 import {
+  EmailChangeRequest,
   EmailPayload,
   ResetPasswordPayload,
   Role,
@@ -12,8 +13,8 @@ import {
   Admin,
   User,
   generateAdminandTokens,
-  generateUserNotVerifiedandTokens,
   generateUserandTokens,
+  generateUserNotVerifiedandTokens,
   removeAllUsers
 } from './utils/generateUserAndToken'
 import { mongooseSetUp, dropDatabase, dropCollections } from './utils/setup'
@@ -22,7 +23,6 @@ import * as generateEmailModule from '../utils/generateVerificationCode'
 import * as sendEmailModule from '../middleware/sendEmail'
 import * as generateResetTokenModule from '../utils/generateResetToken'
 import sinon from 'sinon'
-import { generateShelters, removeAllShelters } from './utils/generateShelters'
 import tmp from 'tmp-promise'
 import multer from 'multer'
 import express from 'express'
@@ -30,7 +30,11 @@ import { AuthController } from '../controllers/auth'
 import { authenticateAccessToken } from '../middleware/authenticateToken'
 import { generateInvitation } from './utils/generateInvitation'
 import { generateResetToken } from '../utils/generateResetToken'
-import { generateExpiredToken } from './utils/generateExpiredToken'
+import {
+  generateExpiredAccessToken,
+  generateExpiredRefreshToken,
+  generateExpiredToken
+} from './utils/generateExpiredToken'
 
 describe('auth', () => {
   beforeAll(async () => {
@@ -342,6 +346,23 @@ describe('auth', () => {
       expect(response.text).toEqual('Invalid invitation')
       expect(response.body).toEqual({})
     })
+
+    it('should respond with Bad Request if user tries to signup as admin', async () => {
+      await generateAdminandTokens(Role.Admin)
+      const signupData = {
+        name: user.name,
+        email: user.email,
+        password: '123456',
+        role: 'ADMIN'
+      }
+      const response = await request(app)
+        .post('/auth/signup')
+        .send(signupData)
+        .expect(409)
+
+      expect(response.text).toEqual('Admin user already exists')
+      expect(response.body).toEqual({})
+    })
   })
 
   describe('requestPasswordReset', () => {
@@ -356,7 +377,7 @@ describe('auth', () => {
     <p>We received a request to reset your password. The password reset window is limited to five minutes.</p>
     <p>If you do not reset your password within five minutes, you will need to submit a new request.</p>
     <p>Please click on the following link to complete the process:</p>
-     <p><a href="http://127.0.0.1:5173/resetPassword/abc123/">Reset</a></p>
+     <p><a href="http://localhost:5173/resetPassword/abc123/">Reset</a></p>
     <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
   `
 
@@ -385,7 +406,7 @@ describe('auth', () => {
 
     it('should send reset password email successfully', async () => {
       const response = await request(app)
-        .post('/auth/requestPasswordReset')
+        .post('/auth/password/reset/request')
         .send(payload)
         .expect(200)
 
@@ -407,7 +428,7 @@ describe('auth', () => {
       }
 
       const response = await request(app)
-        .post('/auth/requestPasswordReset')
+        .post('/auth/password/reset/request')
         .send(invalidEmailPayload)
         .expect(404)
 
@@ -422,7 +443,7 @@ describe('auth', () => {
       )
 
       const response = await request(app)
-        .post('/auth/requestPasswordReset')
+        .post('/auth/password/reset/request')
         .send(payload)
         .expect(500)
 
@@ -432,7 +453,7 @@ describe('auth', () => {
     })
   })
 
-  describe('sendVerificationCode', () => {
+  describe('verificationCode', () => {
     let user: User
     let payload: SendCodePayload
     let generateVerificationCodeSpy: jest.SpyInstance
@@ -445,8 +466,7 @@ describe('auth', () => {
     beforeEach(async () => {
       user = await generateUserandTokens()
       payload = {
-        email: user.email,
-        emailChangeRequest: false
+        email: user.email
       }
       // Spy on the generateVerificationCode function and mock its implementation
       generateVerificationCodeSpy = jest.spyOn(
@@ -466,8 +486,10 @@ describe('auth', () => {
     })
 
     it('should send verification code successfully', async () => {
+      const testUser = await generateUserNotVerifiedandTokens() // for sending first time (if veriificationCode.code does not exist)
+      payload.email = testUser.email
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(payload)
         .expect(200)
 
@@ -481,22 +503,13 @@ describe('auth', () => {
       )
     })
 
-    it('should send verification code successfully', async () => {
-      const testUser = await generateUserNotVerifiedandTokens() // for sending first time (if veriificationCode.code does not exist)
-      payload.email = testUser.email
+    it('should throw error if user is already verified', async () => {
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(payload)
-        .expect(200)
+        .expect(422)
 
-      expect(response.body.message).toEqual('Signup email sent successfully')
-      expect(sendEmailSpy).toBeCalledTimes(1)
-      expectedRecipient = payload.email
-      expect(sendEmailSpy).toBeCalledWith(
-        expectedRecipient,
-        expectedSubject,
-        expectedMessage
-      )
+      expect(response.text).toEqual('User already verified')
     })
 
     it('should handle error when sending verification code', async () => {
@@ -505,25 +518,21 @@ describe('auth', () => {
         throw new Error('Failed to send email')
       })
 
+      const testUser = await generateUserNotVerifiedandTokens()
+      payload.email = testUser.email
+
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(payload)
         .expect(500)
 
       expect(response.text).toEqual('Error sending signup email')
-      expect(sendEmailSpy).toBeCalledTimes(1)
-      expectedRecipient = payload.email
-      expect(sendEmailSpy).toBeCalledWith(
-        expectedRecipient,
-        expectedSubject,
-        expectedMessage
-      )
     })
 
     it('should throw an error if user does not exist', async () => {
       payload.email = 'nonexistentuser@test.com' // Assign a non-existent email
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(payload)
         .expect(404)
 
@@ -532,11 +541,11 @@ describe('auth', () => {
     })
 
     it('should throw an error if user data in req.user is invalid', async () => {
-      payload.emailChangeRequest = true
+      payload.emailChangeRequest = EmailChangeRequest.newEmailStep
 
       // Send the request without that header.
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(payload)
         .expect(401)
 
@@ -545,10 +554,10 @@ describe('auth', () => {
     })
 
     it('should send email change request successfully', async () => {
-      payload.emailChangeRequest = true
+      payload.emailChangeRequest = EmailChangeRequest.newEmailStep
 
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send(payload)
         .expect(200)
@@ -568,7 +577,7 @@ describe('auth', () => {
     it('should respond with Bad Request if email is missing', async () => {
       const incompletePayload = {}
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(incompletePayload)
         .expect(400)
 
@@ -579,7 +588,7 @@ describe('auth', () => {
     it('should respond with Bad Request if email is empty', async () => {
       payload.email = ''
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(payload)
         .expect(400)
 
@@ -590,22 +599,26 @@ describe('auth', () => {
     it('should respond with Bad Request if emailChangeRequest is string', async () => {
       const incorrectPayload = { email: user.email, emailChangeRequest: 'test' }
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(incorrectPayload)
         .expect(400)
 
-      expect(response.text).toEqual(`"emailChangeRequest" must be a boolean`)
+      expect(response.text).toEqual(
+        `"emailChangeRequest" must be one of [currentEmailStep, newEmailStep]`
+      )
       expect(response.body).toEqual({})
     })
 
     it('should respond with Bad Request if emailChangeRequest is number', async () => {
       const incorrectPayload = { email: user.email, emailChangeRequest: 1 }
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(incorrectPayload)
         .expect(400)
 
-      expect(response.text).toEqual(`"emailChangeRequest" must be a boolean`)
+      expect(response.text).toEqual(
+        `"emailChangeRequest" must be one of [currentEmailStep, newEmailStep]`
+      )
       expect(response.body).toEqual({})
     })
 
@@ -613,7 +626,7 @@ describe('auth', () => {
       payload.email = 'test@gmailcom'
 
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(payload)
         .expect(400)
 
@@ -625,7 +638,7 @@ describe('auth', () => {
       const incorrectPayload = { email: 1 }
 
       const response = await request(app)
-        .post('/auth/sendVerificationCode')
+        .post('/auth/verificationCode')
         .send(incorrectPayload)
         .expect(400)
 
@@ -648,7 +661,7 @@ describe('auth', () => {
       }
 
       const response = await request(app)
-        .post('/auth/verifyEmail')
+        .post('/auth/email/verification')
         .send(payload)
         .expect(200)
 
@@ -664,7 +677,7 @@ describe('auth', () => {
       }
 
       const response = await request(app)
-        .post('/auth/verifyEmail')
+        .post('/auth/email/verification')
         .send(payload)
         .expect(404)
 
@@ -679,7 +692,7 @@ describe('auth', () => {
       }
 
       const response = await request(app)
-        .post('/auth/verifyEmail')
+        .post('/auth/email/verification')
         .send(payload)
         .expect(400)
 
@@ -704,7 +717,7 @@ describe('auth', () => {
       }
 
       const response = await request(app)
-        .post('/auth/verifyEmail')
+        .post('/auth/email/verification')
         .send(payload)
         .expect(401)
 
@@ -717,7 +730,7 @@ describe('auth', () => {
     it('should respond with Bad Request if email is missing', async () => {
       const incompletePayload = { verificationCode: user.verificationCode.code }
       const response = await request(app)
-        .post('/auth/verifyEmail')
+        .post('/auth/email/verification')
         .send(incompletePayload)
         .expect(400)
 
@@ -728,7 +741,7 @@ describe('auth', () => {
     it('should respond with Bad Request if verificationCode is missing', async () => {
       const incompletePayload = { email: user.email }
       const response = await request(app)
-        .post('/auth/verifyEmail')
+        .post('/auth/email/verification')
         .send(incompletePayload)
         .expect(400)
 
@@ -742,7 +755,7 @@ describe('auth', () => {
         verificationCode: user.verificationCode.code
       }
       const response = await request(app)
-        .post('/auth/verifyEmail')
+        .post('/auth/email/verification')
         .send(payload)
         .expect(400)
 
@@ -756,7 +769,7 @@ describe('auth', () => {
         verificationCode: ''
       }
       const response = await request(app)
-        .post('/auth/verifyEmail')
+        .post('/auth/email/verification')
         .send(payload)
         .expect(400)
 
@@ -773,7 +786,7 @@ describe('auth', () => {
       }
 
       const response = await request(app)
-        .post('/auth/verifyEmail')
+        .post('/auth/email/verification')
         .send(payload)
         .expect(400)
 
@@ -788,7 +801,7 @@ describe('auth', () => {
       }
 
       const response = await request(app)
-        .post('/auth/verifyEmail')
+        .post('/auth/email/verification')
         .send(incorrectPayload)
         .expect(400)
 
@@ -800,7 +813,7 @@ describe('auth', () => {
       const incorrectPayload = { email: user.email, verificationCode: 1 }
 
       const response = await request(app)
-        .post('/auth/verifyEmail')
+        .post('/auth/email/verification')
         .send(incorrectPayload)
         .expect(400)
 
@@ -818,7 +831,7 @@ describe('auth', () => {
 
     it('should refresh tokens successfully for a verified user', async () => {
       const response = await request(app)
-        .post('/auth/refresh')
+        .post('/auth/token/refresh')
         .auth(user.tokens.refreshToken, { type: 'bearer' })
         .expect(200)
 
@@ -833,7 +846,7 @@ describe('auth', () => {
       )
 
       const response = await request(app)
-        .post('/auth/refresh')
+        .post('/auth/token/refresh')
         .auth(invalidRefreshToken, { type: 'bearer' })
         .expect(404)
 
@@ -846,7 +859,7 @@ describe('auth', () => {
       const newUser = await generateUserNotVerifiedandTokens()
 
       const response = await request(app)
-        .post('/auth/refresh')
+        .post('/auth/token/refresh')
         .auth(newUser.tokens.refreshToken, { type: 'bearer' })
         .expect(403)
 
@@ -855,9 +868,142 @@ describe('auth', () => {
     })
 
     it('should respond with Unauthorized if token is missing', async () => {
-      const response = await request(app).post(`/auth/refresh`).expect(401)
+      const response = await request(app)
+        .post(`/auth/token/refresh`)
+        .expect(401)
 
       expect(response.text).toEqual(`Unauthorized`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Unauthorized if refresh token has expired', async () => {
+      const invalidAccessToken = generateExpiredRefreshToken('test1@gmail.com')
+
+      const response = await request(app)
+        .post('/auth/token/refresh')
+        .auth(invalidAccessToken, { type: 'bearer' })
+        .expect(401)
+
+      expect(response.text).toEqual('Refresh token has expired')
+      expect(response.body).toEqual({})
+    })
+  })
+
+  describe('get alternate email', () => {
+    let user: Admin, payload: EmailPayload
+
+    beforeEach(async () => {
+      await generateUserandTokens()
+      user = await generateAdminandTokens(Role.Admin)
+      payload = {
+        email: 'test@gmail.com'
+      }
+    })
+
+    afterEach(async () => {
+      await removeAllUsers()
+    })
+
+    it('should successfully notify the user to provide an alternate email', async () => {
+      const response = await request(app)
+        .post(`/auth/email/alternate`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(payload)
+        .expect(200)
+
+      expect(response.body.message).toBe('User notified successfully')
+    })
+
+    it('should throw an error if user does not exist', async () => {
+      payload.email = 'nonexistentuser@gmail.com'
+      const response = await request(app)
+        .post(`/auth/email/alternate`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(payload)
+        .expect(404)
+
+      expect(response.text).toEqual('User not found')
+      expect(response.body).toEqual({})
+    })
+
+    it('should throw an error if user is already a shelter', async () => {
+      await generateAdminandTokens(Role.Shelter)
+      payload.email = 'shelter1@test.com'
+      const response = await request(app)
+        .post(`/auth/email/alternate`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(payload)
+        .expect(409)
+
+      expect(response.text).toEqual('User is already a shelter')
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if email is missing', async () => {
+      const response = await request(app)
+        .post(`/auth/email/alternate`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" is required`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if email is empty', async () => {
+      payload.email = ''
+      const response = await request(app)
+        .post(`/auth/email/alternate`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(payload)
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" is not allowed to be empty`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Bad Request if email is invalid', async () => {
+      payload.email = 'test@gmailcom'
+      const response = await request(app)
+        .post(`/auth/email/alternate`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send(payload)
+        .expect(400)
+
+      expect(response.text).toEqual(`"email" must be a valid email`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Unauthorized if token is missing', async () => {
+      const response = await request(app)
+        .post(`/auth/email/alternate`)
+        .send(payload)
+        .expect(401)
+
+      expect(response.text).toEqual(`Unauthorized`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Permission Denied if shelter tries to perform this task', async () => {
+      const shelter = await generateAdminandTokens(Role.Shelter)
+      const response = await request(app)
+        .post(`/auth/email/alternate`)
+        .auth(shelter.tokens.accessToken, { type: 'bearer' })
+        .send(payload)
+        .expect(403)
+
+      expect(response.text).toEqual(`Permission denied`)
+      expect(response.body).toEqual({})
+    })
+
+    it('should respond with Permission Denied if user tries to perform this task', async () => {
+      const simpleUser = await generateUserandTokens()
+      const response = await request(app)
+        .post(`/auth/email/alternate`)
+        .auth(simpleUser.tokens.accessToken, { type: 'bearer' })
+        .send(payload)
+        .expect(403)
+
+      expect(response.text).toEqual(`Permission denied`)
       expect(response.body).toEqual({})
     })
   })
@@ -869,6 +1015,10 @@ describe('auth', () => {
       user = await generateUserandTokens()
     })
 
+    afterEach(async () => {
+      await removeAllUsers()
+    })
+
     it('should throw an error if user does not exist', async () => {
       const nonExistentEmailToken = generateAccessToken(
         'nonexistent@gmail.com',
@@ -877,7 +1027,7 @@ describe('auth', () => {
       const nonExistentEmail = 'nonexistenttest@gmail.com'
 
       const response = await request(app)
-        .get(`/auth/checkEmail?email=${nonExistentEmail}`)
+        .get(`/auth/email/availability?email=${nonExistentEmail}`)
         .auth(nonExistentEmailToken, { type: 'bearer' })
         .expect(404)
 
@@ -890,7 +1040,7 @@ describe('auth', () => {
       const newUser = await generateUserNotVerifiedandTokens()
 
       const response = await request(app)
-        .get(`/auth/checkEmail?email=${newUser.email}`)
+        .get(`/auth/email/availability?email=${newUser.email}`)
         .auth(newUser.tokens.accessToken, { type: 'bearer' })
         .expect(403)
 
@@ -900,7 +1050,7 @@ describe('auth', () => {
 
     it('should throw an error if email already exists', async () => {
       const response = await request(app)
-        .get(`/auth/checkEmail?email=${user.email}`)
+        .get(`/auth/email/availability?email=${user.email}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(409)
 
@@ -912,7 +1062,7 @@ describe('auth', () => {
       const newEmail = 'newTest@gmail.com'
 
       const response = await request(app)
-        .get(`/auth/checkEmail?email=${newEmail}`)
+        .get(`/auth/email/availability?email=${newEmail}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(200)
 
@@ -921,7 +1071,7 @@ describe('auth', () => {
 
     it('should respond with Bad Request if email is missing', async () => {
       const response = await request(app)
-        .get(`/auth/checkEmail`)
+        .get(`/auth/email/availability`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -932,7 +1082,7 @@ describe('auth', () => {
     it('should respond with Bad Request if email is empty', async () => {
       const newEmail = ''
       const response = await request(app)
-        .get(`/auth/checkEmail?email=${newEmail}`)
+        .get(`/auth/email/availability?email=${newEmail}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -943,7 +1093,7 @@ describe('auth', () => {
     it('should respond with Bad Request if email is invalid', async () => {
       const newEmail = 'test@gmailcom'
       const response = await request(app)
-        .get(`/auth/checkEmail?email=${newEmail}`)
+        .get(`/auth/email/availability?email=${newEmail}`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -959,6 +1109,10 @@ describe('auth', () => {
       user = await generateUserandTokens()
     })
 
+    afterEach(async () => {
+      await removeAllUsers()
+    })
+
     it('should throw an error if user does not exist', async () => {
       const nonExistentUserToken = generateAccessToken(
         'nonexistent@gmail.com',
@@ -968,7 +1122,7 @@ describe('auth', () => {
       const nonExistentEmail = 'nonexistenttest@gmail.com'
 
       const response = await request(app)
-        .put(`/auth/changeEmail`)
+        .put(`/auth/email`)
         .auth(nonExistentUserToken, { type: 'bearer' })
         .send({ email: nonExistentEmail })
         .expect(404)
@@ -982,7 +1136,7 @@ describe('auth', () => {
       const newUser = await generateUserNotVerifiedandTokens()
 
       const response = await request(app)
-        .put(`/auth/changeEmail`)
+        .put(`/auth/email`)
         .auth(newUser.tokens.accessToken, { type: 'bearer' })
         .send({ email: 'new.email@gmail.com' })
         .expect(403)
@@ -995,7 +1149,7 @@ describe('auth', () => {
       const newEmail = 'new.email@gmail.com'
 
       const response = await request(app)
-        .put(`/auth/changeEmail`)
+        .put(`/auth/email`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ email: newEmail })
         .expect(200)
@@ -1009,7 +1163,7 @@ describe('auth', () => {
 
     it('should respond with Bad Request if email is missing', async () => {
       const response = await request(app)
-        .put(`/auth/changeEmail`)
+        .put(`/auth/email`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -1020,7 +1174,7 @@ describe('auth', () => {
     it('should respond with Bad Request if email is empty', async () => {
       const newEmail = ''
       const response = await request(app)
-        .put(`/auth/changeEmail`)
+        .put(`/auth/email`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ email: newEmail })
         .expect(400)
@@ -1032,7 +1186,7 @@ describe('auth', () => {
     it('should respond with Bad Request if email is invalid', async () => {
       const newEmail = 'test@gmailcom'
       const response = await request(app)
-        .put(`/auth/changeEmail`)
+        .put(`/auth/email`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ email: newEmail })
         .expect(400)
@@ -1056,7 +1210,7 @@ describe('auth', () => {
       )
 
       const response = await request(app)
-        .post('/auth/checkPassword')
+        .post('/auth/password/verify')
         .auth(nonExistentUserToken, { type: 'bearer' })
         .send({ password: 'testPassword' })
         .expect(404)
@@ -1070,7 +1224,7 @@ describe('auth', () => {
       const newUser = await generateUserNotVerifiedandTokens()
 
       const response = await request(app)
-        .post('/auth/checkPassword')
+        .post('/auth/password/verify')
         .auth(newUser.tokens.accessToken, { type: 'bearer' })
         .send({ password: 'testPassword' })
         .expect(403)
@@ -1083,7 +1237,7 @@ describe('auth', () => {
       const incorrectPassword = 'incorrectPassword'
 
       const response = await request(app)
-        .post('/auth/checkPassword')
+        .post('/auth/password/verify')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ password: incorrectPassword })
         .expect(400)
@@ -1095,7 +1249,7 @@ describe('auth', () => {
     it('should return a success message if the password is correct', async () => {
       const correctPassword = '123456'
       const response = await request(app)
-        .post('/auth/checkPassword')
+        .post('/auth/password/verify')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ password: correctPassword })
         .expect(200)
@@ -1106,7 +1260,7 @@ describe('auth', () => {
     it('should return bad request if the password is a number', async () => {
       const password = 123456
       const response = await request(app)
-        .post('/auth/checkPassword')
+        .post('/auth/password/verify')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ password: password })
         .expect(400)
@@ -1117,7 +1271,7 @@ describe('auth', () => {
 
     it('should return bad request if the password is missing', async () => {
       const response = await request(app)
-        .post('/auth/checkPassword')
+        .post('/auth/password/verify')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -1128,7 +1282,7 @@ describe('auth', () => {
     it('should return bad request if the password is empty', async () => {
       const password = ''
       const response = await request(app)
-        .post('/auth/checkPassword')
+        .post('/auth/password/verify')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ password: password })
         .expect(400)
@@ -1140,7 +1294,7 @@ describe('auth', () => {
     it('should respond with Bad Request if password has length less than 6', async () => {
       const password = '12345'
       const response = await request(app)
-        .post('/auth/checkPassword')
+        .post('/auth/password/verify')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ password: password })
         .expect(400)
@@ -1154,7 +1308,7 @@ describe('auth', () => {
     it('should respond with Bad Request if password has length greater than 32', async () => {
       const password = '1'.repeat(1025)
       const response = await request(app)
-        .post('/auth/checkPassword')
+        .post('/auth/password/verify')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ password: password })
         .expect(400)
@@ -1168,7 +1322,7 @@ describe('auth', () => {
     it('should return bad request if token is mssing', async () => {
       const correctPassword = '123456'
       const response = await request(app)
-        .post('/auth/checkPassword')
+        .post('/auth/password/verify')
         .send({ password: correctPassword })
         .expect(401)
 
@@ -1193,7 +1347,7 @@ describe('auth', () => {
       const newPassword = 'newPassword'
 
       const response = await request(app)
-        .put(`/auth/changePassword`)
+        .put(`/auth/password`)
         .auth(nonExistentUserToken, { type: 'bearer' })
         .send({ password: newPassword })
         .expect(404)
@@ -1207,7 +1361,7 @@ describe('auth', () => {
       const newUser = await generateUserNotVerifiedandTokens()
 
       const response = await request(app)
-        .put(`/auth/changePassword`)
+        .put(`/auth/password`)
         .auth(newUser.tokens.accessToken, { type: 'bearer' })
         .send({ password: 'new.password' })
         .expect(403)
@@ -1220,7 +1374,7 @@ describe('auth', () => {
       const newPassword = 'new.password'
 
       const response = await request(app)
-        .put(`/auth/changePassword`)
+        .put(`/auth/password`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ password: newPassword })
         .expect(200)
@@ -1238,7 +1392,7 @@ describe('auth', () => {
     it('should return bad request if the password is a number', async () => {
       const password = 123456
       const response = await request(app)
-        .put('/auth/changePassword')
+        .put('/auth/password')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ password: password })
         .expect(400)
@@ -1249,7 +1403,7 @@ describe('auth', () => {
 
     it('should return bad request if the password is missing', async () => {
       const response = await request(app)
-        .put('/auth/changePassword')
+        .put('/auth/password')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .expect(400)
 
@@ -1260,7 +1414,7 @@ describe('auth', () => {
     it('should return bad request if the password is empty', async () => {
       const password = ''
       const response = await request(app)
-        .put('/auth/changePassword')
+        .put('/auth/password')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ password: password })
         .expect(400)
@@ -1272,7 +1426,7 @@ describe('auth', () => {
     it('should respond with Bad Request if password has length less than 6', async () => {
       const password = '12345'
       const response = await request(app)
-        .put('/auth/changePassword')
+        .put('/auth/password')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ password: password })
         .expect(400)
@@ -1286,7 +1440,7 @@ describe('auth', () => {
     it('should respond with Bad Request if password has length greater than 32', async () => {
       const password = '1'.repeat(1025)
       const response = await request(app)
-        .put('/auth/changePassword')
+        .put('/auth/password')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ password: password })
         .expect(400)
@@ -1300,7 +1454,7 @@ describe('auth', () => {
     it('should return bad request if token is mssing', async () => {
       const correctPassword = '123456'
       const response = await request(app)
-        .put('/auth/changePassword')
+        .put('/auth/password')
         .send({ password: correctPassword })
         .expect(401)
 
@@ -1537,78 +1691,16 @@ describe('auth', () => {
       expect(response.text).toEqual('User not found')
       expect(response.body).toEqual({})
     })
-  })
 
-  describe('getShelters', () => {
-    let adminUser: Admin
-
-    beforeEach(async () => {
-      // Generate shelters
-      await generateShelters()
-
-      // Generate an admin user and tokens for testing
-      adminUser = await generateAdminandTokens(Role.Admin)
-    })
-
-    afterEach(async () => {
-      // Clean up any existing data
-      await removeAllShelters()
-    })
-
-    it('should throw an error if the user is not an admin', async () => {
-      const user = await generateUserandTokens()
+    it('should respond with Unauthorized if access token has expired', async () => {
+      const invalidAccessToken = generateExpiredAccessToken('test1@gmail.com')
 
       const response = await request(app)
-        .get('/auth/shelters')
-        .auth(user.tokens.accessToken, { type: 'bearer' })
-        .expect(403)
+        .delete(`/auth/logout`)
+        .auth(invalidAccessToken, { type: 'bearer' })
+        .expect(401)
 
-      expect(response.text).toEqual('Permission denied')
-      expect(response.body).toEqual({})
-    })
-
-    it('should get all shelters successfully if user is an admin', async () => {
-      const response = await request(app)
-        .get('/auth/shelters')
-        .auth(adminUser.tokens.accessToken, { type: 'bearer' })
-        .expect(200)
-
-      expect(Array.isArray(response.body)).toBe(true)
-      expect(response.body.length).toBeGreaterThanOrEqual(1)
-
-      response.body.forEach((shelter: any) => {
-        expect(shelter).toHaveProperty('id')
-        expect(shelter).toHaveProperty('name')
-      })
-    })
-
-    it('should return empty list if there are no shelters', async () => {
-      // remove all shelters
-      await removeAllShelters()
-
-      const response = await request(app)
-        .get(`/auth/shelters`)
-        .auth(adminUser.tokens.accessToken, { type: 'bearer' })
-        .expect(200)
-
-      expect(Array.isArray(response.body)).toBe(true)
-      expect(response.body.length).toEqual(0)
-    })
-
-    it('should throw unauthorized if user is not authenticated', async () => {
-      const response = await request(app).get(`/auth/shelters`).expect(401)
-
-      expect(response.text).toEqual('Unauthorized')
-    })
-
-    it('should throw user not found if user is false admin', async () => {
-      const nonAdminToken = generateAccessToken('falseadmin@gmail.com', 'ADMIN')
-      const response = await request(app)
-        .get(`/auth/shelters`)
-        .auth(nonAdminToken, { type: 'bearer' })
-        .expect(404)
-
-      expect(response.text).toEqual('User not found')
+      expect(response.text).toEqual('Access token has expired')
       expect(response.body).toEqual({})
     })
   })
@@ -1660,7 +1752,7 @@ describe('auth', () => {
 
       const server = express()
       server.put(
-        '/auth/updateProfile',
+        '/auth/profile',
         authenticateAccessToken,
         upload.single('profilePhoto'),
         async (req, res) => {
@@ -1691,7 +1783,7 @@ describe('auth', () => {
       )
 
       const response = await request(server)
-        .put('/auth/updateProfile')
+        .put('/auth/profile')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .field('name', 'New Name')
         .field('address', 'New Address')
@@ -1721,7 +1813,7 @@ describe('auth', () => {
 
       const server = express()
       server.put(
-        '/auth/updateProfile',
+        '/auth/profile',
         authenticateAccessToken,
         upload.single('profilePhoto'),
         async (req, res) => {
@@ -1753,7 +1845,7 @@ describe('auth', () => {
       )
 
       const response = await request(server)
-        .put('/auth/updateProfile')
+        .put('/auth/profile')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .field('name', 'New Name')
         .field('address', 'New Address')
@@ -1767,7 +1859,7 @@ describe('auth', () => {
       await cleanup() // Delete the temporary file after the test
     })
 
-    it('should throw an error if new profile photo a pdf file', async () => {
+    it('should throw an error if new profile photo is a pdf file', async () => {
       const { path: tmpFilePath, cleanup } = await tmp.file({
         postfix: '.pdf'
       })
@@ -1777,7 +1869,7 @@ describe('auth', () => {
 
       const server = express()
       server.put(
-        '/auth/updateProfile',
+        '/auth/profile',
         authenticateAccessToken,
         upload.single('profilePhoto'),
         async (req, res) => {
@@ -1809,7 +1901,7 @@ describe('auth', () => {
       )
 
       const response = await request(server)
-        .put('/auth/updateProfile')
+        .put('/auth/profile')
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .field('name', 'New Name')
         .field('address', 'New Address')
@@ -1825,7 +1917,7 @@ describe('auth', () => {
 
     it('should remove user profile photo if removeProfilePhoto is true', async () => {
       const response = await request(app)
-        .put(`/auth/updateProfile`)
+        .put(`/auth/profile`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({
           name: newName,
@@ -1854,7 +1946,7 @@ describe('auth', () => {
       )
 
       const response = await request(app)
-        .put(`/auth/updateProfile`)
+        .put(`/auth/profile`)
         .auth(nonExistentUserToken, { type: 'bearer' })
         .send({ name: newName, address: newAddress, bio: newBio })
         .expect(404)
@@ -1865,7 +1957,7 @@ describe('auth', () => {
 
     it('should update user profile if user exists and data is valid', async () => {
       const response = await request(app)
-        .put(`/auth/updateProfile`)
+        .put(`/auth/profile`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ name: newName, address: newAddress, bio: newBio })
         .expect(200)
@@ -1883,7 +1975,7 @@ describe('auth', () => {
 
     it('should throw an error if no fields are provided', async () => {
       const response = await request(app)
-        .put(`/auth/updateProfile`)
+        .put(`/auth/profile`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({})
         .expect(400)
@@ -1895,7 +1987,7 @@ describe('auth', () => {
     it('should respond with bad request if name is a number', async () => {
       const invalidNewName = 1
       const response = await request(app)
-        .put(`/auth/updateProfile`)
+        .put(`/auth/profile`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ name: invalidNewName, address: newAddress, bio: newBio })
         .expect(400)
@@ -1907,7 +1999,7 @@ describe('auth', () => {
     it('should respond with bad request if address is a number', async () => {
       const invalidNewAddress = 1
       const response = await request(app)
-        .put(`/auth/updateProfile`)
+        .put(`/auth/profile`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ name: newName, address: invalidNewAddress, bio: newBio })
         .expect(400)
@@ -1919,13 +2011,27 @@ describe('auth', () => {
     it('should respond with bad request if bio is a number', async () => {
       const invalidNewBio = 1
       const response = await request(app)
-        .put(`/auth/updateProfile`)
+        .put(`/auth/profile`)
         .auth(user.tokens.accessToken, { type: 'bearer' })
         .send({ name: newName, address: newAddress, bio: invalidNewBio })
         .expect(400)
 
       expect(response.text).toEqual(`"bio" must be a string`)
       expect(response.body).toEqual({})
+    })
+
+    it('should return 500 when there is an internal server error', async () => {
+      jest.spyOn(UserModel, 'findOne').mockImplementationOnce(() => {
+        throw { code: 500, message: 'Failed to update profile' }
+      })
+
+      const response = await request(app)
+        .put(`/auth/profile`)
+        .auth(user.tokens.accessToken, { type: 'bearer' })
+        .send({ name: newName, address: newAddress, bio: newBio })
+        .expect(500)
+
+      expect(response.text).toEqual('Failed to update profile')
     })
   })
 
@@ -1936,20 +2042,39 @@ describe('auth', () => {
       user = await generateUserandTokens()
     })
 
+    afterEach(async () => {
+      await removeAllUsers()
+      jest.clearAllMocks()
+    })
+
     it('should verify the reset token successfully', async () => {
       const response = await request(app)
-        .get(`/auth/verifyResetToken?resetToken=${user.passwordResetToken}`)
+        .get(
+          `/auth/password/reset/token/verify?resetToken=${user.passwordResetToken}`
+        )
         .expect(200)
 
       expect(response.body.email).toEqual(user.email)
     })
 
-    it('should fail to verify with expired token', async () => {
-      // replace this with your function to generate an expired token
-      const expiredToken = generateExpiredToken(user.email, 'RESET')
+    it('should fail to verify if reset token for that user does not exist', async () => {
+      const shelter = await generateAdminandTokens(Role.Shelter)
+      const shelterResetToken = generateResetToken(shelter.email)
 
       const response = await request(app)
-        .get(`/auth/verifyResetToken?resetToken=${expiredToken}`)
+        .get(
+          `/auth/password/reset/token/verify?resetToken=${shelterResetToken}`
+        )
+        .expect(400)
+
+      expect(response.text).toEqual('Invalid or expired reset token')
+    })
+
+    it('should fail to verify with expired token', async () => {
+      const expiredToken = generateExpiredToken(user.email)
+
+      const response = await request(app)
+        .get(`/auth/password/reset/token/verify?resetToken=${expiredToken}`)
         .expect(400)
 
       expect(response.text).toEqual('Expired reset token')
@@ -1957,7 +2082,7 @@ describe('auth', () => {
 
     it('should fail to verify with invalid token', async () => {
       const response = await request(app)
-        .get(`/auth/verifyResetToken?resetToken=invalidToken`)
+        .get(`/auth/password/reset/token/verify?resetToken=invalidToken`)
         .expect(400)
 
       expect(response.text).toEqual('Invalid reset token')
@@ -1969,7 +2094,9 @@ describe('auth', () => {
       )
 
       const response = await request(app)
-        .get(`/auth/verifyResetToken?resetToken=${tokenForNonExistentUser}`)
+        .get(
+          `/auth/password/reset/token/verify?resetToken=${tokenForNonExistentUser}`
+        )
         .expect(404)
 
       expect(response.text).toEqual('User not found')
@@ -1990,13 +2117,14 @@ describe('auth', () => {
       }
     })
 
-    afterEach(() => {
+    afterEach(async () => {
+      await removeAllUsers()
       jest.clearAllMocks()
     })
 
     it('should reset the password successfully', async () => {
       const response = await request(app)
-        .put('/auth/resetPassword')
+        .put('/auth/password/reset')
         .send(payload)
         .expect(200)
 
@@ -2007,7 +2135,7 @@ describe('auth', () => {
       payload.email = 'non-existing@example.com'
 
       const response = await request(app)
-        .put('/auth/resetPassword')
+        .put('/auth/password/reset')
         .send(payload)
         .expect(404)
 
@@ -2027,7 +2155,7 @@ describe('auth', () => {
       expect(updatedUser?.passwordResetToken).toBeUndefined()
 
       const response = await request(app)
-        .put('/auth/resetPassword')
+        .put('/auth/password/reset')
         .send(payload)
         .expect(404)
 
@@ -2038,11 +2166,11 @@ describe('auth', () => {
       // Set expired token for the user
       await UserModel.updateOne(
         { email: userEmail },
-        { passwordResetToken: generateExpiredToken(userEmail, 'RESET') }
+        { passwordResetToken: generateExpiredToken(userEmail) }
       )
 
       const response = await request(app)
-        .put('/auth/resetPassword')
+        .put('/auth/password/reset')
         .send(payload)
         .expect(400)
 

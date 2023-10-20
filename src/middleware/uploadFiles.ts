@@ -1,9 +1,9 @@
 import { Request } from 'express'
 import multer, { FileFilterCallback, Options } from 'multer'
-//import fs from 'fs'
 import { google, drive_v3 } from 'googleapis'
 
 let serviceAccountCredentials: any
+
 if (process.env.NODE_ENV !== 'test') {
   if (process.env.GOOGLE_SERVICE_ACCOUNT) {
     try {

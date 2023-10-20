@@ -1,12 +1,12 @@
 import express from 'express'
 import { ApplicationController } from '../controllers/application'
 import {
+  applicationIDValidation,
   applyForPetValidation,
   getAllApplicationsValidation,
   getTimeSlotsValidation,
-  idValidation,
   scheduleVisitValidation,
-  updateApplicationStatusValidation
+  statusValidation
 } from '../utils/validation'
 import { authenticateAccessToken } from '../middleware/authenticateToken'
 import { isUser } from '../middleware/isUser'
@@ -32,14 +32,19 @@ applicationRouter.post(
 )
 
 applicationRouter.get(
-  '/',
+  '/timeSlots',
   authenticateAccessToken,
-  isUser,
   async (req, res) => {
-    const { error } = idValidation(req.query)
+    const { error } = getTimeSlotsValidation(req.query)
     if (error) return res.status(400).send(error.details[0].message)
     try {
-      const response = await controller.getApplicationDetails(req)
+      const { shelterID, petID, visitDate, visitType } = req.query
+      const response = await controller.getTimeSlots(
+        shelterID as string,
+        petID as string,
+        visitDate as string,
+        visitType as string
+      )
       return res.send(response)
     } catch (err: any) {
       return res.status(err.code).send(err.message)
@@ -47,26 +52,82 @@ applicationRouter.get(
   }
 )
 
-applicationRouter.get(
-  '/applications',
+applicationRouter.post(
+  '/:applicationID/homeVisit',
   authenticateAccessToken,
+  isUser,
   async (req, res) => {
-    const { error } = getAllApplicationsValidation(req.query)
-    if (error) return res.status(400).send(error.details[0].message)
-    try {
-      const {
-        page = '1',
-        limit = '5',
-        searchQuery,
-        applicationStatusFilter
-      } = req.query
+    const idError = applicationIDValidation(req.params).error
+    const visitError = scheduleVisitValidation(req.body).error
 
-      const response = await controller.getApplications(
-        parseInt(page as string),
-        parseInt(limit as string),
-        req,
-        searchQuery as string,
-        applicationStatusFilter as string
+    if (idError || visitError) {
+      return res
+        .status(400)
+        .send(
+          idError ? idError.details[0].message : visitError?.details[0].message
+        )
+    }
+    try {
+      const applicationID = req.params.applicationID as string
+      const response = await controller.scheduleHomeVisit(
+        applicationID,
+        req.body
+      )
+      return res.send(response)
+    } catch (err: any) {
+      return res.status(err.code).send(err.message)
+    }
+  }
+)
+
+applicationRouter.post(
+  '/:applicationID/shelterVisit',
+  authenticateAccessToken,
+  isShelter,
+  async (req, res) => {
+    const idError = applicationIDValidation(req.params).error
+    const visitError = scheduleVisitValidation(req.body).error
+
+    if (idError || visitError) {
+      return res
+        .status(400)
+        .send(
+          idError ? idError.details[0].message : visitError?.details[0].message
+        )
+    }
+    try {
+      const applicationID = req.params.applicationID as string
+      const response = await controller.scheduleShelterVisit(
+        applicationID,
+        req.body
+      )
+      return res.send(response)
+    } catch (err: any) {
+      return res.status(err.code).send(err.message)
+    }
+  }
+)
+
+applicationRouter.put(
+  '/:applicationID/status',
+  authenticateAccessToken,
+  isShelter,
+  async (req, res) => {
+    const idError = applicationIDValidation(req.params).error
+    const statusError = statusValidation(req.body).error
+
+    if (idError || statusError) {
+      return res
+        .status(400)
+        .send(
+          idError ? idError.details[0].message : statusError?.details[0].message
+        )
+    }
+    try {
+      const applicationID = req.params.applicationID as string
+      const response = await controller.updateApplicationStatus(
+        applicationID,
+        req.body
       )
       return res.send(response)
     } catch (err: any) {
@@ -76,29 +137,18 @@ applicationRouter.get(
 )
 
 applicationRouter.get(
-  '/timeSlots',
-  authenticateAccessToken,
-  async (req, res) => {
-    const { error } = getTimeSlotsValidation(req.query)
-    if (error) return res.status(400).send(error.details[0].message)
-    try {
-      const response = await controller.getTimeSlots(req)
-      return res.send(response)
-    } catch (err: any) {
-      return res.status(err.code).send(err.message)
-    }
-  }
-)
-
-applicationRouter.post(
-  '/scheduleHomeVisit',
+  '/:applicationID',
   authenticateAccessToken,
   isUser,
   async (req, res) => {
-    const { error } = scheduleVisitValidation(req.body)
+    const { error } = applicationIDValidation(req.params)
     if (error) return res.status(400).send(error.details[0].message)
     try {
-      const response = await controller.scheduleHomeVisit(req.body)
+      const applicationID = req.params.applicationID as string
+      const response = await controller.getApplicationDetails(
+        req,
+        applicationID
+      )
       return res.send(response)
     } catch (err: any) {
       return res.status(err.code).send(err.message)
@@ -106,36 +156,28 @@ applicationRouter.post(
   }
 )
 
-applicationRouter.post(
-  '/scheduleShelterVisit',
-  authenticateAccessToken,
-  isShelter,
-  async (req, res) => {
-    const { error } = scheduleVisitValidation(req.body)
-    if (error) return res.status(400).send(error.details[0].message)
-    try {
-      const response = await controller.scheduleShelterVisit(req.body)
-      return res.send(response)
-    } catch (err: any) {
-      return res.status(err.code).send(err.message)
-    }
-  }
-)
+applicationRouter.get('/', authenticateAccessToken, async (req, res) => {
+  const { error } = getAllApplicationsValidation(req.query)
+  if (error) return res.status(400).send(error.details[0].message)
+  try {
+    const {
+      page = '1',
+      limit = '5',
+      searchQuery,
+      applicationStatusFilter
+    } = req.query
 
-applicationRouter.put(
-  '/updateStatus',
-  authenticateAccessToken,
-  isShelter,
-  async (req, res) => {
-    const { error } = updateApplicationStatusValidation(req.body)
-    if (error) return res.status(400).send(error.details[0].message)
-    try {
-      const response = await controller.updateApplicationStatus(req.body)
-      return res.send(response)
-    } catch (err: any) {
-      return res.status(err.code).send(err.message)
-    }
+    const response = await controller.getApplications(
+      parseInt(page as string),
+      parseInt(limit as string),
+      req,
+      searchQuery as string,
+      applicationStatusFilter as string
+    )
+    return res.send(response)
+  } catch (err: any) {
+    return res.status(err.code).send(err.message)
   }
-)
+})
 
 export default applicationRouter

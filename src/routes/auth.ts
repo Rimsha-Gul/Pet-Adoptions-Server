@@ -8,7 +8,7 @@ import {
   signUpValidation,
   loginValidation,
   emailValidation,
-  checkPasswordValidation,
+  passwordValidation,
   updateProfileValidation,
   sendVerificationCodeValidation,
   verifyEmailValidation,
@@ -35,7 +35,7 @@ authRouter.post('/signup', async (req, res) => {
 })
 
 authRouter.post(
-  '/sendVerificationCode',
+  '/verificationCode',
   conditionalAuthenticateAccessToken,
   async (req, res) => {
     const { error } = sendVerificationCodeValidation(req.body)
@@ -49,7 +49,7 @@ authRouter.post(
   }
 )
 
-authRouter.post('/verifyEmail', async (req, res) => {
+authRouter.post('/email/verification', async (req, res) => {
   const { error } = verifyEmailValidation(req.body)
   if (error) return res.status(400).send(error.details[0].message)
   try {
@@ -60,14 +60,18 @@ authRouter.post('/verifyEmail', async (req, res) => {
   }
 })
 
-authRouter.post('/refresh', authenticateRefreshToken, async (req, res) => {
-  try {
-    const response = await controller.refresh(req)
-    return res.send(response)
-  } catch (err: any) {
-    return res.status(err.code).send(err.message)
+authRouter.post(
+  '/token/refresh',
+  authenticateRefreshToken,
+  async (req, res) => {
+    try {
+      const response = await controller.refresh(req)
+      return res.send(response)
+    } catch (err: any) {
+      return res.status(err.code).send(err.message)
+    }
   }
-})
+)
 
 authRouter.post('/login', async (req, res) => {
   const { error } = loginValidation(req.body)
@@ -81,7 +85,7 @@ authRouter.post('/login', async (req, res) => {
 })
 
 authRouter.put(
-  '/updateProfile',
+  '/profile',
   authenticateAccessToken,
   upload.single('profilePhoto'),
   async (req, res) => {
@@ -128,18 +132,23 @@ authRouter.put(
   }
 )
 
-authRouter.get('/checkEmail', authenticateAccessToken, async (req, res) => {
-  const { error } = emailValidation(req.query)
-  if (error) return res.status(400).send(error.details[0].message)
-  try {
-    const response = await controller.checkEmail(req)
-    return res.send(response)
-  } catch (err: any) {
-    return res.status(err.code).send(err.message)
+authRouter.get(
+  '/email/availability',
+  authenticateAccessToken,
+  async (req, res) => {
+    const { error } = emailValidation(req.query)
+    if (error) return res.status(400).send(error.details[0].message)
+    try {
+      const newEmail = req.query.email as string
+      const response = await controller.checkEmail(req, newEmail)
+      return res.send(response)
+    } catch (err: any) {
+      return res.status(err.code).send(err.message)
+    }
   }
-})
+)
 
-authRouter.put('/changeEmail', authenticateAccessToken, async (req, res) => {
+authRouter.put('/email', authenticateAccessToken, async (req, res) => {
   const { error } = emailValidation(req.body)
   if (error) return res.status(400).send(error.details[0].message)
   try {
@@ -150,19 +159,23 @@ authRouter.put('/changeEmail', authenticateAccessToken, async (req, res) => {
   }
 })
 
-authRouter.post('/checkPassword', authenticateAccessToken, async (req, res) => {
-  const { error } = checkPasswordValidation(req.body)
-  if (error) return res.status(400).send(error.details[0].message)
-  try {
-    const response = await controller.checkPassword(req.body, req)
-    return res.send(response)
-  } catch (err: any) {
-    return res.status(err.code).send(err.message)
+authRouter.post(
+  '/password/verify',
+  authenticateAccessToken,
+  async (req, res) => {
+    const { error } = passwordValidation(req.body)
+    if (error) return res.status(400).send(error.details[0].message)
+    try {
+      const response = await controller.verifyPassword(req.body, req)
+      return res.send(response)
+    } catch (err: any) {
+      return res.status(err.code).send(err.message)
+    }
   }
-})
+)
 
-authRouter.put('/changePassword', authenticateAccessToken, async (req, res) => {
-  const { error } = checkPasswordValidation(req.body)
+authRouter.put('/password', authenticateAccessToken, async (req, res) => {
+  const { error } = passwordValidation(req.body)
   if (error) return res.status(400).send(error.details[0].message)
   try {
     const response = await controller.changePassword(req.body, req)
@@ -181,21 +194,7 @@ authRouter.delete('/logout', authenticateAccessToken, async (req, res) => {
   }
 })
 
-authRouter.get(
-  '/shelters',
-  authenticateAccessToken,
-  isAdmin,
-  async (req, res) => {
-    try {
-      const response = await controller.getShelters(req)
-      return res.send(response)
-    } catch (err: any) {
-      return res.status(err.code).send(err.message)
-    }
-  }
-)
-
-authRouter.post('/requestPasswordReset', async (req, res) => {
+authRouter.post('/password/reset/request', async (req, res) => {
   const { error } = emailValidation(req.body)
   if (error) return res.status(400).send(error.details[0].message)
   try {
@@ -206,18 +205,19 @@ authRouter.post('/requestPasswordReset', async (req, res) => {
   }
 })
 
-authRouter.get('/verifyResetToken', async (req, res) => {
+authRouter.get('/password/reset/token/verify', async (req, res) => {
   const { error } = verifyResetTokenValidation(req.query)
   if (error) return res.status(400).send(error.details[0].message)
   try {
-    const response = await controller.VerifyResetToken(req)
+    const resetToken = req.query.resetToken as string
+    const response = await controller.VerifyResetToken(resetToken)
     return res.send(response)
   } catch (err: any) {
     return res.status(err.code).send(err.message)
   }
 })
 
-authRouter.put('/resetPassword', async (req, res) => {
+authRouter.put('/password/reset', async (req, res) => {
   const { error } = resetPasswordValidation(req.body)
   if (error) return res.status(400).send(error.details[0].message)
   try {
@@ -229,7 +229,7 @@ authRouter.put('/resetPassword', async (req, res) => {
 })
 
 authRouter.post(
-  '/getAlternateEmail',
+  '/email/alternate',
   authenticateAccessToken,
   isAdmin,
   async (req, res) => {

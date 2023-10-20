@@ -6,11 +6,11 @@ import User, {
   VerificationResponse,
   VerificationPayload,
   SendCodePayload,
-  ShelterResponse,
   EmailPayload,
-  CheckPasswordPayload,
+  PasswordPayload,
   UpdateProfilePayload,
   Role,
+  EmailChangeRequest,
   ResetPasswordPayload
 } from '../models/User'
 import { generateAccessToken } from '../utils/generateAccessToken'
@@ -25,6 +25,7 @@ import {
   Get,
   Post,
   Put,
+  Query,
   Request,
   Route,
   Security,
@@ -40,14 +41,10 @@ import {
   requestAlternateEmailForShelter
 } from '../data/emailMessages'
 import {
-  emailPayloadExample,
-  checkPasswordPayloadExample,
-  shelterResponseExample,
   signupResponseExample,
   tokenResponseExample,
   updateProfilePayloadExample,
-  verificationResponseExample,
-  resetPasswordPayloadExample
+  verificationResponseExample
 } from '../examples/auth'
 import { Invitation, InvitationStatus } from '../models/Invitation'
 import { generateResetToken } from '../utils/generateResetToken'
@@ -70,7 +67,7 @@ export class AuthController {
    * @summary Generates a 6-digit code and sends it
    *
    */
-  @Post('/sendVerificationCode')
+  @Post('/verificationCode')
   public async sendVerificationCode(
     @Body() body: SendCodePayload,
     @Request() req: UserRequest
@@ -83,7 +80,7 @@ export class AuthController {
    *
    */
   @Example<VerificationResponse>(verificationResponseExample)
-  @Post('/verifyEmail')
+  @Post('/email/verification')
   public async verifyEmail(
     @Body() body: VerificationPayload
   ): Promise<VerificationResponse> {
@@ -104,7 +101,7 @@ export class AuthController {
    */
   @Example<TokenResponse>(tokenResponseExample)
   @Security('bearerAuth')
-  @Post('/refresh')
+  @Post('/token/refresh')
   public async refresh(@Request() req: UserRequest): Promise<TokenResponse> {
     return refresh(req)
   }
@@ -114,7 +111,7 @@ export class AuthController {
    */
   @Example<UpdateProfilePayload>(updateProfilePayloadExample)
   @Security('bearerAuth')
-  @Put('/updateProfile')
+  @Put('/profile')
   public async updateProfile(
     @Request() req: UserRequest,
     @FormField() name?: string,
@@ -128,19 +125,25 @@ export class AuthController {
   /**
    * @summary Checks if user's new email already has a linked account
    */
-  @Example<EmailPayload>(emailPayloadExample)
   @Security('bearerAuth')
-  @Get('/checkEmail')
-  public async checkEmail(@Request() req: UserRequest) {
-    return checkEmail(req)
+  @Get('/email/availability')
+  public async checkEmail(
+    @Request() req: UserRequest,
+    /**
+     * New email for user
+     * @example "johndoe@example.com"
+     */
+    @Query() email: string
+  ) {
+    return checkEmail(req, email)
   }
 
   /**
    * @summary Changes user's email
    */
-  @Example<EmailPayload>(emailPayloadExample)
+  @Example<TokenResponse>(tokenResponseExample)
   @Security('bearerAuth')
-  @Put('/changeEmail')
+  @Put('/email')
   public async changeEmail(
     @Body() body: EmailPayload,
     @Request() req: UserRequest
@@ -151,24 +154,22 @@ export class AuthController {
   /**
    * @summary Checks if user's entered password is correct
    */
-  @Example<CheckPasswordPayload>(checkPasswordPayloadExample)
   @Security('bearerAuth')
-  @Post('/checkPassword')
-  public async checkPassword(
-    @Body() body: CheckPasswordPayload,
+  @Post('/password/verify')
+  public async verifyPassword(
+    @Body() body: PasswordPayload,
     @Request() req: UserRequest
   ) {
-    return checkPassword(body, req)
+    return verifyPassword(body, req)
   }
 
   /**
    * @summary Changes user's password
    */
-  @Example<CheckPasswordPayload>(checkPasswordPayloadExample)
   @Security('bearerAuth')
-  @Put('/changePassword')
+  @Put('/password')
   public async changePassword(
-    @Body() body: CheckPasswordPayload,
+    @Body() body: PasswordPayload,
     @Request() req: UserRequest
   ) {
     return changePassword(body, req)
@@ -184,23 +185,9 @@ export class AuthController {
   }
 
   /**
-   * @summary Returns ids and names of all shelters
-   *
-   */
-  @Example<ShelterResponse>(shelterResponseExample)
-  @Security('bearerAuth')
-  @Get('/shelters')
-  public async getShelters(
-    @Request() req: UserRequest
-  ): Promise<ShelterResponse[]> {
-    return getShelters(req)
-  }
-
-  /**
    * @summary Checks if user's entered email has an associated account and create reset tokens
    */
-  @Example<EmailPayload>(emailPayloadExample)
-  @Post('/requestPasswordReset')
+  @Post('/password/reset/request')
   public async requestPasswordReset(@Body() body: EmailPayload) {
     return requestPasswordReset(body)
   }
@@ -209,53 +196,36 @@ export class AuthController {
    * @summary Verifies the reset password token for user
    *
    */
-  @Get('/verifyResetToken')
-  public async VerifyResetToken(@Request() req: UserRequest) {
-    return VerifyResetToken(req)
+  @Get('/password/reset/token/verify')
+  public async VerifyResetToken(@Query() resetToken: string) {
+    return VerifyResetToken(resetToken)
   }
 
   /**
    * @summary Changes user's password
    */
-  @Example<ResetPasswordPayload>(resetPasswordPayloadExample)
-  @Put('/resetPassword')
+  @Put('/password/reset')
   public async resetPassword(@Body() body: ResetPasswordPayload) {
     return resetPassword(body)
   }
 
   /**
-   * @summary Changes user's role
+   * @summary Sends email to user to provide alternate email to sign up as shelter
    */
-  @Example<EmailPayload>(emailPayloadExample)
   @Security('bearerAuth')
-  @Post('/getAlternateEmail')
+  @Post('/email/alternate')
   public async getAlternateEmail(@Body() body: EmailPayload) {
     return getAlternateEmail(body)
   }
 }
 
-const getAlternateEmail = async (body: EmailPayload) => {
-  const { email } = body
-
-  const existingUser = await User.findOne({ email })
-
-  if (!existingUser) throw { code: 404, message: 'User not found' }
-
-  if (existingUser.role === Role.Shelter)
-    throw { code: 409, message: 'User is already a shelter' }
-
-  const { subject, message } = requestAlternateEmailForShelter(
-    existingUser.name
-  )
-
-  await sendEmail(email, subject, message)
-
-  return { code: 200, message: 'User notified successfully' }
-}
-
 const signup = async (body: UserPayload): Promise<SignupResponse> => {
   const { name, email, password, role } = body
 
+  if (role === Role.Admin) {
+    const existingAdmin = await User.findOne({ role: Role.Admin })
+    if (existingAdmin) throw { code: 409, message: 'Admin user already exists' }
+  }
   if (role === Role.Shelter) {
     const invitation = await Invitation.findOne({ shelterEmail: email })
     if (!invitation) throw { code: 400, message: 'Invalid invitation' }
@@ -297,7 +267,10 @@ const sendVerificationCode = async (
 ) => {
   const { email, emailChangeRequest } = body
   let user
-  if (!emailChangeRequest) {
+  if (
+    !emailChangeRequest ||
+    emailChangeRequest === EmailChangeRequest.currentEmailStep
+  ) {
     user = await User.findOne({ email })
     if (!user) throw { code: 404, message: 'User not found' }
   } else {
@@ -306,11 +279,17 @@ const sendVerificationCode = async (
       if (!user) throw { code: 404, message: 'User not found' }
     }
   }
+
+  if (!emailChangeRequest && user.isVerified === true)
+    throw { code: 422, message: 'User already verified' } // User is already verified and thus cannot be verified again
+
   const verificationCode: string = generateVerificationCode()
   try {
     const codeEmail = getVerificationCodeEmail(verificationCode)
     await sendEmail(
-      emailChangeRequest ? email : user.email,
+      emailChangeRequest === EmailChangeRequest.newEmailStep
+        ? email
+        : user.email,
       codeEmail.subject,
       codeEmail.message
     )
@@ -395,8 +374,7 @@ const login = async (body: LoginPayload): Promise<TokenResponse> => {
 }
 
 const refresh = async (req: UserRequest): Promise<TokenResponse> => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const user = (await User.findOne({ email: req.user?.email }))!
+  const user = (await User.findOne({ email: req.user!.email }))!
 
   if (!user.isVerified) {
     throw { code: 403, message: 'User not verified' }
@@ -421,31 +399,32 @@ const updateProfile = async (
   bio?: string,
   profilePhoto?: string[]
 ) => {
-  const userEmail = req?.user?.email
+  try {
+    const userEmail = req.user!.email
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const user = (await User.findOne({ email: userEmail }))!
+    const user = await User.findOne({ email: userEmail })
 
-  if (name) user.name = name
-  if (address) user.address = address
-  if (bio) user.bio = bio
-  if (profilePhoto) {
-    user.profilePhoto = profilePhoto
+    if (name) user!.name = name
+    if (address) user!.address = address
+    if (bio) user!.bio = bio
+    if (profilePhoto) {
+      user!.profilePhoto = profilePhoto
+    }
+
+    await user!.save()
+    return { code: 200, message: 'Profile updated successfully' }
+  } catch (error: any) {
+    throw { code: 500, message: 'Failed to update profile' }
   }
-
-  await user.save()
-  return { code: 200, message: 'Profile updated successfully' }
 }
 
-const checkEmail = async (req: UserRequest) => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const user = (await User.findOne({ email: req.user?.email }))!
+const checkEmail = async (req: UserRequest, email: string) => {
+  const user = (await User.findOne({ email: req.user!.email }))!
 
   if (!user.isVerified) {
     throw { code: 403, message: 'User not verified' }
   } else {
     // if user is verified, check if there's already a user with new emmail
-    const { email } = req.query
     const existingUser = await User.findOne({ email: email })
     if (existingUser) {
       throw { code: 409, message: 'A user with this email already exists' }
@@ -458,8 +437,7 @@ const changeEmail = async (
   body: EmailPayload,
   req: UserRequest
 ): Promise<TokenResponse> => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const user = (await User.findOne({ email: req?.user?.email }))!
+  const user = (await User.findOne({ email: req.user!.email }))!
 
   if (!user.isVerified) {
     throw { code: 403, message: 'User not verified' }
@@ -479,7 +457,7 @@ const changeEmail = async (
   }
 }
 
-const checkPassword = async (body: CheckPasswordPayload, req: UserRequest) => {
+const verifyPassword = async (body: PasswordPayload, req: UserRequest) => {
   const user = await User.findOne({ email: req?.user?.email })
   if (!user) throw { code: 404, message: 'User not found' }
 
@@ -497,7 +475,7 @@ const checkPassword = async (body: CheckPasswordPayload, req: UserRequest) => {
   }
 }
 
-const changePassword = async (body: CheckPasswordPayload, req: UserRequest) => {
+const changePassword = async (body: PasswordPayload, req: UserRequest) => {
   const user = await User.findOne({ email: req?.user?.email })
   if (!user) throw { code: 404, message: 'User not found' }
 
@@ -518,16 +496,6 @@ const logout = async (req: UserRequest) => {
   return { code: 200, message: 'Logout successful' }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getShelters = async (_req: UserRequest): Promise<ShelterResponse[]> => {
-  const shelters = await User.find({ role: 'SHELTER' }, '_id name')
-  const shelterResponses: ShelterResponse[] = shelters.map((shelter) => ({
-    id: shelter._id.toString(),
-    name: shelter.name
-  }))
-  return shelterResponses
-}
-
 const requestPasswordReset = async (body: EmailPayload) => {
   const { email } = body
 
@@ -541,10 +509,8 @@ const requestPasswordReset = async (body: EmailPayload) => {
 
   await user.save()
 
-  // Create the reset password email content.
   const resetEmail = getResetPasswordEmail(resetToken)
 
-  // Send the email
   try {
     await sendEmail(user.email, resetEmail.subject, resetEmail.message)
   } catch (error) {
@@ -554,9 +520,7 @@ const requestPasswordReset = async (body: EmailPayload) => {
   return { code: 200, message: 'Reset password email sent successfully' }
 }
 
-const VerifyResetToken = async (req: UserRequest) => {
-  const { resetToken } = req.query
-
+const VerifyResetToken = async (resetToken: string) => {
   try {
     // decode and verify the token synchronously
     const decoded: any = jwt.verify(
@@ -586,10 +550,7 @@ const VerifyResetToken = async (req: UserRequest) => {
     if (err.name === 'JsonWebTokenError') {
       throw { code: 400, message: 'Invalid reset token' }
     }
-    if (err.code) {
-      throw err
-    }
-    throw { code: 500, message: 'Internal server error' }
+    throw { code: err.code, message: err.message }
   }
 }
 
@@ -621,10 +582,26 @@ const resetPassword = async (body: ResetPasswordPayload) => {
     await user.save()
 
     return { code: 200, message: 'Password reset successfully' }
-  } catch (err) {
-    if (err.code) {
-      throw err
-    }
-    throw { code: 500, message: 'Internal server error' }
+  } catch (err: any) {
+    throw { code: err.code, message: err.message }
   }
+}
+
+const getAlternateEmail = async (body: EmailPayload) => {
+  const { email } = body
+
+  const existingUser = await User.findOne({ email })
+
+  if (!existingUser) throw { code: 404, message: 'User not found' }
+
+  if (existingUser.role === Role.Shelter)
+    throw { code: 409, message: 'User is already a shelter' }
+
+  const { subject, message } = requestAlternateEmailForShelter(
+    existingUser.name
+  )
+
+  await sendEmail(email, subject, message)
+
+  return { code: 200, message: 'User notified successfully' }
 }

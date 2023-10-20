@@ -10,6 +10,7 @@ import {
   Example,
   FormField,
   Get,
+  Path,
   Post,
   Query,
   Request,
@@ -91,14 +92,17 @@ export class PetController {
   /**
    * @summary Returns details of a pet given its id
    *
+   * @param petID ID of the pet
+   * @example petID "A123456789"
    */
   @Example<AddPetResponse>(petResponseExample)
   @Security('bearerAuth')
-  @Get('/')
+  @Get('/:petID')
   public async getPetDetails(
-    @Request() req: ExpressRequest
+    @Request() req: ExpressRequest,
+    @Path() petID: string
   ): Promise<AddPetResponse> {
-    return getPetDetails(req)
+    return getPetDetails(req, petID)
   }
 
   /**
@@ -107,7 +111,7 @@ export class PetController {
    */
   @Example<AllPetsResponse>(petsResponseExample)
   @Security('bearerAuth')
-  @Get('/all')
+  @Get('/')
   public async getAllPets(
     @Query('page') page: number,
     @Query('limit') limit: number,
@@ -174,8 +178,6 @@ const addPet = async (
   )
 
   if (!shelter) throw { code: 404, message: 'Shelter not found' }
-  else if (shelter.role !== 'SHELTER')
-    throw { code: 400, message: 'User is not a shelter' }
 
   const petImages: string[] = images
   const parsedBirthDate: Date = new Date(birthDate)
@@ -220,8 +222,10 @@ const addPet = async (
   }
 }
 
-const getPetDetails = async (req: UserRequest): Promise<AddPetResponse> => {
-  const petID = req.query.id
+const getPetDetails = async (
+  req: UserRequest,
+  petID: string
+): Promise<AddPetResponse> => {
   const pet = await Pet.findOne({ microchipID: petID })
   if (!pet) throw { code: 404, message: 'Pet not found' }
 
@@ -234,7 +238,7 @@ const getPetDetails = async (req: UserRequest): Promise<AddPetResponse> => {
   const imageUrls = await Promise.all(images.map((image) => getImageURL(image)))
 
   const petApplication = await Application.findOne({
-    applicantEmail: req.user?.email,
+    applicantEmail: req.user!.email,
     microchipID: pet.microchipID
   })
   const petHasAdoptionRequest = !!petApplication
@@ -443,7 +447,7 @@ const getAllPets = async (
         )
 
         const petApplication = await Application.findOne({
-          applicantEmail: req.user?.email,
+          applicantEmail: req.user!.email,
           microchipID: pet.microchipID
         })
         const petHasAdoptionRequest = !!petApplication

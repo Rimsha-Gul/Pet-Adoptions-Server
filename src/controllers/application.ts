@@ -1,14 +1,14 @@
 import { Pet } from '../models/Pet'
 import {
+  allApplicationsExample,
   applicationExample,
-  scheduleHomeVisitPayloadExample,
-  updateApplicationExample
+  timeSlotsResponseExample
 } from '../examples/application'
 import Application, {
   AllApplicationsResponse,
   ApplicationPayload,
   ApplictionResponseForUser,
-  ScheduleHomeVisitPayload,
+  ScheduleVisitPayload,
   Status,
   TimeSlotsResponse,
   UpdateApplicationPayload
@@ -18,6 +18,7 @@ import {
   Body,
   Example,
   Get,
+  Path,
   Post,
   Put,
   Query,
@@ -48,7 +49,7 @@ import { sendEmail } from '../middleware/sendEmail'
 import { Visit, VisitType } from '../models/Visit'
 import { canReview } from '../utils/canReview'
 import { generateTimeSlots } from '../utils/generateTimeSlots'
-import { Notification } from '../models/Notification'
+import { Notification, NotificationResponse } from '../models/Notification'
 import { emitUserNotification } from '../socket'
 import moment from 'moment'
 
@@ -59,7 +60,7 @@ export class ApplicationController {
    * @summary Accepts application info and creates application if all fields are valid
    *
    */
-  @Example<ApplicationPayload>(applicationExample)
+  @Example<ApplictionResponseForUser>(applicationExample)
   @Security('bearerAuth')
   @Post('/')
   public async applyForAPet(
@@ -71,22 +72,26 @@ export class ApplicationController {
 
   /**
    * @summary Returns an application's details given id
-   *
+   * @param applicationID ID of the application
+   * @example applicationID "64b14bd7ba2fba2af4b5338d"
    */
+  @Example<ApplictionResponseForUser>(applicationExample)
   @Security('bearerAuth')
-  @Get('/')
+  @Get('/:applicationID')
   public async getApplicationDetails(
-    @Request() req: UserRequest
+    @Request() req: UserRequest,
+    @Path() applicationID: string
   ): Promise<ApplictionResponseForUser> {
-    return getApplicationDetails(req)
+    return getApplicationDetails(req, applicationID)
   }
 
   /**
    * @summary Returns list of applications of a user
    *
    */
+  @Example<AllApplicationsResponse>(allApplicationsExample)
   @Security('bearerAuth')
-  @Get('/applications')
+  @Get('/')
   public async getApplications(
     @Query('page') page: number,
     @Query('limit') limit: number,
@@ -107,45 +112,58 @@ export class ApplicationController {
    * @summary Returns time slots available to shcedule visit on a particular day
    *
    */
+  @Example<TimeSlotsResponse>(timeSlotsResponseExample)
   @Security('bearerAuth')
   @Get('/timeSlots')
   public async getTimeSlots(
-    @Request() req: UserRequest
+    @Query() shelterID: string,
+    @Query() petID: string,
+    @Query() visitDate: string,
+    @Query() visitType: string
   ): Promise<TimeSlotsResponse> {
-    return getTimeSlots(req)
+    return getTimeSlots(shelterID, petID, visitDate, visitType)
   }
 
   /**
    * @summary Accepts application id and date for home visit and sends email to applicant and shelter
-   *
+   * @param applicationID ID of the application
+   * @example applicationID "64b14bd7ba2fba2af4b5338d"
    */
-  @Example<ScheduleHomeVisitPayload>(scheduleHomeVisitPayloadExample)
   @Security('bearerAuth')
-  @Post('/scheduleHomeVisit')
-  public async scheduleHomeVisit(@Body() body: ScheduleHomeVisitPayload) {
-    return scheduleHomeVisit(body)
+  @Post('/:applicationID/homeVisit')
+  public async scheduleHomeVisit(
+    @Path() applicationID: string,
+    @Body() body: ScheduleVisitPayload
+  ) {
+    return scheduleHomeVisit(applicationID, body)
   }
 
   /**
    * @summary Accepts application id and date for shelter visit and sends email to applicant and shelter
-   *
+   * @param applicationID ID of the application
+   * @example applicationID "64b14bd7ba2fba2af4b5338d"
    */
-  @Example<ScheduleHomeVisitPayload>(scheduleHomeVisitPayloadExample)
   @Security('bearerAuth')
-  @Post('/scheduleShelterVisit')
-  public async scheduleShelterVisit(@Body() body: ScheduleHomeVisitPayload) {
-    return scheduleShelterVisit(body)
+  @Post('/:applicationID/shelterVisit')
+  public async scheduleShelterVisit(
+    @Path() applicationID: string,
+    @Body() body: ScheduleVisitPayload
+  ) {
+    return scheduleShelterVisit(applicationID, body)
   }
 
   /**
    * @summary Updates an application's status
-   *
+   * @param applicationID ID of the application
+   * @example applicationID "64b14bd7ba2fba2af4b5338d"
    */
-  @Example<UpdateApplicationPayload>(updateApplicationExample)
   @Security('bearerAuth')
-  @Put('/updateStatus')
-  public async updateApplicationStatus(@Body() body: UpdateApplicationPayload) {
-    return updateApplicationStatus(body)
+  @Put('/:applicationID/status')
+  public async updateApplicationStatus(
+    @Path() applicationID: string,
+    @Body() body: UpdateApplicationPayload
+  ) {
+    return updateApplicationStatus(applicationID, body)
   }
 }
 
@@ -168,7 +186,7 @@ const applyForAPet = async (
     handlePetIssues,
     moveWithPet,
     canAffordPetsNeeds,
-    canAffordPetsMediacal,
+    canAffordPetsMedical,
     petTravelPlans,
     petOutlivePlans
   } = body
@@ -210,7 +228,7 @@ const applyForAPet = async (
     handlePetIssues: handlePetIssues,
     moveWithPet: moveWithPet,
     canAffordPetsNeeds: canAffordPetsNeeds,
-    canAffordPetsMediacal: canAffordPetsMediacal,
+    canAffordPetsMedical: canAffordPetsMedical,
     petTravelPlans: petTravelPlans,
     petOutlivePlans: petOutlivePlans,
     status: Status.UnderReview
@@ -221,9 +239,9 @@ const applyForAPet = async (
     application: {
       ...application.toObject(),
       id: application._id,
-      status: application.status,
+      // status: application.status,
       submissionDate: application.createdAt.toISOString().split('T')[0],
-      microchipID: application.microchipID,
+      // microchipID: application.microchipID,
       petImage: getImageURL(pet.images[0]),
       petName: pet.name,
       shelterName: shelter.name
@@ -232,9 +250,13 @@ const applyForAPet = async (
 }
 
 const getApplicationDetails = async (
-  req: UserRequest
+  req: UserRequest,
+  applicationID: string
 ): Promise<ApplictionResponseForUser> => {
-  const application = await Application.findById(req.query.id)
+  const application = await Application.findOne({
+    _id: applicationID,
+    applicantEmail: req.user!.email
+  })
 
   if (!application) throw { code: 404, message: 'Application not found' }
 
@@ -247,23 +269,22 @@ const getApplicationDetails = async (
   if (!pet) throw { code: 404, message: 'Pet not found' }
   if (!shelter) throw { code: 404, message: 'Shelter not found' }
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const canUserReview = await canReview(shelter.id.toString(), req.user!.email)
 
   const applicationResponse: ApplictionResponseForUser = {
     application: {
       ...application.toObject(),
       id: application._id.toString(),
-      status: application.status,
+      // status: application.status,
       submissionDate: application.createdAt.toISOString().split('T')[0],
-      microchipID: application.microchipID,
+      // microchipID: application.microchipID,
       petImage: getImageURL(pet.images[0]),
       petName: pet.name,
-      shelterName: shelter.name,
-      homeVisitDate: application.homeVisitDate,
-      shelterVisitDate: application.shelterVisitDate,
-      homeVisitEmailSentDate: application.homeVisitEmailSentDate,
-      shelterVisitEmailSentDate: application.shelterVisitEmailSentDate
+      shelterName: shelter.name
+      // homeVisitDate: application.homeVisitDate,
+      // shelterVisitDate: application.shelterVisitDate,
+      // homeVisitEmailSentDate: application.homeVisitEmailSentDate,
+      // shelterVisitEmailSentDate: application.shelterVisitEmailSentDate
     },
     canReview: canUserReview
   }
@@ -486,7 +507,7 @@ const getApplications = async (
       const applicationResponse = {
         ...application,
         id: application._id.toString(),
-        submissionDate: application.createdAt,
+        submissionDate: application.createdAt.toISOString().split('T')[0],
         petImage: imageURLs[0],
         petName: pet.name,
         shelterName: shelter.name,
@@ -511,58 +532,68 @@ const getApplications = async (
   }
 }
 
-const getTimeSlots = async (req: UserRequest): Promise<TimeSlotsResponse> => {
-  const { id, petID, visitDate, visitType } = req.query
+const getTimeSlots = async (
+  shelterID: string,
+  petID: string,
+  visitDate: string,
+  visitType: string
+): Promise<TimeSlotsResponse> => {
+  try {
+    // Generate all possible time slots for the day
+    const allTimeSlots = generateTimeSlots()
 
-  // Generate all possible time slots for the day
-  const allTimeSlots = generateTimeSlots()
-
-  // Convert the visitDate from the request into a Date object for comparison
-  const startOfVisitDate = new Date(visitDate + 'T00:00:00Z')
-  const startOfNextDate = new Date(
-    startOfVisitDate.getTime() + 24 * 60 * 60 * 1000
-  )
-
-  // Define a query object
-  const query: any = {
-    visitType: visitType,
-    visitDate: {
-      $gte: startOfVisitDate.toISOString(),
-      $lt: startOfNextDate.toISOString()
-    },
-    shelterID: id
-  }
-
-  // Conditionally add petID to the query if the visitType is 'Shelter'
-  if (visitType === VisitType.Shelter) {
-    query.petID = petID
-  }
-
-  const bookedVisits = await Visit.find(query)
-
-  const timezoneOffsetHours = 5 // Offset between local time and UTC in hours
-
-  const bookedTimeSlots = bookedVisits.map((visit) => {
-    const visitDateObj = new Date(visit.visitDate)
-    // Convert UTC time from database to local time
-    visitDateObj.setHours(visitDateObj.getUTCHours() + timezoneOffsetHours)
-    return (
-      visitDateObj.getHours() +
-      ':' +
-      String(visitDateObj.getMinutes()).padStart(2, '0')
+    // Convert the visitDate from the request into a Date object for comparison
+    const startOfVisitDate = new Date(visitDate + 'T00:00:00Z')
+    const startOfNextDate = new Date(
+      startOfVisitDate.getTime() + 24 * 60 * 60 * 1000
     )
-  })
 
-  // Filter the time slots that are still available
-  const availableTimeSlots: string[] = allTimeSlots.filter(
-    (slot) => !bookedTimeSlots.includes(slot)
-  )
-  return { availableTimeSlots: availableTimeSlots }
+    // Define a query object
+    const query: any = {
+      visitType: visitType,
+      visitDate: {
+        $gte: startOfVisitDate.toISOString(),
+        $lt: startOfNextDate.toISOString()
+      },
+      shelterID: shelterID
+    }
+
+    // Conditionally add petID to the query if the visitType is 'Shelter'
+    if (visitType === VisitType.Shelter) {
+      query.petID = petID
+    }
+
+    const bookedVisits = await Visit.find(query)
+
+    const timezoneOffsetHours = 5 // Offset between local time and UTC in hours
+
+    const bookedTimeSlots = bookedVisits.map((visit) => {
+      const visitDateObj = new Date(visit.visitDate)
+      // Convert UTC time from database to local time
+      visitDateObj.setHours(visitDateObj.getUTCHours() + timezoneOffsetHours)
+      return (
+        visitDateObj.getHours() +
+        ':' +
+        String(visitDateObj.getMinutes()).padStart(2, '0')
+      )
+    })
+
+    // Filter the time slots that are still available
+    const availableTimeSlots: string[] = allTimeSlots.filter(
+      (slot) => !bookedTimeSlots.includes(slot)
+    )
+    return { availableTimeSlots: availableTimeSlots }
+  } catch (error: any) {
+    throw { code: 500, message: 'Failed to fetch time slots' }
+  }
 }
 
-const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
-  const { id, visitDate } = body
-  const application = await Application.findById(id)
+const scheduleHomeVisit = async (
+  applicationID: string,
+  body: ScheduleVisitPayload
+) => {
+  const { visitDate } = body
+  const application = await Application.findById(applicationID)
   if (!application) throw { code: 404, message: 'Application not found' }
 
   const pet = await Pet.findOne({ microchipID: application.microchipID })
@@ -577,7 +608,7 @@ const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
   if (!shelter) throw { code: 404, message: 'Shelter not found' }
 
   const existingVisit = await Visit.findOne({
-    applicationID: id,
+    applicationID: applicationID,
     shelterID: application.shelterID,
     applicantEmail: application.applicantEmail,
     visitType: VisitType.Home
@@ -606,7 +637,7 @@ const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
   await application.save()
 
   const visit = new Visit({
-    applicationID: id,
+    applicationID: applicationID,
     shelterID: application.shelterID,
     petID: application.microchipID,
     applicantEmail: application.applicantEmail,
@@ -618,26 +649,30 @@ const scheduleHomeVisit = async (body: ScheduleHomeVisitPayload) => {
 
   const notification = new Notification({
     userEmail: application.applicantEmail,
-    applicationID: id,
+    applicationID: applicationID,
     status: Status.UserVisitScheduled,
     petImage: getImageURL(pet.images[0]),
-    actionUrl: `/view/application/${id}`,
+    actionUrl: `/view/application/${applicationID}`,
     date: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]')
   })
 
   const savedNotification = await notification.save()
-  const notificationWithId = {
-    ...savedNotification,
-    id: savedNotification._id.toString()
+  const notificationWithId: NotificationResponse = {
+    ...savedNotification.toObject(),
+    id: savedNotification._id.toString(),
+    applicationID: savedNotification.applicationID.toString()
   }
   emitUserNotification(application.applicantEmail, notificationWithId)
 
   return { code: 200, message: 'Home Visit has been scheduled' }
 }
 
-const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
-  const { id, visitDate } = body
-  const application = await Application.findById(id)
+const scheduleShelterVisit = async (
+  applicationID: string,
+  body: ScheduleVisitPayload
+) => {
+  const { visitDate } = body
+  const application = await Application.findById(applicationID)
   if (!application) throw { code: 404, message: 'Application not found' }
 
   const pet = await Pet.findOne({ microchipID: application.microchipID })
@@ -658,7 +693,7 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
   if (!shelter) throw { code: 404, message: 'Shelter not found' }
 
   const existingVisit = await Visit.findOne({
-    applicationID: id,
+    applicationID: applicationID,
     shelterID: application.shelterID,
     applicantEmail: application.applicantEmail,
     visitType: VisitType.Shelter
@@ -687,7 +722,7 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
   await application.save()
 
   const visit = new Visit({
-    applicationID: id,
+    applicationID: applicationID,
     shelterID: application.shelterID,
     petID: application.microchipID,
     applicantEmail: applicant.email,
@@ -699,28 +734,32 @@ const scheduleShelterVisit = async (body: ScheduleHomeVisitPayload) => {
 
   const notification = new Notification({
     userEmail: application.applicantEmail,
-    applicationID: id,
+    applicationID: applicationID,
     status: Status.UserVisitScheduled,
     petImage: getImageURL(pet.images[0]),
-    actionUrl: `/view/application/${id}`,
+    actionUrl: `/view/application/${applicationID}`,
     date: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]')
   })
 
   const savedNotification = await notification.save()
-  const notificationWithId = {
-    ...savedNotification,
-    id: savedNotification._id.toString()
+  const notificationWithId: NotificationResponse = {
+    ...savedNotification.toObject(),
+    id: savedNotification._id.toString(),
+    applicationID: savedNotification.applicationID.toString()
   }
   emitUserNotification(application.applicantEmail, notificationWithId)
 
   return { code: 200, message: 'Shelter Visit has been scheduled' }
 }
 
-const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
-  const { id, status } = body
+const updateApplicationStatus = async (
+  applicationID: string,
+  body: UpdateApplicationPayload
+) => {
+  const { status } = body
   let responseMessage = 'Application status updated successfully'
 
-  const application = await Application.findById(id)
+  const application = await Application.findById(applicationID)
   if (!application) throw { code: 404, message: 'Application not found' }
 
   const shelter = await User.findOne({
@@ -866,22 +905,23 @@ const updateApplicationStatus = async (body: UpdateApplicationPayload) => {
 
     const notification = new Notification({
       userEmail: application.applicantEmail,
-      applicationID: id,
+      applicationID: applicationID,
       status: status,
       petImage: getImageURL(pet.images[0]),
-      actionUrl: `/view/application/${id}`,
+      actionUrl: `/view/application/${applicationID}`,
       date: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]')
     })
 
     const savedNotification = await notification.save()
-    const notificationWithId = {
-      ...savedNotification,
-      id: savedNotification._id.toString()
+    const notificationWithId: NotificationResponse = {
+      ...savedNotification.toObject(),
+      id: savedNotification._id.toString(),
+      applicationID: savedNotification.applicationID.toString()
     }
     emitUserNotification(application.applicantEmail, notificationWithId)
 
     return { code: 200, message: responseMessage }
   } catch (error) {
-    throw { code: 500, message: 'Error updating application status: ' }
+    throw { code: 500, message: 'Error updating application status' }
   }
 }

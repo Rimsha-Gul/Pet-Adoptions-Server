@@ -7,7 +7,9 @@ import {
 } from '../models/Review'
 import {
   Body,
+  Example,
   Get,
+  Path,
   Post,
   Put,
   Query,
@@ -17,70 +19,80 @@ import {
   Tags
 } from 'tsoa'
 import { User } from '../models/User'
+import { reviewsResponseExample } from '../examples/review'
 
 @Route('review')
 @Tags('Review')
 export class ReviewController {
   /**
    * @summary Accepts rating and review and adds the review in the database
-   *
+   * @param shelterID ID of the shelter
+   * @example shelterID "6475e9630044288a2b4880b5"
    */
   @Security('bearerAuth')
-  @Post('/')
+  @Post('/:shelterID')
   public async addReview(
+    @Path() shelterID: string,
     @Body() body: ReviewPayload,
     @Request() req: UserRequest
   ) {
-    return addReview(body, req)
+    return addReview(shelterID, body, req)
   }
 
   /**
    * @summary Returns all reviews of a specific shelter
-   *
+   * @param shelterID ID of the shelter
+   * @example shelterID "6475e9630044288a2b4880b5"
    */
+  @Example<ReviewsResponse>(reviewsResponseExample)
   @Security('bearerAuth')
-  @Get('/all')
+  @Get('/:shelterID')
   public async getReviews(
+    @Path() shelterID: string,
     @Query('page') page: number,
-    @Query('limit') limit: number,
-    @Request() req: UserRequest
+    @Query('limit') limit: number
   ): Promise<ReviewsResponse> {
-    return getReviews(page, limit, req)
+    return getReviews(shelterID, page, limit)
   }
 
   /**
    * @summary Updates review
-   *
+   * @param shelterID ID of the shelter
+   * @example shelterID "6475e9630044288a2b4880b5"
    */
   @Security('bearerAuth')
-  @Put('/update')
+  @Put('/:shelterID')
   public async updateReview(
+    @Path() shelterID: string,
     @Body() body: ReviewPayload,
     @Request() req: UserRequest
   ) {
-    return updateReview(body, req)
+    return updateReview(shelterID, body, req)
   }
 }
 
-const addReview = async (body: ReviewPayload, req: UserRequest) => {
+const addReview = async (
+  shelterID: string,
+  body: ReviewPayload,
+  req: UserRequest
+) => {
   // Check if a review already exists from this user for this shelter
-  const { shelterID, rating, reviewText } = body
+  const { rating, reviewText } = body
   const existingReview = await Review.findOne({
     shelterID: shelterID,
-    applicantEmail: req.user?.email
+    applicantEmail: req.user!.email
   })
 
   if (existingReview) {
     throw { code: 400, message: 'Review already exists' }
   }
 
-  const user = await User.findOne({ email: req.user?.email })
-  if (!user) throw { code: 404, message: 'User not found' }
+  const user = await User.findOne({ email: req.user!.email })
 
   const newReview = new Review({
-    shelterID: body.shelterID,
-    applicantEmail: req.user?.email,
-    applicantName: user.name,
+    shelterID: shelterID,
+    applicantEmail: req.user!.email,
+    applicantName: user!.name,
     rating: rating,
     reviewText: reviewText
   })
@@ -108,12 +120,11 @@ const addReview = async (body: ReviewPayload, req: UserRequest) => {
 }
 
 const getReviews = async (
+  shelterID: string,
   page: number,
-  limit: number,
-  req: UserRequest
+  limit: number
 ): Promise<ReviewsResponse> => {
   const skip = (page - 1) * limit
-  const shelterID = req.query.id
 
   const shelter = await User.findOne({ _id: shelterID })
 
@@ -143,21 +154,20 @@ const getReviews = async (
   }
 }
 
-const updateReview = async (body: ReviewPayload, req: UserRequest) => {
+const updateReview = async (
+  shelterID: string,
+  body: ReviewPayload,
+  req: UserRequest
+) => {
   // Check if the review to be updated exists
-  const { shelterID, rating, reviewText } = body
+  const { rating, reviewText } = body
 
   const existingReview = await Review.findOne({
     shelterID: shelterID,
-    applicantEmail: req.user?.email
+    applicantEmail: req.user!.email
   })
 
-  if (!existingReview) {
-    throw { code: 400, message: 'Review not found' }
-  }
-
-  const user = await User.findOne({ email: req.user?.email })
-  if (!user) throw { code: 404, message: 'User not found' }
+  if (!existingReview) throw { code: 404, message: 'Review not found' }
 
   const oldRating = existingReview.rating // Store the old rating before updating
 
@@ -169,9 +179,7 @@ const updateReview = async (body: ReviewPayload, req: UserRequest) => {
   // Fetch the shelter
   const shelter = await User.findOne({ _id: shelterID })
 
-  if (!shelter) {
-    throw { code: 404, message: 'Shelter not found' }
-  }
+  if (!shelter) throw { code: 404, message: 'Shelter not found' }
 
   // Calculate the new average rating
   // Subtract the old rating and add the new rating, then divide by the total number of reviews

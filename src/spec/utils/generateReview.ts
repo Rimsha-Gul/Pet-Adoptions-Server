@@ -1,3 +1,4 @@
+import { User } from '../../models/User'
 import { Review } from '../../models/Review'
 
 export interface Review {
@@ -15,6 +16,13 @@ export const generateReview = async (shelterID: string) => {
     reviewText: 'Great shelter!'
   })
   await review.save()
+
+  const shelter = await User.findOne({ _id: shelterID })
+  if (shelter) {
+    shelter.numberOfReviews = 1
+    shelter.rating = 5
+    await shelter.save()
+  }
 }
 
 export const generateReviews = async (shelterID: string) => {
@@ -58,4 +66,8 @@ export const generateReviews = async (shelterID: string) => {
 
   const reviews = reviewsData.map((data) => new Review(data))
   await Review.insertMany(reviews)
+}
+
+export const removeAllReviews = async () => {
+  await Review.deleteMany({})
 }

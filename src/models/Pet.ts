@@ -1,33 +1,33 @@
 import { Document, Model, Schema, model } from 'mongoose'
 
 export enum Category {
-  Cat = 'CAT',
-  Dog = 'DOG',
-  Horse = 'HORSE',
-  Rabbit = 'RABBIT',
-  Bird = 'BIRD',
-  SmallAndFurry = 'SMALL_AND_FURRY',
-  ScalesFinsAndOthers = 'SCALES_FINS_AND_OTHERS',
-  Barnyard = 'BARNYARD'
+  Cat = 'Cat',
+  Dog = 'Dog',
+  Horse = 'Horse',
+  Rabbit = 'Rabbit',
+  Bird = 'Bird',
+  SmallAndFurry = 'Small and Furry',
+  ScalesFinsAndOthers = 'Scales, Fins and Others',
+  Barnyard = 'Barnyard'
 }
 
 export enum Gender {
-  Male = 'MALE',
-  Female = 'FEMALE'
+  Male = 'Male',
+  Female = 'Female'
 }
 
 export enum ActivityNeeds {
-  Low = 'LOW',
-  VeryLow = 'VERY_LOW',
-  MidRange = 'MIDRANGE',
-  High = 'HIGH',
-  VeryHigh = 'VERY_HIGH'
+  Low = 'Low',
+  VeryLow = 'Very Low',
+  MidRange = 'Midrange',
+  High = 'High',
+  VeryHigh = 'Very High'
 }
 
 export enum LevelOfGrooming {
-  Low = 'LOW',
-  Medium = 'MEDIUM',
-  High = 'HIGH'
+  Low = 'Low',
+  Medium = 'Medium',
+  High = 'High'
 }
 
 export interface PetPayload {

@@ -1,7 +1,7 @@
 import Joi from 'joi'
 import { ActivityNeeds, Category, Gender, LevelOfGrooming } from '../models/Pet'
 import { ResidenceType, Status } from '../models/Application'
-import { Role } from '../models/User'
+import { EmailChangeRequest, Role } from '../models/User'
 import { VisitType } from '../models/Visit'
 
 const nameSchema = Joi.string().min(3).max(32)
@@ -22,6 +22,9 @@ const residenceTypeSchema = Joi.string().valid(...Object.values(ResidenceType))
 const statusSchema = Joi.string().valid(...Object.values(Status))
 const visitTypeSchema = Joi.string().valid(...Object.values(VisitType))
 const roleSchema = Joi.string().valid(...Object.values(Role))
+const emailChangeSchema = Joi.string().valid(
+  ...Object.values(EmailChangeRequest)
+)
 
 const today = new Date()
 const weekFromNow = new Date()
@@ -46,7 +49,7 @@ export const sendVerificationCodeValidation = (
 ): Joi.ValidationResult =>
   Joi.object({
     email: emailSchema.required(),
-    emailChangeRequest: Joi.boolean()
+    emailChangeRequest: emailChangeSchema
   }).validate(data)
 
 export const verifyEmailValidation = (data: any): Joi.ValidationResult =>
@@ -68,7 +71,7 @@ export const emailValidation = (data: any): Joi.ValidationResult =>
     email: emailSchema.required()
   }).validate(data)
 
-export const checkPasswordValidation = (data: any): Joi.ValidationResult =>
+export const passwordValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
     password: passwordSchema.required()
   }).validate(data)
@@ -99,7 +102,7 @@ export const addPetValidation = (data: any): Joi.ValidationResult =>
 
 export const getPetValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    id: Joi.string().length(10).required()
+    petID: Joi.string().length(10).required()
   }).validate(data)
 
 export const getAllPetsValidation = (data: any): Joi.ValidationResult =>
@@ -142,7 +145,7 @@ export const applyForPetValidation = (data: any): Joi.ValidationResult =>
     handlePetIssues: Joi.string().required(),
     moveWithPet: Joi.string().required(),
     canAffordPetsNeeds: Joi.boolean().required(),
-    canAffordPetsMediacal: Joi.boolean().required(),
+    canAffordPetsMedical: Joi.boolean().required(),
     petTravelPlans: Joi.string().required(),
     petOutlivePlans: Joi.string().required()
   }).validate(data)
@@ -160,17 +163,24 @@ export const idValidation = (data: any): Joi.ValidationResult =>
     id: objectIDSchema.required()
   }).validate(data)
 
-export const updateApplicationStatusValidation = (
-  data: any
-): Joi.ValidationResult =>
+export const applicationIDValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    id: objectIDSchema.required(),
+    applicationID: objectIDSchema.required()
+  }).validate(data)
+
+export const shelterIDValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
+    shelterID: objectIDSchema.required()
+  }).validate(data)
+
+export const statusValidation = (data: any): Joi.ValidationResult =>
+  Joi.object({
     status: statusSchema.required()
   }).validate(data)
 
 export const getTimeSlotsValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    id: objectIDSchema.required(),
+    shelterID: objectIDSchema.required(),
     visitDate: Joi.date().greater(today).less(weekFromNow).required(),
     visitType: visitTypeSchema.required(),
     petID: Joi.string().length(10).required()
@@ -178,20 +188,17 @@ export const getTimeSlotsValidation = (data: any): Joi.ValidationResult =>
 
 export const scheduleVisitValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    id: objectIDSchema.required(),
     visitDate: Joi.date().greater(today).less(weekFromNow).required()
   }).validate(data)
 
 export const addReviewValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    shelterID: objectIDSchema.required(),
-    rating: Joi.number().integer().min(1).max(5),
+    rating: Joi.number().integer().min(1).max(5).required(),
     reviewText: Joi.string().required()
   }).validate(data)
 
 export const getAllReviewsValidation = (data: any): Joi.ValidationResult =>
   Joi.object({
-    id: objectIDSchema.required(),
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).default(6)
   }).validate(data)
@@ -218,7 +225,14 @@ export const requestReactivationValidation = (
   data: any
 ): Joi.ValidationResult =>
   Joi.object({
-    applicationID: objectIDSchema.required(),
     reasonNotScheduled: Joi.string().required(),
     reasonToReactivate: Joi.string().required()
+  }).validate(data)
+
+export const getAllNotificationsValidation = (
+  data: any
+): Joi.ValidationResult =>
+  Joi.object({
+    page: Joi.number().integer().min(1).default(1),
+    limit: Joi.number().integer().min(1).default(8)
   }).validate(data)

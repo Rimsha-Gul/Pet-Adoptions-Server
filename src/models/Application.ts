@@ -22,10 +22,30 @@ export enum Status {
 }
 
 export interface UpdateApplicationPayload {
-  id: string
   status: Status
 }
 
+/**
+ * @example {
+ *  "shelterID": "6475e9630044288a2b4880b5",
+ *  "microchipID": "A123456789",
+ *  "residenceType": "rentHouse",
+ *  "hasRentPetPermission": "true",
+ *  "hasChildren": "true",
+ *  "childrenAges": "2,4",
+ *  "hasOtherPets": "true",
+ *  "otherPetsInfo": "Cat 1, Dog 2",
+ *  "petAloneTime": "4",
+ *  "hasPlayTimeParks": "true",
+ *  "petActivities": "walking, playing around the house, swimming, sky diving",
+ *  "handlePetIssues": "i will pat him",
+ *  "moveWithPet": "i will take him with me",
+ *  "canAffordPetsNeeds": "true",
+ *  "canAffordPetsMedical": "true",
+ *  "petTravelPlans": "i will take him wherever i go",
+ *  "petOutlivePlans": "My friend, Alex will take care of him"
+ * }
+ */
 export interface ApplicationPayload {
   shelterID: string
   microchipID: string
@@ -41,13 +61,16 @@ export interface ApplicationPayload {
   handlePetIssues: string
   moveWithPet: string
   canAffordPetsNeeds: boolean
-  canAffordPetsMediacal: boolean
+  canAffordPetsMedical: boolean
   petTravelPlans: string
   petOutlivePlans: string
 }
 
-export interface ScheduleHomeVisitPayload {
-  id: string
+export interface ScheduleVisitPayload {
+  /**
+   * Date for visit
+   * @example "2023-08-19T04:00:00Z"
+   */
   visitDate: string
 }
 
@@ -127,7 +150,7 @@ const ApplicationSchema = new Schema<ApplicationDocument>(
     handlePetIssues: { type: String, required: true },
     moveWithPet: { type: String, required: true },
     canAffordPetsNeeds: { type: Boolean, required: true },
-    canAffordPetsMediacal: { type: Boolean, required: true },
+    canAffordPetsMedical: { type: Boolean, required: true },
     petTravelPlans: { type: String, required: true },
     petOutlivePlans: { type: String, required: true },
     status: { type: String, enum: Status },

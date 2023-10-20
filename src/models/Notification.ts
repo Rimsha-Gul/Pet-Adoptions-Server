@@ -1,13 +1,10 @@
 import { Model, Schema, model } from 'mongoose'
 import { Status } from './Application'
 
-export interface NotificationPayload {
+export interface NotificationResponse {
   id: string
-}
-
-export interface NotificationResponse extends NotificationPayload {
   userEmail: string
-  applicationID: Schema.Types.ObjectId
+  applicationID: string
   status: Status
   petImage: string
   isSeen: boolean
@@ -16,9 +13,16 @@ export interface NotificationResponse extends NotificationPayload {
   date: string
 }
 
+export interface AllNotificationsResponse {
+  notifications: NotificationResponse[]
+  totalPages: number
+}
+
 export interface NotificationDocument
-  extends Omit<NotificationResponse, 'id'>,
-    Document {}
+  extends Omit<NotificationResponse, 'id' | 'applicationID'>,
+    Document {
+  applicationID: Schema.Types.ObjectId
+}
 
 const NotificationSchema = new Schema<NotificationDocument>(
   {
