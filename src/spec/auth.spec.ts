@@ -2101,20 +2101,6 @@ describe('auth', () => {
 
       expect(response.text).toEqual('User not found')
     })
-
-    // it('should return 500 when there is an internal server error', async () => {
-    //   UserModel.findOne = jest.fn().mockImplementation(() => {
-    //     throw new Error('Test generic error')
-    //   })
-
-    //   const response = await request(app)
-    //     .get(
-    //       `/auth/password/reset/token/verify?resetToken=${user.passwordResetToken}`
-    //     )
-    //     .expect(500)
-
-    //   expect(response.text).toEqual('Internal server error')
-    // })
   })
 
   describe('resetPassword', () => {
