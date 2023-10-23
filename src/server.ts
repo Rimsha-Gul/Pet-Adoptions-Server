@@ -4,7 +4,7 @@ import { io } from './socket'
 
 dbPromise?.then(() => {
   try {
-    const port = process.env.PORT
+    const port = process.env.PORT || 8080
 
     // Create HTTP server
     const httpServer = createServer(app)
