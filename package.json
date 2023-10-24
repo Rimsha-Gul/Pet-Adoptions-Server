@@ -10,7 +10,7 @@
     "swagger": "tsoa spec",
     "lint": "eslint --ignore-path .eslintignore --ext .js,.ts .",
     "format": "prettier --ignore-path .prettierignore --write \"**/*.+(js|ts|json|yaml)\"",
-    "test": "node --max-old-space-size=4096 node_modules/.bin/jest --coverage --silent --detectOpenHandles"
+    "test": "jest --max-old-space-size=4096 --coverage --detectOpenHandles"
   },
   "keywords": [],
   "author": "",
@@ -43,6 +43,7 @@
     "socket.io": "^4.7.2",
     "swagger-ui-express": "^4.6.3",
     "tmp-promise": "^3.0.3",
+    "typescript": "^5.2.2",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
@@ -74,6 +75,6 @@
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.1",
     "tsoa": "^5.1.1",
-    "typescript": "^5.0.4"
+    "typescript": "^5.2.2"
   }
 }
