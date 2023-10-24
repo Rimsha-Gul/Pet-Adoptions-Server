@@ -5,8 +5,7 @@
   "main": "./src/server.ts",
   "scripts": {
     "start": "nodemon ./src/server.ts",
-    "prebuild": "npm ci",
-    "build": "npm run prebuild && ./node_modules/.bin/rimraf ./build && tsc",
+    "build": "rm -rf ./build && tsc",
     "start:prod": "npm run build && node build/server.js",
     "swagger": "tsoa spec",
     "lint": "eslint --ignore-path .eslintignore --ext .js,.ts .",
