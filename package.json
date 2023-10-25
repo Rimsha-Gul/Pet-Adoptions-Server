@@ -6,7 +6,7 @@
   "scripts": {
     "start": "nodemon ./src/server.ts",
     "build": "npx rimraf ./build && npx tsc",
-    "start:prod": "npm run build && node build/server.js",
+    "start:prod": "node build/server.js",
     "swagger": "tsoa spec",
     "lint": "eslint --ignore-path .eslintignore --ext .js,.ts .",
     "format": "prettier --ignore-path .prettierignore --write \"**/*.+(js|ts|json|yaml)\"",
@@ -52,7 +52,7 @@
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.17",
     "@types/express-session": "^1.17.7",
-    "@types/jest": "^29.5.2",
+    "@types/jest": "^29.5.6",
     "@types/mongoose": "^5.11.97",
     "@types/mongoose-sequence": "^3.0.7",
     "@types/node": "^18.16.3",
