@@ -25,10 +25,7 @@ router.use(
   swaggerUi.serve,
   swaggerUi.setup(undefined, {
     swaggerOptions: {
-      swaggerUrl: '/swagger.yaml',
-      swaggerOptions: {
-        validatorUrl: null
-      }
+      url: '/swagger.yaml'
     }
   })
 )
