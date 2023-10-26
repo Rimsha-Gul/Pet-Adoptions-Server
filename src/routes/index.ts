@@ -21,7 +21,7 @@ router.use('/reactivationRequest', reactivationRequestRouter)
 router.use('/notifications', notificationRouter)
 
 router.use(
-  '/api-docs',
+  '/',
   swaggerUi.serve,
   swaggerUi.setup(undefined, {
     swaggerOptions: {
