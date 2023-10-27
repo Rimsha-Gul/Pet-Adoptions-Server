@@ -12,9 +12,7 @@ const app: Express = express()
 app.use(express.json())
 app.use(cors())
 
-console.log(path.join(__dirname, '../../public'))
 app.use(express.static(path.join(__dirname, '../../public')))
-console.log(path.join(__dirname, '../../public'))
 app.use('/', router)
 
 /***********************************
