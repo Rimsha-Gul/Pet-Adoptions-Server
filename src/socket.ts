@@ -4,7 +4,7 @@ import { Notification, NotificationResponse } from './models/Notification'
 // Initialize Socket.io
 export const io = new Server({
   cors: {
-    origin: 'http://localhost:5173',
+    origin: 'https://purrfect-adoptions.vercel.app/',
     methods: ['GET', 'POST'],
     credentials: true
   }

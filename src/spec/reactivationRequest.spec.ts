@@ -68,7 +68,7 @@ describe('reactivationRequest', () => {
     <p>Dear Shelter 1,</p>
     <p>We have received a request to reactivate the application with ID: <strong>${applicationID}</strong>.</p>
     <p>The applicant has provided reasons for their previous inability to proceed and expressed a desire to reactivate the application process.</p>
-    <p>To review the details and take appropriate actions, please <a href="http://localhost:5173/view/application/${applicationID}/">click here</a>.</p>
+    <p>To review the details and take appropriate actions, please <a href="https://purrfect-adoptions.vercel.app/view/application/${applicationID}/">click here</a>.</p>
     <p>Thank you for your attention to this matter.</p>
     <p>Best Regards,</p>
     <p>The Purrfect Adoptions Team</p>

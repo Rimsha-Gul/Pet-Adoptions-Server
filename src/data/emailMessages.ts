@@ -15,7 +15,7 @@ export const getResetPasswordEmail = (resetToken: string) => {
     <p>We received a request to reset your password. The password reset window is limited to five minutes.</p>
     <p>If you do not reset your password within five minutes, you will need to submit a new request.</p>
     <p>Please click on the following link to complete the process:</p>
-     <p><a href="http://localhost:5173/resetPassword/${resetToken}/">Reset</a></p>
+     <p><a href="https://purrfect-adoptions.vercel.app/resetPassword/${resetToken}/">Reset</a></p>
     <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
   `
 
@@ -37,7 +37,7 @@ export const getHomeVisitRequestEmail = (applicationID: string) => {
     <p>As part of our process, we ask that you schedule this visit within the next week, by <strong>${nextWeekDate}</strong>. This visit is an important step in ensuring that the pet will be comfortable and secure in their potential new home.</p>
     <p><strong>Note:</strong> If you'd like to schedule your visit, please do so at least one day in advance to allow the shelter time for preparations.</p>
     <p><strong>Important:</strong> If you do not schedule your visit by the aforementioned date, your application will be marked as "expired." Should this happen, you'll need to request to reactivate your application to proceed further.</p>
-    <p>Please click <a href="http://localhost:5173/${applicationID}/scheduleHomeVisit">here</a> to schedule your home visit.</p>
+    <p>Please click <a href="https://purrfect-adoptions.vercel.app/${applicationID}/scheduleHomeVisit">here</a> to schedule your home visit.</p>
     <p>If you have any questions or require any assistance, please feel free to respond to this email.</p>
     <p>Thank you for your cooperation and your interest in adopting.</p>
     <p>Best,</p>
@@ -264,7 +264,7 @@ export const getShelterInvitationEmail = (invitationLink: string) => {
     <p>Greetings,</p>
     <p>We are thrilled to extend an invitation to join our growing network of dedicated shelters on Purrfect Adoptions.</p>
     <p>We have built a platform that brings together shelters and potential pet adopters, with a mission to find loving and suitable homes for as many pets as possible.</p>
-    <p>To accept this invitation and begin the registration process, please click <a href="http://localhost:5173/shelter/invitation/${invitationLink}/">here</a></p>
+    <p>To accept this invitation and begin the registration process, please click <a href="https://purrfect-adoptions.vercel.app/shelter/invitation/${invitationLink}/">here</a></p>
     <p>Please note that this invitation is valid for one week. If the invitation has expired, please contact us to receive a new one.</p>
     <p>If you have any questions or need further assistance, please do not hesitate to reply to this email. We look forward to partnering with you in our endeavor to make a positive impact on the lives of pets and adopters alike.</p>
     <p>Thank you,</p>
@@ -322,7 +322,7 @@ export const getReactivationRequestEmail = (
     <p>Dear ${shelterName},</p>
     <p>We have received a request to reactivate the application with ID: <strong>${applicationID}</strong>.</p>
     <p>The applicant has provided reasons for their previous inability to proceed and expressed a desire to reactivate the application process.</p>
-    <p>To review the details and take appropriate actions, please <a href="http://localhost:5173/view/application/${applicationID}/">click here</a>.</p>
+    <p>To review the details and take appropriate actions, please <a href="https://purrfect-adoptions.vercel.app/view/application/${applicationID}/">click here</a>.</p>
     <p>Thank you for your attention to this matter.</p>
     <p>Best Regards,</p>
     <p>The Purrfect Adoptions Team</p>
