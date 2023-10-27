@@ -6,7 +6,7 @@ export const sendEmail = async (
   message: string
 ): Promise<void> => {
   const mailOptions = {
-    from: process.env.NODEMAILER_USER,
+    from: '"Purrfect Adoptions" <' + process.env.NODEMAILER_USER + '>',
     to: `${recipientEmail}`,
     subject: `${subject}`,
     html: `${message}`
