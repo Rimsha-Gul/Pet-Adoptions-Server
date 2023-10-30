@@ -1,5 +1,5 @@
 export const getVerificationCodeEmail = (verificationCode: string) => {
-  const subject = 'Purrfect Adoptions - Email Verification'
+  const subject = 'Email Verification'
   const message = `<p>Your email verification code is: <strong>${verificationCode}</strong>.</p><p>Do not share this code with anyone else.</p>`
 
   return {
@@ -9,7 +9,7 @@ export const getVerificationCodeEmail = (verificationCode: string) => {
 }
 
 export const getResetPasswordEmail = (resetToken: string) => {
-  const subject = 'Purrfect Adoptions - Password Reset Request'
+  const subject = 'Password Reset Request'
 
   const message = `
     <p>We received a request to reset your password. The password reset window is limited to five minutes.</p>
@@ -26,7 +26,7 @@ export const getResetPasswordEmail = (resetToken: string) => {
 }
 
 export const getHomeVisitRequestEmail = (applicationID: string) => {
-  const subject = 'Purrfect Adoptions - Home Visit Request'
+  const subject = 'Home Visit Request'
   const nextWeekDate = new Date(
     Date.now() + 7 * 24 * 60 * 60 * 1000
   ).toLocaleDateString()
@@ -54,7 +54,7 @@ export const getApplicantHomeVisitScheduledEmail = (
   applicationID: string,
   visitDate: string
 ) => {
-  const subject = 'Purrfect Adoptions - Home Visit Scheduled'
+  const subject = 'Home Visit Scheduled'
   const formattedDate = new Date(visitDate).toLocaleString()
 
   const message = `
@@ -75,7 +75,7 @@ export const getShelterHomeVisitScheduledEmail = (
   applicationID: string,
   visitDate: string
 ) => {
-  const subject = 'Purrfect Adoptions - Home Visit Scheduled'
+  const subject = 'Home Visit Scheduled'
   const formattedDate = new Date(visitDate).toLocaleString()
 
   const message = `
@@ -96,7 +96,7 @@ export const getHomeApprovalEmail = (
   applicationID: string,
   visitDate: string
 ) => {
-  const subject = 'Purrfect Adoptions - Home Approved'
+  const subject = 'Home Approved'
   const formattedDate = new Date(visitDate).toLocaleString()
 
   const message = `
@@ -116,7 +116,7 @@ export const getHomeRejectionEmail = (
   applicationID: string,
   visitDate: string
 ) => {
-  const subject = 'Purrfect Adoptions - Home Visit Unsuccessful'
+  const subject = 'Home Visit Unsuccessful'
   const formattedDate = new Date(visitDate).toLocaleString()
 
   const message = `
@@ -137,7 +137,7 @@ export const getApplicantShelterVisitScheduledEmail = (
   applicationID: string,
   visitDate: string
 ) => {
-  const subject = 'Purrfect Adoptions - Shelter Visit Scheduled'
+  const subject = 'Shelter Visit Scheduled'
   const formattedDate = new Date(visitDate).toLocaleString()
 
   const message = `
@@ -158,7 +158,7 @@ export const getShelterShelterVisitScheduledEmail = (
   applicationID: string,
   visitDate: string
 ) => {
-  const subject = 'Purrfect Adoptions - Shelter Visit Scheduled'
+  const subject = 'Shelter Visit Scheduled'
   const formattedDate = new Date(visitDate).toLocaleString()
 
   const message = `
@@ -179,7 +179,7 @@ export const getApplicantAdoptionConfirmationEmail = (
   applicationID: string,
   adoptionDate: string
 ) => {
-  const subject = 'Purrfect Adoptions - Adoption Successful'
+  const subject = 'Adoption Successful'
   const formattedDate = new Date(adoptionDate).toLocaleString()
 
   const message = `
@@ -200,7 +200,7 @@ export const getShelterAdoptionConfirmationEmail = (
   adoptionDate: string,
   applicantEmail: string
 ) => {
-  const subject = 'Purrfect Adoptions - Adoption Finalized'
+  const subject = 'Adoption Finalized'
   const formattedDate = new Date(adoptionDate).toLocaleString()
 
   const message = `
@@ -220,7 +220,7 @@ export const getApplicantAdoptionRejectionEmail = (
   applicationID: string,
   rejectionDate: string
 ) => {
-  const subject = 'Purrfect Adoptions - Adoption Not Successful'
+  const subject = 'Adoption Not Successful'
   const formattedDate = new Date(rejectionDate).toLocaleString()
 
   const message = `
@@ -241,7 +241,7 @@ export const getShelterAdoptionRejectionEmail = (
   rejectionDate: string,
   applicantEmail: string
 ) => {
-  const subject = 'Purrfect Adoptions - Adoption Not Finalized'
+  const subject = 'Adoption Not Finalized'
   const formattedDate = new Date(rejectionDate).toLocaleString()
 
   const message = `
@@ -258,7 +258,7 @@ export const getShelterAdoptionRejectionEmail = (
 }
 
 export const getShelterInvitationEmail = (invitationLink: string) => {
-  const subject = 'Purrfect Adoptions - Invitation to Join Our Network'
+  const subject = 'Invitation to Join Our Network'
 
   const message = `
     <p>Greetings,</p>
@@ -278,7 +278,7 @@ export const getShelterInvitationEmail = (invitationLink: string) => {
 }
 
 export const getPetAdoptionNotificationEmail = (applicationID: string) => {
-  const subject = 'Purrfect Adoptions - Pet Adoption Update'
+  const subject = 'Pet Adoption Update'
 
   const message = `
     <p>Dear applicant,</p>
@@ -294,7 +294,7 @@ export const getPetAdoptionNotificationEmail = (applicationID: string) => {
 }
 
 export const requestAlternateEmailForShelter = (userName: string) => {
-  const subject = 'Purrfect Adoptions - Email Address Action Required'
+  const subject = 'Email Address Action Required'
 
   const message = `
     <p>Dear <strong>${userName}</strong>,</p>
@@ -316,7 +316,7 @@ export const getReactivationRequestEmail = (
   applicationID: string,
   shelterName: string
 ) => {
-  const subject = 'Purrfect Adoptions - Reactivation Request Received'
+  const subject = 'Reactivation Request Received'
 
   const message = `
     <p>Dear ${shelterName},</p>
@@ -337,7 +337,7 @@ export const getReactivationRequestEmail = (
 export const getApplicantReactivationApprovalEmail = (
   applicationID: string
 ) => {
-  const subject = 'Purrfect Adoptions - Reactivation Request Approved'
+  const subject = 'Reactivation Request Approved'
 
   const message = `
     <p>Good news! We are pleased to inform you that your reactivation request for application ID: <strong>${applicationID}</strong> has been approved.</p>
@@ -353,7 +353,7 @@ export const getApplicantReactivationApprovalEmail = (
 }
 
 export const getApplicantReactivationDeclineEmail = (applicationID: string) => {
-  const subject = 'Purrfect Adoptions - Reactivation Request Declined'
+  const subject = 'Reactivation Request Declined'
 
   const message = `
     <p>We regret to inform you that your reactivation request for application ID: <strong>${applicationID}</strong> has been declined.</p>

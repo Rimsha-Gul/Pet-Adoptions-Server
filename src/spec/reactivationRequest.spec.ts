@@ -63,7 +63,7 @@ describe('reactivationRequest', () => {
     })
 
     it('should successfully create reactivation request and return 200', async () => {
-      const expectedSubject = `Purrfect Adoptions - Reactivation Request Received`
+      const expectedSubject = `Reactivation Request Received`
       const expectedMessage = `
     <p>Dear Shelter 1,</p>
     <p>We have received a request to reactivate the application with ID: <strong>${applicationID}</strong>.</p>

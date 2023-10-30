@@ -372,7 +372,7 @@ describe('auth', () => {
     let sendEmailSpy: jest.SpyInstance
 
     let expectedRecipient
-    const expectedSubject = `Purrfect Adoptions - Password Reset Request`
+    const expectedSubject = `Password Reset Request`
     const expectedMessage = `
     <p>We received a request to reset your password. The password reset window is limited to five minutes.</p>
     <p>If you do not reset your password within five minutes, you will need to submit a new request.</p>
@@ -460,7 +460,7 @@ describe('auth', () => {
     let sendEmailSpy: jest.SpyInstance
 
     let expectedRecipient
-    const expectedSubject = `Purrfect Adoptions - Email Verification`
+    const expectedSubject = `Email Verification`
     const expectedMessage = `<p>Your email verification code is: <strong>123456</strong>.</p><p>Do not share this code with anyone else.</p>`
 
     beforeEach(async () => {

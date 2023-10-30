@@ -191,7 +191,7 @@ describe('shelter', () => {
     let sendEmailSpy: jest.SpyInstance
 
     let expectedRecipient
-    const expectedSubject = `Purrfect Adoptions - Invitation to Join Our Network`
+    const expectedSubject = `Invitation to Join Our Network`
     const expectedMessage = `
     <p>Greetings,</p>
     <p>We are thrilled to extend an invitation to join our growing network of dedicated shelters on Purrfect Adoptions.</p>
