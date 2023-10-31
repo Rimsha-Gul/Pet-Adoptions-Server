@@ -2381,7 +2381,7 @@ describe('application', () => {
       const formattedDate = currentTime.toLocaleString()
       const expectedApplicantMessage = `
     <p>Congratulations! We are pleased to inform you that your application, ID: <strong>${applicationID}</strong>, has resulted in a successful adoption.</p>
-    <p>The adoption was confirmed on: <strong>${formattedDate} UTC UTC</strong></p>
+    <p>The adoption was confirmed on: <strong>${formattedDate} UTC</strong></p>
     <p>We are thrilled to see another pet find a loving home and wish you all the best on this new journey. Don't hesitate to reach out if you have any queries or need support.</p>
     <p>Thank you for your commitment to animal adoption and for being a part of the Purrfect Adoptions community.</p>
   `
