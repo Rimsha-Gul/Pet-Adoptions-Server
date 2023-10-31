@@ -1612,7 +1612,7 @@ describe('application', () => {
       const expectedApplicantSubject = `Home Visit Scheduled`
       const expectedApplicantMessage = `
     <p>We are happy to inform you that your home visit for your application, ID: <strong>${applicationID}</strong>, has been successfully scheduled.</p>
-    <p>The visit is set for: <strong>${formattedDateTime}</strong></p>
+    <p>The visit is set for: <strong>${formattedDateTime} UTC</strong></p>
     <p>Please ensure that you are available at the scheduled time. During the visit, we will assess the living conditions and ensure it is a safe and loving environment for our pets.</p>
     <p>If the visit is successful, we will then move on to the next step of the adoption process.</p>
     <p>Thank you for choosing Purrfect Adoptions!</p>
@@ -1621,7 +1621,7 @@ describe('application', () => {
       const expectedShelterSubject = `Home Visit Scheduled`
       const expectedShelterMessage = `
     <p>A home visit for application ID: <strong>${applicationID}</strong> has been scheduled.</p>
-    <p>The visit is set for: <strong>${formattedDateTime}</strong></p>
+    <p>The visit is set for: <strong>${formattedDateTime} UTC</strong></p>
     <p>Please ensure that a representative is available to conduct the visit. During the visit, please assess the living conditions to ensure they are appropriate for the specific pet applied for. </p>
     <p>Ensure to document any significant findings for review in the application process.</p>
     <p>Thank you for your hard work!</p>
@@ -1834,7 +1834,7 @@ describe('application', () => {
       const expectedApplicantSubject = `Shelter Visit Scheduled`
       const expectedApplicantMessage = `
     <p>We are pleased to inform you that your shelter visit for your application, ID: <strong>${applicationID}</strong>, has been successfully scheduled.</p>
-    <p>The visit is set for: <strong>${formattedDateTime}</strong></p>
+    <p>The visit is set for: <strong>${formattedDateTime} UTC</strong></p>
     <p>Please ensure that you are available at the scheduled time. During your visit, you will have the opportunity to meet the pet and assess if it's a good fit for you.</p>
     <p>If the visit is successful, we will then move on to the next step of the adoption process.</p>
     <p>Thank you for choosing Purrfect Adoptions!</p>
@@ -1843,7 +1843,7 @@ describe('application', () => {
       const expectedShelterSubject = `Shelter Visit Scheduled`
       const expectedShelterMessage = `
     <p>A shelter visit for application ID: <strong>${applicationID}</strong> has been scheduled.</p>
-    <p>The visit is set for: <strong>${formattedDateTime}</strong></p>
+    <p>The visit is set for: <strong>${formattedDateTime} UTC</strong></p>
     <p>Please ensure that a representative and the pet are available for the visit. During the visit, observe the interaction between the applicant and the pet to assess their compatibility.</p>
     <p>Ensure to document any significant findings for review in the application process.</p>
     <p>Thank you for your dedication and hard work!</p>
@@ -2186,7 +2186,7 @@ describe('application', () => {
       const formattedDate = currentTime.toLocaleString()
       const expectedMessage = `
     <p>We are thrilled to inform you that your home visit for your application, ID: <strong>${applicationID}</strong>, has been successful.</p>
-    <p>The approval was confirmed on: <strong>${formattedDate}</strong></p>
+    <p>The approval was confirmed on: <strong>${formattedDate} UTC</strong></p>
     <p>The next step of the adoption process will be your scheduled visit to our shelter. We will be in touch soon with scheduling details.</p>
     <p>Thank you for your cooperation and patience during this process. We appreciate your commitment to providing a loving home for our pets.</p>
   `
@@ -2244,7 +2244,7 @@ describe('application', () => {
       const formattedDate = currentTime.toLocaleString()
       const expectedMessage = `
     <p>We regret to inform you that your home visit for your application, ID: <strong>${applicationID}</strong>, has not been successful.</p>
-    <p>The decision was confirmed on: <strong>${formattedDate}</strong></p>
+    <p>The decision was confirmed on: <strong>${formattedDate} UTC</strong></p>
     <p>We understand this may be disappointing, and we want to assure you that this decision does not reflect upon you personally. Our primary concern is the well-being of our pets, and sometimes this means making difficult decisions.</p>
     <p>If you believe there have been changes to your living situation that may influence this decision, please feel free to reapply.</p>
     <p>Thank you for your understanding and your interest in providing a loving home for our pets.</p>
@@ -2303,14 +2303,14 @@ describe('application', () => {
       const formattedDate = currentTime.toLocaleString()
       const expectedApplicantMessage = `
     <p>We regret to inform you that your application, ID: <strong>${applicationID}</strong>, did not result in an adoption.</p>
-    <p>The decision was made on: <strong>${formattedDate}</strong></p>
+    <p>The decision was made on: <strong>${formattedDate} UTC</strong></p>
     <p>We understand that not every visit or interaction leads to an adoption, and we encourage you to continue searching for the right pet. Our team is available to assist you in this journey.</p>
     <p>Thank you for considering adoption and for being a part of the Purrfect Adoptions community.</p>
   `
       const expectedShelterSubject = 'Adoption Not Finalized'
       const expectedShelterMessage = `
     <p>We regret to inform you that the potential adoption for the application, ID: <strong>${applicationID}</strong>, by applicant: <strong>${user.email}</strong> did not proceed.</p>
-    <p>The decision was made on: <strong>${formattedDate}</strong></p>
+    <p>The decision was made on: <strong>${formattedDate} UTC</strong></p>
     <p>We understand that not every visit or interaction leads to an adoption, and we are committed to ensuring the best fit for each pet. Your pet will be available again for other potential adopters.</p>
     <p>Thank you for your continuous dedication and care towards the animals. Your efforts make a significant difference.</p>
   `
@@ -2381,14 +2381,14 @@ describe('application', () => {
       const formattedDate = currentTime.toLocaleString()
       const expectedApplicantMessage = `
     <p>Congratulations! We are pleased to inform you that your application, ID: <strong>${applicationID}</strong>, has resulted in a successful adoption.</p>
-    <p>The adoption was confirmed on: <strong>${formattedDate}</strong></p>
+    <p>The adoption was confirmed on: <strong>${formattedDate} UTC UTC</strong></p>
     <p>We are thrilled to see another pet find a loving home and wish you all the best on this new journey. Don't hesitate to reach out if you have any queries or need support.</p>
     <p>Thank you for your commitment to animal adoption and for being a part of the Purrfect Adoptions community.</p>
   `
       const expectedShelterSubject = `Adoption Finalized`
       const expectedShelterMessage = `
     <p>We're delighted to inform you that the adoption for the application, ID: <strong>${applicationID}</strong>, by applicant: <strong>${user.email}</strong> has been successfully completed.</p>
-    <p>The adoption was confirmed on: <strong>${formattedDate}</strong></p>
+    <p>The adoption was confirmed on: <strong>${formattedDate} UTC</strong></p>
     <p>This marks another successful pet adoption from your shelter, contributing towards our mission of finding homes for all animals in need.</p>
     <p>Thank you for your continuous dedication and care towards the animals. Your efforts make a significant difference.</p>
   `
