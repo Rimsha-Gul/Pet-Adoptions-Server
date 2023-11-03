@@ -5,7 +5,10 @@ import { io } from './socket'
 dbPromise?.then(() => {
   try {
     const port = process.env.PORT || 8080
-    const appURL = process.env.WEB_APP_URL
+    const backendURL =
+      process.env.NODE_ENV === 'production'
+        ? `${process.env.SERVER_URL}`
+        : `${process.env.SERVER_URL}:${port}`
 
     // Create HTTP server
     const httpServer = createServer(app)
@@ -14,7 +17,7 @@ dbPromise?.then(() => {
     io.attach(httpServer)
 
     httpServer.listen(port, () => {
-      console.log(`⚡️[server]: Server is running at ${appURL}:${port}`)
+      console.log(`⚡️[server]: Server is running at ${backendURL}`)
     })
   } catch (err) {
     console.error('Error starting the server: ', err)
