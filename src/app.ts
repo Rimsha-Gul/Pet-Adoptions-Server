@@ -1,5 +1,10 @@
 import dotenv from 'dotenv'
 dotenv.config()
+
+const envFile =
+  process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development'
+dotenv.config({ path: envFile })
+
 import express, { Express } from 'express'
 import mongoose, { ConnectOptions } from 'mongoose'
 import router from './routes'

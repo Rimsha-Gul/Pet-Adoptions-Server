@@ -377,8 +377,10 @@ describe('auth', () => {
     <p>We received a request to reset your password. The password reset window is limited to five minutes.</p>
     <p>If you do not reset your password within five minutes, you will need to submit a new request.</p>
     <p>Please click on the following link to complete the process:</p>
-     <p><a href="https://purrfect-adoptions.vercel.app/resetPassword/abc123/">Reset</a></p>
+    <p><a href="${process.env.WEB_APP_URL}/resetPassword/abc123/">Reset</a></p>
     <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+    <p>Best,</p>
+    <p>The Purrfect Adoptions Team</p>
   `
 
     beforeEach(async () => {
@@ -461,7 +463,11 @@ describe('auth', () => {
 
     let expectedRecipient
     const expectedSubject = `Email Verification`
-    const expectedMessage = `<p>Your email verification code is: <strong>123456</strong>.</p><p>Do not share this code with anyone else.</p>`
+    const expectedMessage = `
+    <p>Your email verification code is: <strong>123456</strong>.</p><p>Do not share this code with anyone else.</p>
+    <p>Best,</p>
+    <p>The Purrfect Adoptions Team</p>
+  `
 
     beforeEach(async () => {
       user = await generateUserandTokens()
