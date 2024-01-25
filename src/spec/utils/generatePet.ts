@@ -94,9 +94,19 @@ export const generatePet = async () => {
 export const generatePets = async () => {
   await generateShelters()
   const shelters = await User.find({ role: 'SHELTER' })
+
+  const oneYearAndOneMonthAgo = new Date()
+  oneYearAndOneMonthAgo.setFullYear(oneYearAndOneMonthAgo.getFullYear() - 1)
+  oneYearAndOneMonthAgo.setMonth(oneYearAndOneMonthAgo.getMonth() - 1)
+  const birthDate = oneYearAndOneMonthAgo.toISOString().split('T')[0]
+
   const today = new Date()
   const futureDay = today.getDate() + 2 // two days ahead than current day
-  const birthdate = new Date(2022, today.getMonth(), futureDay)
+  const birthdate = new Date(
+    today.getFullYear(),
+    today.getMonth() - 1,
+    futureDay
+  )
 
   const petsData = [
     {
@@ -104,7 +114,7 @@ export const generatePets = async () => {
       microchipID: 'A123456799',
       name: 'Max',
       gender: Gender.Male,
-      birthDate: '2022-01-01',
+      birthDate: birthDate,
       color: 'Brown',
       breed: 'Labrador',
       category: Category.Dog,
@@ -156,7 +166,7 @@ export const generatePets = async () => {
       microchipID: 'A123456778',
       name: 'Snowflake',
       gender: Gender.Male,
-      birthDate: '2022-01-01',
+      birthDate: birthDate,
       color: 'Brown',
       breed: 'Labrador',
       category: Category.Bird,
@@ -182,7 +192,7 @@ export const generatePets = async () => {
       microchipID: 'A123456678',
       name: 'Cotton',
       gender: Gender.Male,
-      birthDate: '2022-01-01',
+      birthDate: birthDate,
       color: 'Brown',
       breed: 'Labrador',
       category: Category.Barnyard,
@@ -208,7 +218,7 @@ export const generatePets = async () => {
       microchipID: 'A123455678',
       name: 'Marbles',
       gender: Gender.Male,
-      birthDate: '2022-01-01',
+      birthDate: birthDate,
       color: 'Brown',
       breed: 'Labrador',
       category: Category.Horse,
@@ -234,7 +244,7 @@ export const generatePets = async () => {
       microchipID: 'A123445678',
       name: 'Willow',
       gender: Gender.Male,
-      birthDate: '2022-01-01',
+      birthDate: birthDate,
       color: 'Brown',
       breed: 'Labrador',
       category: Category.Rabbit,
@@ -260,7 +270,7 @@ export const generatePets = async () => {
       microchipID: 'A123345678',
       name: 'Cotton Candy',
       gender: Gender.Male,
-      birthDate: '2022-01-01',
+      birthDate: birthDate,
       color: 'Brown',
       breed: 'Labrador',
       category: Category.ScalesFinsAndOthers,
@@ -286,7 +296,7 @@ export const generatePets = async () => {
       microchipID: 'A122345678',
       name: 'Marbles',
       gender: Gender.Male,
-      birthDate: '2022-01-01',
+      birthDate: birthDate,
       color: 'Brown',
       breed: 'Labrador',
       category: Category.SmallAndFurry,
@@ -312,7 +322,7 @@ export const generatePets = async () => {
       microchipID: 'A112345678',
       name: 'Marshmellow',
       gender: Gender.Male,
-      birthDate: '2022-01-01',
+      birthDate: birthDate,
       color: 'Brown',
       breed: 'Labrador',
       category: Category.SmallAndFurry,
