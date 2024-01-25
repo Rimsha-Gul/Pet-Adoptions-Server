@@ -28,7 +28,9 @@ petRouter.post(
       return res.status(400).send('Images are required')
     }
     const { error } = addPetValidation(req.body)
-    if (error) return res.status(400).send(error.details[0].message)
+    if (error) {
+      return res.status(400).send(error.details[0].message)
+    }
     try {
       const {
         microchipID,

@@ -1609,22 +1609,26 @@ describe('application', () => {
     })
 
     it('should successfully schedule a home visit', async () => {
-      const expectedApplicantSubject = `Purrfect Adoptions - Home Visit Scheduled`
+      const expectedApplicantSubject = `Home Visit Scheduled`
       const expectedApplicantMessage = `
     <p>We are happy to inform you that your home visit for your application, ID: <strong>${applicationID}</strong>, has been successfully scheduled.</p>
-    <p>The visit is set for: <strong>${formattedDateTime}</strong></p>
+    <p>The visit is set for: <strong>${formattedDateTime} UTC</strong></p>
     <p>Please ensure that you are available at the scheduled time. During the visit, we will assess the living conditions and ensure it is a safe and loving environment for our pets.</p>
     <p>If the visit is successful, we will then move on to the next step of the adoption process.</p>
     <p>Thank you for choosing Purrfect Adoptions!</p>
+    <p>Best,</p>
+    <p>The Purrfect Adoptions Team</p>
   `
 
-      const expectedShelterSubject = `Purrfect Adoptions - Home Visit Scheduled`
+      const expectedShelterSubject = `Home Visit Scheduled`
       const expectedShelterMessage = `
     <p>A home visit for application ID: <strong>${applicationID}</strong> has been scheduled.</p>
-    <p>The visit is set for: <strong>${formattedDateTime}</strong></p>
+    <p>The visit is set for: <strong>${formattedDateTime} UTC</strong></p>
     <p>Please ensure that a representative is available to conduct the visit. During the visit, please assess the living conditions to ensure they are appropriate for the specific pet applied for. </p>
     <p>Ensure to document any significant findings for review in the application process.</p>
     <p>Thank you for your hard work!</p>
+    <p>Best,</p>
+    <p>The Purrfect Adoptions Team</p>
   `
       const response = await request(app)
         .post(`/applications/${applicationID}/homeVisit`)
@@ -1831,22 +1835,26 @@ describe('application', () => {
     })
 
     it('should successfully schedule a shelter visit', async () => {
-      const expectedApplicantSubject = `Purrfect Adoptions - Shelter Visit Scheduled`
+      const expectedApplicantSubject = `Shelter Visit Scheduled`
       const expectedApplicantMessage = `
     <p>We are pleased to inform you that your shelter visit for your application, ID: <strong>${applicationID}</strong>, has been successfully scheduled.</p>
-    <p>The visit is set for: <strong>${formattedDateTime}</strong></p>
+    <p>The visit is set for: <strong>${formattedDateTime} UTC</strong></p>
     <p>Please ensure that you are available at the scheduled time. During your visit, you will have the opportunity to meet the pet and assess if it's a good fit for you.</p>
     <p>If the visit is successful, we will then move on to the next step of the adoption process.</p>
     <p>Thank you for choosing Purrfect Adoptions!</p>
+    <p>Best,</p>
+    <p>The Purrfect Adoptions Team</p>
   `
 
-      const expectedShelterSubject = `Purrfect Adoptions - Shelter Visit Scheduled`
+      const expectedShelterSubject = `Shelter Visit Scheduled`
       const expectedShelterMessage = `
     <p>A shelter visit for application ID: <strong>${applicationID}</strong> has been scheduled.</p>
-    <p>The visit is set for: <strong>${formattedDateTime}</strong></p>
+    <p>The visit is set for: <strong>${formattedDateTime} UTC</strong></p>
     <p>Please ensure that a representative and the pet are available for the visit. During the visit, observe the interaction between the applicant and the pet to assess their compatibility.</p>
     <p>Ensure to document any significant findings for review in the application process.</p>
     <p>Thank you for your dedication and hard work!</p>
+    <p>Best,</p>
+    <p>The Purrfect Adoptions Team</p>
   `
 
       const response = await request(app)
@@ -2125,7 +2133,7 @@ describe('application', () => {
     })
 
     it('should successfully update application status to HomeVisitRequested', async () => {
-      const expectedSubject = `Purrfect Adoptions - Home Visit Request`
+      const expectedSubject = `Home Visit Request`
       const expectedNextWeekDate = new Date(
         Date.now() + 7 * 24 * 60 * 60 * 1000
       )
@@ -2137,7 +2145,7 @@ describe('application', () => {
     <p>As part of our process, we ask that you schedule this visit within the next week, by <strong>${formattedNextWeekDate}</strong>. This visit is an important step in ensuring that the pet will be comfortable and secure in their potential new home.</p>
     <p><strong>Note:</strong> If you'd like to schedule your visit, please do so at least one day in advance to allow the shelter time for preparations.</p>
     <p><strong>Important:</strong> If you do not schedule your visit by the aforementioned date, your application will be marked as "expired." Should this happen, you'll need to request to reactivate your application to proceed further.</p>
-    <p>Please click <a href="http://localhost:5173/${applicationID}/scheduleHomeVisit">here</a> to schedule your home visit.</p>
+    <p>Please click <a href="${process.env.WEB_APP_URL}/${applicationID}/scheduleHomeVisit">here</a> to schedule your home visit.</p>
     <p>If you have any questions or require any assistance, please feel free to respond to this email.</p>
     <p>Thank you for your cooperation and your interest in adopting.</p>
     <p>Best,</p>
@@ -2181,14 +2189,16 @@ describe('application', () => {
     })
 
     it('should successfully update application status to HomeApproved', async () => {
-      const expectedSubject = `Purrfect Adoptions - Home Approved`
+      const expectedSubject = `Home Approved`
       const currentTime = new Date()
       const formattedDate = currentTime.toLocaleString()
       const expectedMessage = `
     <p>We are thrilled to inform you that your home visit for your application, ID: <strong>${applicationID}</strong>, has been successful.</p>
-    <p>The approval was confirmed on: <strong>${formattedDate}</strong></p>
+    <p>The approval was confirmed on: <strong>${formattedDate} UTC</strong></p>
     <p>The next step of the adoption process will be your scheduled visit to our shelter. We will be in touch soon with scheduling details.</p>
     <p>Thank you for your cooperation and patience during this process. We appreciate your commitment to providing a loving home for our pets.</p>
+    <p>Best,</p>
+    <p>The Purrfect Adoptions Team</p>
   `
 
       payload.status = Status.HomeApproved
@@ -2215,7 +2225,7 @@ describe('application', () => {
 
       // Extract the actual date from the expectedMessage
       const dateRegex =
-        /The approval was confirmed on: <strong>([^<]+)<\/strong><\/p>/
+        /The approval was confirmed on: <strong>([^<]+) UTC<\/strong><\/p>/
       const match = expectedMessage.match(dateRegex)
       if (match && match[1]) {
         const actualDate = new Date(match[1])
@@ -2239,15 +2249,17 @@ describe('application', () => {
     })
 
     it('should successfully update application status to HomeRejected', async () => {
-      const expectedSubject = `Purrfect Adoptions - Home Visit Unsuccessful`
+      const expectedSubject = `Home Visit Unsuccessful`
       const currentTime = new Date()
       const formattedDate = currentTime.toLocaleString()
       const expectedMessage = `
     <p>We regret to inform you that your home visit for your application, ID: <strong>${applicationID}</strong>, has not been successful.</p>
-    <p>The decision was confirmed on: <strong>${formattedDate}</strong></p>
+    <p>The decision was confirmed on: <strong>${formattedDate} UTC</strong></p>
     <p>We understand this may be disappointing, and we want to assure you that this decision does not reflect upon you personally. Our primary concern is the well-being of our pets, and sometimes this means making difficult decisions.</p>
     <p>If you believe there have been changes to your living situation that may influence this decision, please feel free to reapply.</p>
     <p>Thank you for your understanding and your interest in providing a loving home for our pets.</p>
+    <p>Best,</p>
+    <p>The Purrfect Adoptions Team</p>
   `
 
       payload.status = Status.HomeRejected
@@ -2274,7 +2286,7 @@ describe('application', () => {
 
       // Extract the actual date from the expectedMessage
       const dateRegex =
-        /The decision was confirmed on: <strong>([^<]+)<\/strong><\/p>/
+        /The decision was confirmed on: <strong>([^<]+) UTC<\/strong><\/p>/
       const match = expectedMessage.match(dateRegex)
       if (match && match[1]) {
         const actualDate = new Date(match[1])
@@ -2298,22 +2310,25 @@ describe('application', () => {
     })
 
     it('should successfully update application status to Rejected', async () => {
-      const expectedApplicantSubject = `Purrfect Adoptions - Adoption Not Successful`
+      const expectedApplicantSubject = `Adoption Not Successful`
       const currentTime = new Date()
       const formattedDate = currentTime.toLocaleString()
       const expectedApplicantMessage = `
     <p>We regret to inform you that your application, ID: <strong>${applicationID}</strong>, did not result in an adoption.</p>
-    <p>The decision was made on: <strong>${formattedDate}</strong></p>
+    <p>The decision was made on: <strong>${formattedDate} UTC</strong></p>
     <p>We understand that not every visit or interaction leads to an adoption, and we encourage you to continue searching for the right pet. Our team is available to assist you in this journey.</p>
     <p>Thank you for considering adoption and for being a part of the Purrfect Adoptions community.</p>
+    <p>Best,</p>
+    <p>The Purrfect Adoptions Team</p>
   `
-      const expectedShelterSubject =
-        'Purrfect Adoptions - Adoption Not Finalized'
+      const expectedShelterSubject = 'Adoption Not Finalized'
       const expectedShelterMessage = `
     <p>We regret to inform you that the potential adoption for the application, ID: <strong>${applicationID}</strong>, by applicant: <strong>${user.email}</strong> did not proceed.</p>
-    <p>The decision was made on: <strong>${formattedDate}</strong></p>
+    <p>The decision was made on: <strong>${formattedDate} UTC</strong></p>
     <p>We understand that not every visit or interaction leads to an adoption, and we are committed to ensuring the best fit for each pet. Your pet will be available again for other potential adopters.</p>
     <p>Thank you for your continuous dedication and care towards the animals. Your efforts make a significant difference.</p>
+    <p>Best,</p>
+    <p>The Purrfect Adoptions Team</p>
   `
 
       payload.status = Status.Rejected
@@ -2347,7 +2362,7 @@ describe('application', () => {
 
       const checkDateInMessage = (message) => {
         const dateRegex =
-          /The decision was made on: <strong>([^<]+)<\/strong><\/p>/
+          /The decision was made on: <strong>([^<]+) UTC<\/strong><\/p>/
         const match = message.match(dateRegex)
         if (match && match[1]) {
           const actualDate = new Date(match[1])
@@ -2377,28 +2392,34 @@ describe('application', () => {
     it('should successfully update application status to Approved', async () => {
       const application2ID = await generatePetWithApplication('test2@gmail.com')
 
-      const expectedApplicantSubject = `Purrfect Adoptions - Adoption Successful`
+      const expectedApplicantSubject = `Adoption Successful`
       const currentTime = new Date()
       const formattedDate = currentTime.toLocaleString()
       const expectedApplicantMessage = `
     <p>Congratulations! We are pleased to inform you that your application, ID: <strong>${applicationID}</strong>, has resulted in a successful adoption.</p>
-    <p>The adoption was confirmed on: <strong>${formattedDate}</strong></p>
+    <p>The adoption was confirmed on: <strong>${formattedDate} UTC</strong></p>
     <p>We are thrilled to see another pet find a loving home and wish you all the best on this new journey. Don't hesitate to reach out if you have any queries or need support.</p>
     <p>Thank you for your commitment to animal adoption and for being a part of the Purrfect Adoptions community.</p>
+    <p>Best,</p>
+    <p>The Purrfect Adoptions Team</p>
   `
-      const expectedShelterSubject = `Purrfect Adoptions - Adoption Finalized`
+      const expectedShelterSubject = `Adoption Finalized`
       const expectedShelterMessage = `
     <p>We're delighted to inform you that the adoption for the application, ID: <strong>${applicationID}</strong>, by applicant: <strong>${user.email}</strong> has been successfully completed.</p>
-    <p>The adoption was confirmed on: <strong>${formattedDate}</strong></p>
+    <p>The adoption was confirmed on: <strong>${formattedDate} UTC</strong></p>
     <p>This marks another successful pet adoption from your shelter, contributing towards our mission of finding homes for all animals in need.</p>
     <p>Thank you for your continuous dedication and care towards the animals. Your efforts make a significant difference.</p>
+    <p>Best,</p>
+    <p>The Purrfect Adoptions Team</p>
   `
-      const expectedOtherApplicantSubject = `Purrfect Adoptions - Pet Adoption Update`
+      const expectedOtherApplicantSubject = `Pet Adoption Update`
       const expectedOtherApplicantMessage = `
     <p>Dear applicant,</p>
     <p>We hope this message finds you well. We are reaching out to inform you that the pet you applied for, application ID: <strong>${application2ID}</strong>, has found a new home.</p>
     <p>We understand that you may be disappointed, and we appreciate your understanding. There are many other pets in need of a loving home, and we encourage you to consider applying for another pet.</p>
     <p>Thank you for your interest in providing a home for our pets. Your compassion makes a huge difference in their lives.</p>
+    <p>Best,</p>
+    <p>The Purrfect Adoptions Team</p>
   `
 
       payload.status = Status.Approved
@@ -2444,7 +2465,7 @@ describe('application', () => {
 
       const checkDateInMessage = (message) => {
         const dateRegex =
-          /The adoption was confirmed on: <strong>([^<]+)<\/strong><\/p>/
+          /The adoption was confirmed on: <strong>([^<]+) UTC<\/strong><\/p>/
         const match = message.match(dateRegex)
         if (match && match[1]) {
           const actualDate = new Date(match[1])
@@ -2472,12 +2493,14 @@ describe('application', () => {
     })
 
     it('should successfully update application status to ReactivationRequestApproved', async () => {
-      const expectedSubject = `Purrfect Adoptions - Reactivation Request Approved`
+      const expectedSubject = `Reactivation Request Approved`
       const expectedMessage = `
     <p>Good news! We are pleased to inform you that your reactivation request for application ID: <strong>${applicationID}</strong> has been approved.</p>
     <p>You now have the opportunity to schedule your home visit within the next <strong>48 hours</strong>. Please note that failure to schedule within this timeframe will result in the permanent closure of your application.</p>
     <p>We are committed to helping pets find loving homes, and we're excited to move forward with your application. If you have any questions or require further clarification, please don't hesitate to reach out.</p>
     <p>Thank you for your commitment to animal adoption and for being a part of the Purrfect Adoptions community.</p>
+    <p>Best,</p>
+    <p>The Purrfect Adoptions Team</p>
   `
       payload.status = Status.ReactivationRequestApproved
       const response = await request(app)
@@ -2510,7 +2533,7 @@ describe('application', () => {
     })
 
     it('should successfully update application status to ReactivationRequestDeclined', async () => {
-      const expectedSubject = `Purrfect Adoptions - Reactivation Request Declined`
+      const expectedSubject = `Reactivation Request Declined`
       const expectedMessage = `
     <p>We regret to inform you that your reactivation request for application ID: <strong>${applicationID}</strong> has been declined.</p>
     <p>This means that your application has been permanently closed and will no longer be processed for further steps.</p>
@@ -2518,6 +2541,8 @@ describe('application', () => {
     <p>We understand that this news might be disappointing. Our team is committed to ensuring that all adoptions are well-suited to both the applicant and the pet.</p>
     <p>If you have any questions or concerns, please don't hesitate to contact us.</p>
     <p>Thank you for your interest in animal adoption and for being a part of the Purrfect Adoptions community.</p>
+    <p>Best,</p>
+    <p>The Purrfect Adoptions Team</p>
   `
       payload.status = Status.ReactivationRequestDeclined
       const response = await request(app)

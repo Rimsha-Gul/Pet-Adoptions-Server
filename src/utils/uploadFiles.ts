@@ -8,6 +8,10 @@ export const uploadFiles = async (
   files: Express.Multer.File[] | Express.Multer.File,
   req: UserRequest
 ): Promise<string[]> => {
+  if (process.env.NODE_ENV === 'cypress_test') {
+    return ['mock-file-id-123']
+  }
+
   const fileArray = Array.isArray(files) ? files : [files]
   const fileIds: string[] = []
 

@@ -14,7 +14,7 @@ export enum EmailChangeRequest {
 
 /**
  * @example {
- *  "name": "Jack Doe",
+ *  "name": "John Doe",
  *  "email": "johndoe@example.com",
  *  "password": "123456",
  *  "role": "USER"

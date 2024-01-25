@@ -6,7 +6,7 @@ export const sendEmail = async (
   message: string
 ): Promise<void> => {
   const mailOptions = {
-    from: process.env.NODEMAILER_USER,
+    from: '"Purrfect Adoptions" <' + process.env.NODEMAILER_USER + '>',
     to: `${recipientEmail}`,
     subject: `${subject}`,
     html: `${message}`
@@ -15,6 +15,6 @@ export const sendEmail = async (
   try {
     await transporter.sendMail(mailOptions)
   } catch (error) {
-    console.error('Error sending signup email:', error)
+    console.error('Error sending email:', error)
   }
 }
