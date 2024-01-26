@@ -15,3 +15,9 @@ Remember to provide environment variables.
 ```bash
     npm test
 ```
+
+For cypress tests
+
+```bash
+    npm start
+```
